@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check } from "lucide-react";
+import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play } from "lucide-react";
 import { useGlobalSystem } from "./GlobalSystemContext";
-import { useWakeWordListener } from "../hooks/useWakeWordListener";
 
 interface Message {
   id: string;
@@ -23,168 +22,66 @@ const PRESET_CHIPS = [
 ];
 
 export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }: CologneChatbotProps) {
-  const { chatMessages: messages, setChatMessages: setMessages } = useGlobalSystem();
+  const { 
+    chatMessages: messages, 
+    language,
+    isVoiceMuted,
+    setIsVoiceMuted,
+    speakResponse,
+    globalListeningState: listeningState,
+    globalStartListening: startListening,
+    globalStopListening: stopListening,
+    globalForceActiveListening: forceActiveListening,
+    handleGlobalSendMessage,
+    isGlobalChatLoading: isLoading,
+    selectedVoiceURI,
+    setSelectedVoiceURI,
+    speechRate,
+    setSpeechRate,
+    availableVoices
+  } = useGlobalSystem();
+  
   const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+  const [showVoiceConfig, setShowVoiceConfig] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Set up Speech Synthesis Voice Speak helper (representing Nova Voice)
-  const speakResponse = (text: string) => {
-    if (isVoiceMuted || typeof window === "undefined" || !window.speechSynthesis) return;
-    try {
-      window.speechSynthesis.cancel();
-      // Remove symbols from text
-      const cleanText = text.replace(/[*_#`~]/g, "");
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = "en-US";
-      
-      const voices = window.speechSynthesis.getVoices();
-      // Look for a high-quality female/neutral English voice for "Nova"
-      let selectedVoice = voices.find(v => 
-        v.lang.startsWith("en-US") && 
-        (v.name.toLowerCase().includes("natural") || 
-         v.name.toLowerCase().includes("google") || 
-         v.name.toLowerCase().includes("nova") ||
-         v.name.toLowerCase().includes("zira") ||
-         v.name.toLowerCase().includes("samantha"))
-      );
-      
-      if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.startsWith("en"));
-      }
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-      
-      utterance.rate = 1.05;
-      utterance.pitch = 1.02;
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn("Speech Synthesis failed:", e);
-    }
-  };
+  // Simulated real-time consensus board states: 0 = idle, 1 = realizing, 2 = deliberating/reading each other, 3 = voting complete
+  const [consensusStep, setConsensusStep] = useState(0);
 
-  // Speak welcome message if not already spoken
   useEffect(() => {
-    // Only speak once on initial mount if messages contain the default greeting
-    if (messages.length === 1 && messages[0].id === "init-1") {
-      const welcomeTimer = setTimeout(() => {
-        speakResponse(messages[0].text);
-      }, 1500);
-      return () => clearTimeout(welcomeTimer);
-    }
-  }, []);
-
-  // Set up Wake Word Listener looking for "UDO"
-  const {
-    listeningState,
-    requestPermission,
-    startListening,
-    stopListening,
-    isSupported
-  } = useWakeWordListener({
-    lang: "en-US",
-    onWakeWordDetected: () => {
-      onRobotStateChange("HAPPY");
-      const wakeReply = "Yes, colleague? I am listening. How can I help you today?";
-      speakResponse(wakeReply);
-      
-      // Post notice message to chat
-      const sysMsg: Message = {
-        id: `msg-wake-${Date.now()}`,
-        sender: "doctor",
-        text: "[Voice Activated] " + wakeReply,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    if (isLoading) {
+      setConsensusStep(1);
+      const timer1 = setTimeout(() => setConsensusStep(2), 2200);
+      const timer2 = setTimeout(() => setConsensusStep(3), 4500);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
       };
-      setMessages((prev) => [...prev, sysMsg]);
-    },
-    onCommandDetected: (commandText) => {
-      handleSendMessage(commandText);
-    },
-    onError: (err) => {
-      console.warn("[Live Chat Voice Error]:", err);
+    } else {
+      setConsensusStep(0);
     }
-  });
+  }, [isLoading]);
 
-  // Automatically start voice wake word listener on mount if permissions granted
-  useEffect(() => {
-    requestPermission().then((allowed) => {
-      if (allowed && isSupported) {
-        startListening();
-      }
-    });
-    return () => {
-      stopListening();
-    };
-  }, [requestPermission, startListening, stopListening, isSupported]);
-
-  // Scroll to bottom whenever messages update
+  // Scroll to bottom whenever messages or loading state updates
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, consensusStep]);
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
-
-    const userMsg: Message = {
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      text: textToSend,
-      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
     setInputMessage("");
-    setIsLoading(true);
-    onRobotStateChange("THINKING");
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend })
-      });
-      const data = await response.json();
-
-      const replyText = data.response || data.content || "I apologize, colleague. A transmission error occurred. Could you please try again?";
-
-      const doctorMsg: Message = {
-        id: `msg-doc-${Date.now()}`,
-        sender: "doctor",
-        text: replyText,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-      };
-
-      setMessages((prev) => [...prev, doctorMsg]);
-      onRobotStateChange("SPEAKING");
-      speakResponse(replyText);
-
-      if (onDrBubbleTrigger) {
-        onDrBubbleTrigger(replyText);
-      }
-    } catch (error) {
-      console.error("Chat error:", error);
-      onRobotStateChange("SURPRISED");
-      
-      const errorMsg: Message = {
-        id: `msg-err-${Date.now()}`,
-        sender: "doctor",
-        text: "I experienced a server disruption. Could we try that question again, dear colleague?",
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-      speakResponse(errorMsg.text);
-    } finally {
-      setIsLoading(false);
+    await handleGlobalSendMessage(textToSend);
+    
+    // Keep parent bubble/state callbacks synchronised if needed
+    if (onRobotStateChange) {
+      onRobotStateChange("THINKING");
     }
   };
 
   return (
-    <div className="flex flex-col h-[580px] bg-black/40 border border-white/10 rounded-2xl overflow-hidden shadow-xl relative" id="cologne-doctor-chat-module">
+    <div className="flex flex-col h-[640px] bg-black/40 border border-white/10 rounded-2xl overflow-hidden shadow-xl relative" id="cologne-doctor-chat-module">
       
       {/* Header Info Panel */}
       <div className="bg-white/5 px-5 py-4 border-b border-white/10 flex items-center justify-between">
@@ -195,25 +92,39 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
             </div>
             <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${
               listeningState === "passive_listening" ? "bg-green-500 animate-pulse" :
-              listeningState === "active_listening" ? "bg-red-500 animate-ping" : "bg-slate-500"
+              listeningState === "active_listening" ? "bg-rose-500 animate-ping" : "bg-slate-500"
             }`} />
           </div>
           <div>
             <h3 className="text-xs font-black text-white font-sans uppercase tracking-wider flex items-center gap-1.5">
-              <span>U.D.O. Live Gemini Chat</span>
+              <span>U.D.O. Clinical Intelligence</span>
               <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-950/40 border border-teal-500/30 px-1.5 py-0.5 rounded uppercase tracking-widest">
                 Nova Voice
               </span>
             </h3>
             <p className="text-[9px] text-teal-400 font-mono tracking-widest font-semibold uppercase">
-              {listeningState === "passive_listening" ? "● Listening for 'UDO'" :
-               listeningState === "active_listening" ? "● Speaking active..." : "● Voice dialogue ready"}
+              {listeningState === "passive_listening" ? (language === "de" ? "● HÖRE AUF WECK-WORT 'UDO'" : "● LISTENING FOR 'UDO'") :
+               listeningState === "active_listening" ? (language === "de" ? "● DIKTIEREN AKTIV..." : "● DICTATION ACTIVE...") : 
+               (language === "de" ? "● DIALOGBEREIT" : "● DIALOGUE READY")}
             </p>
           </div>
         </div>
 
         {/* Audio controls */}
         <div className="flex items-center gap-2">
+          {/* Voice Configuration Settings Panel Toggle */}
+          <button
+            onClick={() => setShowVoiceConfig(!showVoiceConfig)}
+            className={`p-2 rounded-xl border transition-all ${
+              showVoiceConfig 
+                ? "bg-teal-500 border-teal-400 text-slate-950 font-black shadow-lg shadow-teal-500/20" 
+                : "bg-slate-900 border-slate-800 text-slate-300 hover:text-white"
+            }`}
+            title={language === "de" ? "Sprachauswahl & Geschwindigkeit" : "Voice Selection & Speech Speed"}
+          >
+            <Sliders size={14} />
+          </button>
+
           {/* Mute output voice */}
           <button
             onClick={() => {
@@ -227,12 +138,12 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
                 ? "bg-rose-950/20 border-rose-500/30 text-rose-400 hover:bg-rose-950/40" 
                 : "bg-slate-900 border-slate-800 text-slate-300 hover:text-white"
             }`}
-            title={isVoiceMuted ? "Unmute Voice" : "Mute Voice"}
+            title={isVoiceMuted ? (language === "de" ? "Stimme einschalten" : "Unmute Voice") : (language === "de" ? "Stimme stummstellen" : "Mute Voice")}
           >
             {isVoiceMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
 
-          {/* Toggle passive voice wake word listening */}
+          {/* Wake Word passive trigger toggle */}
           <button
             onClick={() => {
               if (listeningState === "idle") {
@@ -242,13 +153,28 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
               }
             }}
             className={`p-2 rounded-xl border transition-all ${
-              listeningState !== "idle"
+              listeningState === "passive_listening"
                 ? "bg-teal-950/20 border-teal-500/40 text-teal-300 animate-pulse"
                 : "bg-slate-900 border-slate-800 text-slate-300 hover:text-white"
             }`}
-            title={listeningState !== "idle" ? "Stop Microphone" : "Start Microphone"}
+            title={listeningState === "passive_listening" ? (language === "de" ? "Weck-Wort stoppen" : "Stop Wake-Word") : (language === "de" ? "Weck-Wort überwachen" : "Monitor Wake-Word")}
           >
-            {listeningState !== "idle" ? <Mic size={14} /> : <MicOff size={14} />}
+            <Bot size={14} />
+          </button>
+
+          {/* Click to Talk / Force Active dictation */}
+          <button
+            onClick={() => {
+              forceActiveListening();
+            }}
+            className={`p-2 rounded-xl border transition-all ${
+              listeningState === "active_listening"
+                ? "bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/20 animate-pulse"
+                : "bg-teal-500 hover:bg-teal-600 border-teal-400 text-slate-950 font-black cursor-pointer shadow-lg shadow-teal-500/15"
+            }`}
+            title={language === "de" ? "Direkt sprechen (Diktat)" : "Direct Speech (Dictate)"}
+          >
+            <Mic size={14} />
           </button>
 
           <div className="flex items-center gap-1 bg-teal-950/20 border border-teal-500/25 rounded-full px-2.5 py-1 text-[9px] font-mono text-teal-300">
@@ -258,10 +184,291 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
         </div>
       </div>
 
+      {/* Voice Selection & Speed Control Panel */}
+      {showVoiceConfig && (
+        <div className="bg-[#0c142c] border-b border-white/10 px-5 py-4 space-y-4 animate-fadeIn">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-black text-teal-400 tracking-wider flex items-center gap-1.5 uppercase">
+              <Sliders size={12} />
+              {language === "de" ? "Sprach- & Sprachgeschwindigkeitssteuerung" : "Voice & Speech Rate Panel"}
+            </span>
+            <span className="text-[8px] font-mono text-slate-400 uppercase">
+              {language === "de" ? "Web Speech API (Echtzeit)" : "Web Speech API (Realtime)"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Voice Dropdown */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-mono text-slate-400 uppercase block">
+                {language === "de" ? "Verfügbare Stimmen wählen" : "Select Available Voice"}
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedVoiceURI || ""}
+                  onChange={(e) => {
+                    const nextVal = e.target.value || null;
+                    setSelectedVoiceURI(nextVal);
+                    // Trigger a brief feedback speak with the new voice
+                    setTimeout(() => {
+                      speakResponse(
+                        language === "de" 
+                          ? "Stimme erfolgreich aktualisiert." 
+                          : "Voice updated successfully."
+                      );
+                    }, 100);
+                  }}
+                  className="bg-black/50 border border-white/10 text-[11px] text-white rounded-lg px-3 py-2 w-full focus:outline-none focus:border-teal-500/40 select-none cursor-pointer font-sans"
+                >
+                  <option value="">
+                    {language === "de" ? "Default-Stimme des Systems" : "System Default Voice"}
+                  </option>
+                  {availableVoices.map((v) => {
+                    const isDe = v.lang.toLowerCase().startsWith("de");
+                    const isEn = v.lang.toLowerCase().startsWith("en");
+                    
+                    let flag = "🌐";
+                    if (isDe) flag = "🇩🇪";
+                    if (isEn) flag = "🇺🇸";
+                    
+                    const nameDisplay = v.name
+                      .replace("Microsoft", "MS")
+                      .replace("Google", "Google")
+                      .replace("Natural", "Natural");
+
+                    return (
+                      <option key={v.voiceURI} value={v.voiceURI}>
+                        {flag} {nameDisplay} ({v.lang})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+
+            {/* Speech Rate Slider */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-mono text-slate-400 uppercase block">
+                  {language === "de" ? "Sprechgeschwindigkeit" : "Speech Rate (Speed)"}
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-teal-400 font-bold">
+                    {speechRate.toFixed(1)}x
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSpeechRate(1.0);
+                      setTimeout(() => {
+                        speakResponse(
+                          language === "de" 
+                            ? "Zurückgesetzt auf Standardgeschwindigkeit." 
+                            : "Reset to standard speech rate."
+                        );
+                      }, 100);
+                    }}
+                    className="p-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 hover:text-white transition-all cursor-pointer"
+                    title={language === "de" ? "Zurücksetzen auf 1.0" : "Reset to 1.0"}
+                  >
+                    <RotateCcw size={10} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-mono text-slate-500">0.5x</span>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.0"
+                  step="0.1"
+                  value={speechRate}
+                  onChange={(e) => {
+                    const rateVal = parseFloat(e.target.value);
+                    setSpeechRate(rateVal);
+                  }}
+                  className="flex-1 accent-teal-400 cursor-pointer bg-slate-800 h-1.5 rounded-lg appearance-none"
+                />
+                <span className="text-[9px] font-mono text-slate-500">2.0x</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick preset chips */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
+            <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">
+              {language === "de" ? "Schnellwahl-Tempo:" : "Preset Rates:"}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: language === "de" ? "Gemütlich (0.8x)" : "Realistic Slow (0.8x)", val: 0.8 },
+                { label: language === "de" ? "Standard (1.0x)" : "Standard Realism (1.0x)", val: 1.0 },
+                { label: language === "de" ? "Professional (1.2x)" : "Professional (1.2x)", val: 1.2 },
+                { label: language === "de" ? "Rapid Briefing (1.5x)" : "Rapid Briefing (1.5x)", val: 1.5 },
+              ].map((preset) => (
+                <button
+                  key={preset.val}
+                  onClick={() => {
+                    setSpeechRate(preset.val);
+                    setTimeout(() => {
+                      speakResponse(
+                        language === "de" 
+                          ? `Geschwindigkeit eingestellt auf ${preset.val}x.` 
+                          : `Speech speed rate set to ${preset.val}x.`
+                      );
+                    }, 100);
+                  }}
+                  className={`text-[9px] px-2 py-0.5 rounded border transition-all cursor-pointer ${
+                    speechRate === preset.val
+                      ? "bg-teal-500/10 border-teal-500/30 text-teal-300 font-bold"
+                      : "bg-black/30 border-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                speakResponse(
+                  language === "de" 
+                    ? "Hallo Kollege, dies ist ein kurzer Hörtest der gewählten Stimme." 
+                    : "Hello colleague, this is a short audio test of your selected voice."
+                );
+              }}
+              className="ml-auto text-[9px] font-sans font-bold bg-teal-600 hover:bg-teal-700 text-white px-2 py-1 rounded flex items-center gap-1 transition-all cursor-pointer shadow-md"
+            >
+              <Play size={10} />
+              <span>{language === "de" ? "Hörprobe" : "Test Voice"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4-Agent Collaborative Consensus Board */}
+      <div className="bg-[#030712]/90 border-b border-white/10 px-5 py-3 flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono font-extrabold text-teal-400 tracking-wider flex items-center gap-1.5 uppercase">
+            <Sparkles size={11} className={consensusStep > 0 ? "animate-spin" : ""} />
+            Consensus-Driven Diagnostic Board (4-AI Multi-Panel)
+          </span>
+          <span className="text-[9px] font-mono font-bold text-slate-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded-full">
+            Colleague: 55yo Female Neurologist
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {/* Dr. Clara (Med-Gemini) */}
+          <div className={`p-2 rounded-xl border transition-all duration-300 ${
+            consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
+            consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
+            consensusStep === 3 ? "bg-green-950/15 border-green-500/30" :
+            "bg-slate-950/40 border-white/5"
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${
+                consensusStep === 1 ? "bg-amber-400 animate-pulse" :
+                consensusStep === 2 ? "bg-teal-400 animate-pulse" :
+                consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
+              }`} />
+              <div className="min-w-0">
+                <span className="text-[9px] font-black text-white block truncate">Dr. Clara (Med-Gemini)</span>
+                <span className="text-[7px] font-mono text-slate-400 block truncate">Neurology Expert</span>
+              </div>
+            </div>
+            <div className="mt-1 text-[8px] font-mono text-slate-400 line-clamp-1 border-t border-white/5 pt-1">
+              {consensusStep === 0 && "● Active & ready..."}
+              {consensusStep === 1 && "⚡ Parsing MRI root pressure..."}
+              {consensusStep === 2 && "🔄 S2k guideline correlation..."}
+              {consensusStep === 3 && "✓ Voted: Radiculopathy Confirmed"}
+            </div>
+          </div>
+
+          {/* Dr. Eric (Claude) */}
+          <div className={`p-2 rounded-xl border transition-all duration-300 ${
+            consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
+            consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
+            consensusStep === 3 ? "bg-green-950/15 border-green-500/30" :
+            "bg-slate-950/40 border-white/5"
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${
+                consensusStep === 1 ? "bg-amber-400 animate-pulse" :
+                consensusStep === 2 ? "bg-teal-400 animate-pulse" :
+                consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
+              }`} />
+              <div className="min-w-0">
+                <span className="text-[9px] font-black text-white block truncate">Dr. Eric (Claude-3.5)</span>
+                <span className="text-[7px] font-mono text-slate-400 block truncate">S2k Forensic Legal</span>
+              </div>
+            </div>
+            <div className="mt-1 text-[8px] font-mono text-slate-400 line-clamp-1 border-t border-white/5 pt-1">
+              {consensusStep === 0 && "● Active & ready..."}
+              {consensusStep === 1 && "⚡ Estimating MdE guidelines..."}
+              {consensusStep === 2 && "🔄 Reviewing Med-Gemini findings..."}
+              {consensusStep === 3 && "✓ Voted: Recommended MdE: 20%"}
+            </div>
+          </div>
+
+          {/* Dr. Marcus (GPT-4o) */}
+          <div className={`p-2 rounded-xl border transition-all duration-300 ${
+            consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
+            consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
+            consensusStep === 3 ? "bg-green-950/15 border-green-500/30" :
+            "bg-slate-950/40 border-white/5"
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${
+                consensusStep === 1 ? "bg-amber-400 animate-pulse" :
+                consensusStep === 2 ? "bg-teal-400 animate-pulse" :
+                consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
+              }`} />
+              <div className="min-w-0">
+                <span className="text-[9px] font-black text-white block truncate">Dr. Marcus (GPT-4o)</span>
+                <span className="text-[7px] font-mono text-slate-400 block truncate">Biomechanics Analyst</span>
+              </div>
+            </div>
+            <div className="mt-1 text-[8px] font-mono text-slate-400 line-clamp-1 border-t border-white/5 pt-1">
+              {consensusStep === 0 && "● Active & ready..."}
+              {consensusStep === 1 && "⚡ Modeling kinetic load vectors..."}
+              {consensusStep === 2 && "🔄 Correlating trauma timeline..."}
+              {consensusStep === 3 && "✓ Voted: Trauma Causality Approved"}
+            </div>
+          </div>
+
+          {/* Dr. Gratsiano (DeepSeek-R1) */}
+          <div className={`p-2 rounded-xl border transition-all duration-300 ${
+            consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
+            consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
+            consensusStep === 3 ? "bg-green-950/15 border-green-500/30" :
+            "bg-slate-950/40 border-white/5"
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${
+                consensusStep === 1 ? "bg-amber-400 animate-pulse" :
+                consensusStep === 2 ? "bg-teal-400 animate-pulse" :
+                consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
+              }`} />
+              <div className="min-w-0">
+                <span className="text-[9px] font-black text-white block truncate">Dr. Gratsiano (DeepSeek-R1)</span>
+                <span className="text-[7px] font-mono text-slate-400 block truncate">Deep clinical Synthesis</span>
+              </div>
+            </div>
+            <div className="mt-1 text-[8px] font-mono text-slate-400 line-clamp-1 border-t border-white/5 pt-1">
+              {consensusStep === 0 && "● Active & ready..."}
+              {consensusStep === 1 && "⚡ Running Deep CoT over findings..."}
+              {consensusStep === 2 && "🔄 Weighing GPT & Claude debates..."}
+              {consensusStep === 3 && "✓ Voted: Synthesis Sealed"}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Messages area */}
       <div 
         ref={scrollRef}
-        className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#05070a]/40"
+        className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#05070a]/40 scrollbar-thin"
       >
         {messages.map((m) => {
           const isDoc = m.sender === "doctor";
@@ -297,30 +504,41 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
         })}
 
         {isLoading && (
-          <div className="flex items-start gap-2.5 mr-auto text-left max-w-[80%]">
-            <div className="w-8 h-8 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-[10px] font-bold text-teal-300 shrink-0 mt-1 animate-pulse">
-              UDO
-            </div>
-            <div className="p-3.5 bg-white/5 rounded-2xl rounded-tl-none text-xs text-slate-400 border border-white/5 shadow-md flex items-center gap-1.5 font-mono">
-              <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" />
-              <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-              <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-              U.D.O. is compiling expert advice...
+          <div className="flex flex-col gap-2 max-w-[80%] mr-auto text-left">
+            <div className="flex items-start gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-[10px] font-bold text-teal-300 shrink-0 mt-1 animate-pulse">
+                UDO
+              </div>
+              <div className="p-3.5 bg-white/5 rounded-2xl rounded-tl-none text-xs text-slate-400 border border-white/5 shadow-md flex items-center gap-1.5 font-mono">
+                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce animate-duration-75" />
+                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                
+                {consensusStep === 1 && (language === "de" ? "Panel liest & erfasst Details..." : "Panel is reading & realizing details...")}
+                {consensusStep === 2 && (language === "de" ? "Kollegen stimmen Antworten ab..." : "Colleagues are debating & aligning...")}
+                {consensusStep === 3 && (language === "de" ? "Ergebnis wird final formuliert..." : "Formulating unified expert consensus...")}
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Suggestion chips bar */}
-      <div className="px-4 py-2 border-t border-white/10 bg-black/40 flex flex-wrap gap-1.5">
-        {PRESET_CHIPS.map((chip) => (
+      {/* Suggestion chips bar with premium typography & micro hover effects */}
+      <div className="px-4 py-3 border-t border-white/10 bg-[#020617]/70 flex flex-wrap gap-2 select-none">
+        {(language === "de" ? [
+          "Wie unterstützen Sie mich bei diesem Projekt?",
+          "Was sind die klinischen Richtlinien für L4/L5?",
+          "Zusammenfassung von Thomas Müllers Status",
+          "Wie berechne ich die Minderung der Erwerbsfähigkeit?"
+        ] : PRESET_CHIPS).map((chip) => (
           <button
             key={chip}
             disabled={isLoading}
             onClick={() => handleSendMessage(chip)}
-            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[9px] text-teal-300 border border-white/5 hover:border-teal-500/30 transition-all font-mono"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-950 text-[10px] text-teal-300 font-sans font-black tracking-wider uppercase border border-teal-500/10 hover:border-teal-500/40 hover:text-white transition-all duration-300 active:scale-95 cursor-pointer shadow-lg hover:shadow-teal-500/5 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {chip}
+            <span className="w-1 h-1 rounded-full bg-teal-400 animate-pulse" />
+            <span>{chip}</span>
           </button>
         ))}
       </div>
@@ -336,7 +554,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
         <input
           type="text"
           disabled={isLoading}
-          placeholder="Ask U.D.O. anything about the project or medical guidelines..."
+          placeholder={language === "de" ? "Kollegiale Anfrage an die U.D.O. Facharztjury..." : "Submit collegial inquiry to the U.D.O. expert board..."}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           className="flex-1 bg-black/25 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 leading-normal"

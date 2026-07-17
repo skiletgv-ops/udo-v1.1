@@ -48,7 +48,7 @@ export function useWakeWordListener({
       localStorage.setItem("udo_mic_permission", "granted");
       return true;
     } catch (err) {
-      console.warn("Microphone permission denied:", err);
+      console.log("[UDO Voice] Microphone permission not active or blocked:", err);
       setPermissionState("denied");
       localStorage.setItem("udo_mic_permission", "denied");
       if (onError) {
@@ -139,7 +139,7 @@ export function useWakeWordListener({
   // Start Voice Listener
   const startListening = useCallback(() => {
     if (permissionState !== "granted") {
-      console.warn("[UDO Voice] Cannot start listener without permission granted.");
+      console.log("[UDO Voice] Listening is idle until permission is explicitly granted.");
       return;
     }
 
@@ -175,13 +175,18 @@ export function useWakeWordListener({
     rec.onresult = handleResult;
 
     rec.onerror = (event: any) => {
-      console.warn("[UDO Voice] Speech recognition error:", event.error);
+      console.log("[UDO Voice] Speech recognition event status:", event.error);
       if (event.error === "not-allowed") {
         setPermissionState("prompt");
         localStorage.removeItem("udo_mic_permission");
       }
       if (onError) {
         onError(event.error);
+      }
+      
+      // Explicit restart for silence or transient errors if enabled
+      if (isEnabledRef.current && event.error !== "not-allowed") {
+        restartRecognition();
       }
     };
 
@@ -200,7 +205,7 @@ export function useWakeWordListener({
     try {
       rec.start();
     } catch (e) {
-      console.warn("[UDO Voice] Error starting recognition:", e);
+      console.log("[UDO Voice] Info starting recognition:", e);
     }
   }, [permissionState, lang, handleResult, restartRecognition, onError]);
 
@@ -233,12 +238,30 @@ export function useWakeWordListener({
     };
   }, []);
 
+  // Force direct command listening (Push-to-Talk / Click-to-Talk)
+  const forceActiveListening = useCallback(() => {
+    if (permissionState !== "granted") {
+      requestPermission().then((allowed) => {
+        if (allowed) {
+          listeningStateRef.current = "active_listening";
+          setListeningState("active_listening");
+          startListening();
+        }
+      });
+    } else {
+      listeningStateRef.current = "active_listening";
+      setListeningState("active_listening");
+      startListening();
+    }
+  }, [permissionState, startListening, requestPermission]);
+
   return {
     permissionState,
     listeningState,
     requestPermission,
     startListening,
     stopListening,
+    forceActiveListening,
     isSupported: typeof window !== "undefined" && (!!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition)
   };
 }

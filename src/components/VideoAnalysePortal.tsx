@@ -43,12 +43,6 @@ const PRESET_VIDEOS = [
     desc: "Aether-Grid Tunnel zur Kalibrierung des neuronalen Diagnose-Prozessors.",
     category: "System Calibration"
   },
-  {
-    name: "Aether Flow Hologram Core",
-    url: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31907-large.mp4",
-    desc: "Echtzeit-Hologramm der konsensbasierten KI-Datenströme von U.D.O.",
-    category: "Hologram Core"
-  },
 ];
 
 export default function VideoAnalysePortal({ onRobotStateChange, activePatient, setActivePatient }: VideoAnalysePortalProps) {

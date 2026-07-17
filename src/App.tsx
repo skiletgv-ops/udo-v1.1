@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ParticleSphereBackground from "./components/ParticleSphereBackground";
-import RobotMascot from "./components/RobotMascot";
 import PhaseWorkflow from "./components/PhaseWorkflow";
 import CologneChatbot from "./components/CologneChatbot";
+import GutachtenPanel from "./components/GutachtenPanel";
 import PracticeUpgrades from "./components/PracticeUpgrades";
 import ExecutiveDashboard from "./components/ExecutiveDashboard";
 import VideoAnalysePortal from "./components/VideoAnalysePortal";
@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { FUNCTIONS_CARDS } from "./data/functionsData";
 import FunctionDetailPage from "./components/functions/FunctionPages";
 import { SplineSceneBasic } from "./components/ui/demo";
+import SystemWhitepaper from "./components/SystemWhitepaper";
+import AccessibilityWidget from "./components/AccessibilityWidget";
 
 // @ts-ignore
 import udoIcon from "./assets/images/udo_futuristic_icon_1783906054468.jpg";
@@ -34,7 +36,8 @@ import {
   Mic,
   Upload,
   Loader2,
-  Check
+  Check,
+  BookOpen
 } from "lucide-react";
 
 
@@ -56,13 +59,134 @@ export default function App() {
     setIsMasterMenuOpen,
     handleRobotClick,
     handleRobotStateChange,
-    handleQuickModuleJump
+    handleQuickModuleJump,
+    language,
+    setLanguage,
+    globalForceActiveListening,
+    fontScale,
+    colorblindMode
   } = useGlobalSystem();
+
+  // Sync font size scaling proportionally with the entire HTML document
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontScale * 16}px`;
+    return () => {
+      document.documentElement.style.fontSize = "16px";
+    };
+  }, [fontScale]);
+
+  // Translate colorblindness modes to the standard SVG matrix filter ids
+  const getColorblindFilterStyle = () => {
+    if (colorblindMode === "deuteranopia") return "url(#deuteranopia-filter)";
+    if (colorblindMode === "protanopia") return "url(#protanopia-filter)";
+    if (colorblindMode === "tritanopia") return "url(#tritanopia-filter)";
+    if (colorblindMode === "monochrome") return "url(#monochrome-filter)";
+    return undefined;
+  };
 
   const [activeFunctionId, setActiveFunctionId] = useState<string | null>(null);
   const [zoomingCardId, setZoomingCardId] = useState<string | null>(null);
   const [zoomCoordinates, setZoomCoordinates] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [introActive, setIntroActive] = useState(true);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isLiveTalkOpen, setIsLiveTalkOpen] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+  const [audioArmed, setAudioArmed] = useState(false);
+
+  // Set up audio arming on any click or interaction
+  useEffect(() => {
+    const armAudioHandler = () => {
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) {
+          const ctx = new AudioContextClass();
+          if (ctx.state === "suspended") {
+            ctx.resume();
+          }
+          const buffer = ctx.createBuffer(1, 1, 22050);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(0);
+          setAudioArmed(true);
+          console.log("[UDO Audio] Armed audio context via user interaction.");
+        }
+      } catch (err) {
+        console.warn("[UDO Audio] Failed to arm:", err);
+      }
+    };
+
+    window.addEventListener("click", armAudioHandler, { once: true });
+    window.addEventListener("keydown", armAudioHandler, { once: true });
+
+    return () => {
+      window.removeEventListener("click", armAudioHandler);
+      window.removeEventListener("keydown", armAudioHandler);
+    };
+  }, []);
+
+  const playInnovationChime = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      
+      const osc1 = ctx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(329.63, ctx.currentTime); // E4
+      osc1.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.55); // E5
+      
+      const osc2 = ctx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(493.88, ctx.currentTime); // B4
+      osc2.frequency.exponentialRampToValueAtTime(987.77, ctx.currentTime + 0.55); // B5
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1500, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.4);
+
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.12);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+      
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 0.6);
+      osc2.stop(ctx.currentTime + 0.6);
+    } catch (err) {
+      console.warn("Chime playback failed:", err);
+    }
+  };
+
+  const handleIntroComplete = () => {
+    setIntroActive(false);
+    if (audioArmed) {
+      playInnovationChime();
+    } else {
+      const playOnFirstInteraction = () => {
+        playInnovationChime();
+        window.removeEventListener("click", playOnFirstInteraction);
+      };
+      window.addEventListener("click", playOnFirstInteraction);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
 
   // High-fidelity Interactive Patient File Upload state
   const [uploadState, setUploadState] = useState<"idle" | "reading" | "decrypting" | "analyzing" | "completed">("idle");
@@ -142,6 +266,7 @@ export default function App() {
             setActiveView("workflow");
             setUploadState("idle");
             setSelectedFileName(null);
+            setIsUploadOpen(false);
           }, 1000);
         }, 1200);
       }, 1000);
@@ -191,12 +316,23 @@ export default function App() {
   };
 
   if (introActive) {
-    return <IntroPresentation onComplete={() => setIntroActive(false)} />;
+    return <IntroPresentation onComplete={handleIntroComplete} />;
   }
 
   return (
 
-    <div className="relative min-h-screen bg-transparent text-slate-100 overflow-hidden font-sans flex flex-col">
+    <div 
+      className="relative min-h-screen bg-transparent text-slate-100 overflow-hidden font-sans flex flex-col"
+      style={{ filter: getColorblindFilterStyle() }}
+    >
+      
+      {/* DYNAMIC MOUSE GLOW TRAILING AURA */}
+      <div 
+        className="pointer-events-none fixed inset-0 z-10 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, rgba(20, 184, 166, 0.08), transparent 80%)`
+        }}
+      />
       
       {/* 3D PARTICLE STARFIELD & INTERACTIVE CARDS GALAXY */}
       <ParticleSphereBackground 
@@ -208,219 +344,398 @@ export default function App() {
       {/* TOP HEADER IS HIDDEN TO MAXIMIZE VISUAL SPACE */}
 
       {/* =========================================================================
-         MASTER BUTTON & ACTION CONTROL PANEL (MINIMIZE, MAXIMIZE & ALL ACTIONS IN ONE)
+         4 CORNERS CONTROL DOCK & FLOATING NAVIGATION SYSTEM
          ========================================================================= */}
-      <div className="fixed top-6 right-6 z-50 flex items-center gap-2">
-        
-        {/* Toggle Panel Size Button (Dynamic Minimize/Maximize for active module) */}
-        {activeView && (
-          <button
-            onClick={() => setIsMaximized(!isMaximized)}
-            className="p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-950 text-slate-100 hover:text-teal-400 border border-slate-800 hover:border-teal-500/50 shadow-xl backdrop-blur-md transition-all cursor-pointer flex items-center gap-2 text-xs font-semibold"
-            title={isMaximized ? "Split-Ansicht wiederherstellen" : "Bereich maximieren"}
-          >
-            {isMaximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-            <span className="font-mono uppercase font-bold text-[10px] hidden sm:inline">
-              {isMaximized ? "Split-Ansicht" : "Maximieren (Full)"}
-            </span>
-          </button>
-        )}
+      {!activeView && !activeFunctionId && (
+        <>
+          {/* LEFT RAIL: PRACTICE MANAGEMENT, SYSTEMS & ACTIONS (Spaced Vertically across full screen) */}
+          <div className="fixed left-6 top-6 bottom-6 z-40 flex flex-col justify-between items-start pointer-events-none">
+            {/* Practice Upgrades */}
+            <button
+              onClick={() => setActiveView("upgrades")}
+              className="h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pl-[15px] pointer-events-auto"
+              title={language === "en" ? "Practice Upgrades" : "Praxis-Upgrades"}
+            >
+              <Sparkles size={16} className="text-teal-400 shrink-0" />
+              <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "Practice Upgrades" : "Praxis-Upgrades"}
+              </span>
+            </button>
 
-        {/* Master Action Core Menu Button containing ALL actions & functions */}
-        <div className="relative">
-          <button
-            onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
-            className={`p-3 rounded-2xl border transition-all duration-300 shadow-xl backdrop-blur-md flex items-center gap-2 text-xs cursor-pointer font-bold ${
-              isMasterMenuOpen 
-                ? "bg-teal-600 text-white border-teal-500" 
-                : "bg-white/80 hover:bg-white text-slate-800 border-slate-200 hover:border-teal-300"
-            }`}
-          >
-            <Cpu size={15} className={`${isMasterMenuOpen ? "animate-spin" : "animate-pulse text-teal-600"}`} />
-            <span className="font-mono uppercase text-[10px]">
-              System Actions
-            </span>
-          </button>
+            {/* KPI Analytics */}
+            <button
+              onClick={() => setActiveView("analytics")}
+              className="h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pl-[15px] pointer-events-auto"
+              title={language === "en" ? "KPI Analytics" : "Kennzahlen & ROI"}
+            >
+              <LineChart size={16} className="text-teal-400 shrink-0" />
+              <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "KPI Analytics" : "Kennzahlen & ROI"}
+              </span>
+            </button>
 
-          {/* Master Action Translucent Dropdown Menu */}
-          {isMasterMenuOpen && (
-            <div className="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-5 shadow-[0_15px_50px_rgba(0,0,0,0.08)] z-50 animate-fade-in text-slate-800">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 mb-3">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600 font-extrabold flex items-center gap-1.5">
-                  <Grid size={12} />
-                  System Control Hub
+            {/* System Actions Hub */}
+            <div className="relative pointer-events-auto">
+              <button
+                onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
+                className={`h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl border transition-all duration-300 shadow-2xl backdrop-blur-xl cursor-pointer overflow-hidden pl-[15px] ${
+                  isMasterMenuOpen 
+                    ? "bg-teal-500 text-slate-950 border-teal-400 shadow-[0_0_25px_rgba(20,184,166,0.25)]" 
+                    : "bg-slate-900/80 hover:bg-slate-950 text-white border-white/10 hover:border-teal-500/40"
+                }`}
+                title={language === "en" ? "System Actions Hub" : "System-Aktionen"}
+              >
+                <Cpu size={16} className={`${isMasterMenuOpen ? "animate-spin text-slate-950" : "animate-pulse text-teal-400"} shrink-0`} />
+                <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                  {language === "en" ? "System Actions" : "System-Aktionen"}
                 </span>
-                <button 
-                  onClick={() => setIsMasterMenuOpen(false)}
-                  className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
-                >
-                  <X size={12} />
-                </button>
-              </div>
+              </button>
 
-              {/* Module Switching shortcuts */}
-              <div className="space-y-1.5 mb-3">
-                <p className="text-[9px] font-mono text-slate-400 uppercase tracking-wider mb-1">Clinical Services</p>
-                
-                <button
-                  onClick={() => handleQuickModuleJump("video")}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center gap-3 transition-all ${
-                    activeView === "video" 
-                      ? "bg-teal-50 border border-teal-200 text-teal-800 font-bold" 
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <Video size={13} className="text-teal-600 font-bold" />
-                  <div className="flex-1">
-                    <p className="leading-none text-[11px] font-bold">3D Video Analysis</p>
-                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 font-semibold">BIOMECHANICAL MOTION ANALYSIS</p>
+              {isMasterMenuOpen && (
+                <div className="absolute bottom-16 left-0 w-80 bg-slate-950/95 backdrop-blur-2xl border border-white/15 rounded-[28px] p-5 shadow-[0_25px_70px_rgba(0,0,0,0.9)] z-50 animate-fade-in text-white space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                    <span className="text-[11px] font-mono uppercase tracking-widest text-teal-400 font-extrabold flex items-center gap-2">
+                      <Grid size={14} />
+                      System Controls
+                    </span>
+                    <button 
+                      onClick={() => setIsMasterMenuOpen(false)}
+                      className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
-                </button>
 
-                <button
-                  onClick={() => handleQuickModuleJump("workflow")}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center gap-3 transition-all ${
-                    activeView === "workflow" 
-                      ? "bg-teal-50 border border-teal-200 text-teal-800 font-bold" 
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <Activity size={13} className="text-teal-600 font-bold" />
-                  <div className="flex-1">
-                    <p className="leading-none text-[11px] font-bold">6-Phase Workflow</p>
-                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 font-semibold">EVIDENCE-BASED PATHWAYS</p>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setRobotState("HAPPY");
+                        setRobotBubble('"Here is the consensus vote: all 12 leading medical experts agree that the left L4/L5 herniation is causally linked to the patient\'s occupational incident."');
+                        setIsMasterMenuOpen(false);
+                      }}
+                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
+                    >
+                      <span>🧪 Consensus Vote</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRobotState("THINKING");
+                        setRobotBubble('"Initiating S2k-Guideline Verification for segment L4/L5. All checks are fully aligned."');
+                        setTimeout(() => setRobotState("WAVING"), 1800);
+                        setIsMasterMenuOpen(false);
+                      }}
+                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
+                    >
+                      <span>📜 Guideline Check</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRobotState("HAPPY");
+                        setRobotBubble('"Qualified Electronic Signature (QES) has been successfully generated and securely transmitted to the insurer."');
+                        setIsMasterMenuOpen(false);
+                      }}
+                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
+                    >
+                      <span>🔑 Sign with QES</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleRobotClick();
+                        setIsMasterMenuOpen(false);
+                      }}
+                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
+                    >
+                      <span>💬 Assistant Dialogue</span>
+                    </button>
                   </div>
-                </button>
-
-                <button
-                  onClick={() => handleQuickModuleJump("chat")}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center gap-3 transition-all ${
-                    activeView === "chat" 
-                      ? "bg-teal-50 border border-teal-200 text-teal-800 font-bold" 
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <MessageSquare size={13} className="text-teal-600 font-bold" />
-                  <div className="flex-1">
-                    <p className="leading-none text-[11px] font-bold">Gemini Live Chat</p>
-                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 font-semibold">EXPERT CLINICAL DIALOGUE (NOVA)</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => handleQuickModuleJump("upgrades")}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center gap-3 transition-all ${
-                    activeView === "upgrades" 
-                      ? "bg-teal-50 border border-teal-200 text-teal-800 font-bold" 
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <Sparkles size={13} className="text-teal-600 font-bold" />
-                  <div className="flex-1">
-                    <p className="leading-none text-[11px] font-bold">Practice Upgrades</p>
-                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 font-semibold">PRESCRIPTIONS, APPOINTMENTS & BOARD</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => handleQuickModuleJump("analytics")}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center gap-3 transition-all ${
-                    activeView === "analytics" 
-                      ? "bg-teal-50 border border-teal-200 text-teal-800 font-bold" 
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <LineChart size={13} className="text-teal-600 font-bold" />
-                  <div className="flex-1">
-                    <p className="leading-none text-[11px] font-bold">Analytics & KPIs</p>
-                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 font-semibold">ROBUST ROI DASHBOARD</p>
-                  </div>
-                </button>
-              </div>
-
-              {/* U.D.O. AI Medical Consensus ACTIONS */}
-              <div className="pt-3 border-t border-slate-100 space-y-1.5 mb-3">
-                <p className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">U.D.O. AI Medical Consensus</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => {
-                      setRobotState("HAPPY");
-                      setRobotBubble('"Here is the consensus vote: all 12 leading medical experts agree that the left L4/L5 herniation is causally linked to the patient\'s occupational incident."');
-                    }}
-                    className="p-2 text-left bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 rounded-xl text-[10px] text-slate-700 hover:text-slate-900 transition-all cursor-pointer flex items-center gap-1 font-bold shadow-sm"
-                  >
-                    <span>🧪 Consensus Vote</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRobotState("THINKING");
-                      setRobotBubble('"Initiating S2k-Guideline Verification for segment L4/L5. All checks are fully aligned."');
-                      setTimeout(() => setRobotState("WAVING"), 1800);
-                    }}
-                    className="p-2 text-left bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 rounded-xl text-[10px] text-slate-700 hover:text-slate-900 transition-all cursor-pointer flex items-center gap-1 font-bold shadow-sm"
-                  >
-                    <span>📜 Guideline Check</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRobotState("HAPPY");
-                      setRobotBubble('"Qualified Electronic Signature (QES) has been successfully generated and securely transmitted to the insurer."');
-                    }}
-                    className="p-2 text-left bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 rounded-xl text-[10px] text-slate-700 hover:text-slate-900 transition-all cursor-pointer flex items-center gap-1 font-bold shadow-sm"
-                  >
-                    <span>🔑 Sign with QES</span>
-                  </button>
-                  <button
-                    onClick={handleRobotClick}
-                    className="p-2 text-left bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 rounded-xl text-[10px] text-slate-700 hover:text-slate-900 transition-all cursor-pointer flex items-center gap-1 font-bold shadow-sm"
-                  >
-                    <span>🍻 Supportive Dialog</span>
-                  </button>
                 </div>
-              </div>
-
-              {/* Layout controls inside the master button */}
-              <div className="pt-2.5 border-t border-slate-100 space-y-2">
-                <p className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Layout Control</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsMaximized(!isMaximized);
-                      setIsMasterMenuOpen(false);
-                    }}
-                    disabled={!activeView}
-                    className="flex-1 py-1.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 hover:bg-slate-100 text-[10px] font-mono font-bold flex items-center justify-center gap-1.5 text-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-                  >
-                    {isMaximized ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
-                    <span>{isMaximized ? "SPLIT-SCREEN" : "MAXIMIZE"}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleQuickModuleJump(null);
-                      setIsMaximized(false);
-                    }}
-                    disabled={!activeView}
-                    className="flex-1 py-1.5 rounded-xl bg-rose-50 border border-rose-100 hover:border-rose-200 hover:bg-rose-50 text-[10px] font-mono font-bold flex items-center justify-center gap-1.5 text-rose-700 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-                  >
-                    <X size={11} />
-                    <span>CLOSE</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Technical indicators inside master actions menu */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-400">
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  GDPR SECURE
-                </span>
-                <span>v2.0 | AWMF-S2k</span>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+
+          {/* RIGHT RAIL: DIAGNOSTICS, TRANSLATION & LIVE DIALOGUE (Spaced Vertically across full screen) */}
+          <div className="fixed right-6 top-6 bottom-6 z-40 flex flex-col justify-between items-end pointer-events-none">
+            {/* Elegant Language Switcher Button */}
+            <button
+              onClick={() => setLanguage(language === "en" ? "de" : "en")}
+              className="h-12 w-12 hover:w-36 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[14px] pointer-events-auto"
+              title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
+            >
+              <span className="text-teal-400 font-mono font-black text-xs shrink-0 w-5 text-center">
+                {language === "en" ? "EN" : "DE"}
+              </span>
+              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "Deutsch 🇩🇪" : "English 🇺🇸"}
+              </span>
+            </button>
+
+            {/* 6-Phase Workflow */}
+            <button
+              onClick={() => setActiveView("workflow")}
+              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
+              title={language === "en" ? "6-Phase Workflow" : "6-Phasen-Workflow"}
+            >
+              <Activity size={16} className="text-teal-400 shrink-0" />
+              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "6-Phase Workflow" : "6-Phasen-Workflow"}
+              </span>
+            </button>
+
+            {/* Next AIs */}
+            <button
+              onClick={() => setActiveView("chat")}
+              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
+              title={language === "en" ? "Next AIs Consultation" : "Nächste KIs Konsilium"}
+            >
+              <Sparkles size={16} className="text-teal-400 shrink-0 animate-pulse" />
+              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "Next AIs Board" : "Nächste KIs"}
+              </span>
+            </button>
+
+            {/* Upload Patient Data */}
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
+              title={language === "en" ? "Upload Patient Data" : "Patientendaten hochladen"}
+            >
+              <Upload size={16} className="text-teal-400 shrink-0 animate-bounce" />
+              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "Upload Data" : "Daten hochladen"}
+              </span>
+            </button>
+
+            {/* Start Live Talk to UDO */}
+            <button
+              onClick={() => {
+                setActiveView("chat");
+                setTimeout(() => {
+                  if (globalForceActiveListening) {
+                    globalForceActiveListening();
+                  }
+                }, 400);
+              }}
+              className="h-12 w-12 hover:w-60 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto animate-pulse"
+              title={language === "en" ? "Start Live Talk to UDO" : "Live-Gespräch mit UDO"}
+            >
+              <Mic size={16} className="text-teal-400 shrink-0" />
+              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                {language === "en" ? "Live Talk to UDO" : "U.D.O. Live Talk"}
+              </span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* =========================================================================
+         APPLE-STYLE TRANSLUCENT POP-UP WINDOWS
+         ========================================================================= */}
+      <AnimatePresence>
+        {isUploadOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm pointer-events-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 30 }}
+              transition={{ type: "spring", damping: 26, stiffness: 170 }}
+              className="w-full max-w-2xl bg-slate-950/95 border border-white/15 rounded-[32px] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.95)] relative"
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+            >
+              {/* Minimize/Close Button */}
+              <button
+                onClick={() => setIsUploadOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
+                title="Minimize window"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
+                  <Upload size={28} className={uploadState !== "idle" ? "animate-bounce" : ""} />
+                </div>
+                <div>
+                  <span className="text-[11px] font-mono font-extrabold text-teal-400 uppercase tracking-widest block">
+                    INGESTION & CAUSALITY ENGINE
+                  </span>
+                  <h3 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-wide mt-1">
+                    Upload Patient Data
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-base text-slate-300 leading-relaxed mb-6">
+                Drag and drop clinical letters, radiological MRI findings, or expert reports here. Our clinical guideline alignment engine will extract relevant variables instantly.
+              </p>
+
+              {/* Drag Zone */}
+              <div className="mb-6">
+                {uploadState === "idle" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="border-2 border-dashed border-white/10 hover:border-teal-500/40 bg-white/5 hover:bg-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all gap-2 text-center group min-h-[140px]">
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+                        onChange={handleFileChange}
+                      />
+                      <Upload size={24} className="text-slate-400 group-hover:text-teal-400 transition-colors" />
+                      <span className="text-sm text-slate-200 font-bold group-hover:text-white transition-colors">
+                        Drop report here
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+                        PDF, Word, TXT, Images
+                      </span>
+                    </label>
+                    
+                    <button
+                      onClick={() => {
+                        triggerUploadSequence("thomas_muller_accident_report.pdf");
+                      }}
+                      className="p-6 rounded-2xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black tracking-wider text-sm transition-all duration-300 uppercase cursor-pointer flex flex-col items-center justify-center gap-3 shadow-lg shadow-teal-500/10 min-h-[140px]"
+                    >
+                      <Activity size={24} />
+                      <span>Ingest Sample Case</span>
+                      <span className="text-[10px] font-mono opacity-80 font-bold">Thomas Müller (Accident Report)</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-[#030712]/95 border border-white/10 rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                      <Loader2 className="text-teal-400 animate-spin" size={20} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-white uppercase tracking-wider truncate">Processing Patient Dossier...</p>
+                        <p className="text-xs font-mono text-slate-400 truncate mt-0.5">{selectedFileName}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-xs font-mono">
+                      <div className="flex items-center justify-between py-1 border-b border-white/5">
+                        <span className={uploadState === "reading" ? "text-teal-400 animate-pulse font-bold" : "text-slate-400"}>
+                          1. HIPAA/GDPR Compliance Verification
+                        </span>
+                        {uploadState !== "reading" ? <Check size={14} className="text-teal-400" /> : <Loader2 size={12} className="text-teal-400 animate-spin" />}
+                      </div>
+
+                      <div className="flex items-center justify-between py-1">
+                        <span className={uploadState === "decrypting" ? "text-teal-400 animate-pulse font-bold" : uploadState === "reading" ? "text-slate-600" : "text-slate-400"}>
+                          2. Clinical Findings & ICD-10 Variable Extraction
+                        </span>
+                        {uploadState === "analyzing" || uploadState === "completed" ? (
+                          <Check size={14} className="text-teal-400" />
+                        ) : uploadState === "decrypting" ? (
+                          <Loader2 size={12} className="text-teal-400 animate-spin" />
+                        ) : (
+                          <span className="text-slate-600 font-bold">WAITING</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end border-t border-white/10 pt-4">
+                <button
+                  onClick={() => setIsUploadOpen(false)}
+                  className="px-6 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold tracking-wider text-xs transition-all uppercase cursor-pointer border border-white/10"
+                >
+                  Minimize Portal
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isLiveTalkOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm pointer-events-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 30 }}
+              transition={{ type: "spring", damping: 26, stiffness: 170 }}
+              className="w-full max-w-2xl bg-slate-950/95 border border-white/15 rounded-[32px] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.95)] relative"
+            >
+              {/* Minimize/Close Button */}
+              <button
+                onClick={() => setIsLiveTalkOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
+                title="Minimize window"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
+                  <Mic size={28} className="animate-pulse" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-mono font-extrabold text-teal-400 uppercase tracking-widest block">
+                    EXPERT LIVE DIALOGUE
+                  </span>
+                  <h3 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-wide mt-1">
+                    Start Live Talk to U.D.O.
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-base text-slate-300 leading-relaxed mb-6">
+                Initiate real-time, interactive voice and chat dialogues with U.D.O. using the responsive Nova Voice. Ask legal, forensic, clinical-guideline, or case correlation questions.
+              </p>
+
+              {/* Glowing wave indicator */}
+              <div className="border border-white/10 bg-black/50 rounded-2xl p-6 flex flex-col items-center justify-center h-[140px] gap-4 mb-6">
+                <div className="flex items-center gap-1.5 h-12 justify-center">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((bar) => (
+                    <div
+                      key={bar}
+                      className="w-1 bg-teal-400 rounded-full"
+                      style={{
+                        height: `${Math.sin(bar * 0.5) * 60 + 80}%`,
+                        animation: `bounce 1.${bar % 3}s ease-in-out infinite alternate`,
+                        animationDelay: `${bar * 0.05}s`
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-mono tracking-widest text-teal-400 uppercase font-bold animate-pulse">
+                  Nova Voice Channel Ready
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-t border-white/10 pt-4">
+                <span className="text-xs text-slate-500 font-mono uppercase tracking-wider">
+                  S2k Guidelines Active
+                </span>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsLiveTalkOpen(false)}
+                    className="px-6 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold tracking-wider text-xs transition-all uppercase cursor-pointer border border-white/10"
+                  >
+                    Minimize
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsLiveTalkOpen(false);
+                      setActiveView("chat");
+                    }}
+                    className="px-6 py-2.5 rounded-2xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black tracking-wider text-xs transition-all duration-300 uppercase cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
+                  >
+                    <Mic size={14} />
+                    <span>Start Voice Chat</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MAIN CONTAINER: Hub Dashboard vs. Selected Active Portal Overlay */}
       <main className="flex-1 w-full relative z-20 flex flex-col pt-16 pointer-events-none">
@@ -434,270 +749,81 @@ export default function App() {
         ) : !activeView ? (
           /* =========================================================================
              1. CENTRAL HUB DASHBOARD (Unobstructed view of rotating card galaxy)
-             - Maximized to full width / sides (max-w-7xl / lg:max-w-full px-12)
+             - Maximized negative space for elegant Apple aesthetics
              ========================================================================= */
-          <div className="flex-1 flex flex-col items-center justify-start p-6 max-w-7xl lg:max-w-full lg:px-12 mx-auto w-full animate-fade-in relative pointer-events-none space-y-8">
-            {/* Interactive 3D Sphere landing hero page - hidden on home to keep space clean if fullscreen requested */}
-            <div className="w-full pointer-events-auto opacity-0 h-0 select-none pointer-events-none overflow-hidden">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 w-full relative pointer-events-none">
+            {/* Interactive 3D Sphere landing hero page hidden/loaded silently */}
+            <div className="w-full opacity-0 h-0 select-none pointer-events-none overflow-hidden">
               <SplineSceneBasic />
-            </div>
-
-            {/* Direct Core Controls Panel - High Fidelity Tactile Buttons */}
-            <div className="w-full z-10 mt-4 mb-8 px-4 pointer-events-auto">
-              <div className="text-left mb-8 max-w-2xl">
-                <p className="text-[10px] font-mono tracking-widest text-teal-400 font-extrabold uppercase">
-                  OPERATIVE AI STEERING HUB
-                </p>
-                <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tight uppercase mt-1">
-                  U.D.O. Medical Expert Workstation
-                </h3>
-                <p className="text-xs text-slate-450 mt-2">
-                  Select a command option below to import patient files, initiate direct clinical verification, or launch the Live Gemini consultation with Nova Voice.
-                </p>
-              </div>
-
-              {/* Flex row / Grid of premium sleek horizontal button consoles */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                
-                {/* BUTTON-CONSOLE 1: UPLOAD PATIENT DATA */}
-                <div 
-                  className={`relative rounded-2xl p-6 border transition-all duration-300 bg-slate-950/90 backdrop-blur-xl flex flex-col justify-between ${
-                    dragActive 
-                      ? "border-teal-400 shadow-[0_0_25px_rgba(20,184,166,0.25)] scale-[1.01]" 
-                      : "border-white/10 hover:border-teal-500/40 hover:shadow-[0_15px_30px_rgba(20,184,166,0.05)]"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
-                        <Upload size={18} className={uploadState !== "idle" ? "animate-bounce" : ""} />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-mono font-bold text-teal-400 uppercase tracking-widest block">
-                          Service: Ingestion & Verification
-                        </span>
-                        <h4 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
-                          Upload Patient Data
-                        </h4>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400 leading-normal mb-4">
-                    Drag and drop clinical reports, MRI findings, or physician letters here, or select a file to activate the automated guidelines processing.
-                  </p>
-
-                  {/* Drag and Drop Zone or Progress bar */}
-                  <div className="mb-4">
-                    {uploadState === "idle" ? (
-                      <label className="border border-dashed border-white/10 hover:border-teal-500/30 bg-white/5 hover:bg-white/10 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-center group">
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
-                          onChange={handleFileChange}
-                        />
-                        <span className="text-xs text-slate-300 font-bold group-hover:text-white transition-colors">
-                          Drag file here or click to browse
-                        </span>
-                        <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider">
-                          Supports PDF, Word, TXT, Images
-                        </span>
-                      </label>
-                    ) : (
-                      <div className="bg-[#030712]/90 border border-white/5 rounded-xl p-4 space-y-3">
-                        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-                          <Loader2 className="text-teal-400 animate-spin" size={14} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold text-white uppercase tracking-wider truncate">Processing report...</p>
-                            <p className="text-[9px] font-mono text-slate-400 truncate">{selectedFileName}</p>
-                          </div>
-                        </div>
-
-                        {/* Ingestion steps */}
-                        <div className="space-y-1 text-[9px] font-mono">
-                          <div className="flex items-center justify-between">
-                            <span className={uploadState === "reading" ? "text-teal-400 animate-pulse font-bold" : "text-slate-400"}>
-                              1. HIPAA & GDPR Compliance Check
-                            </span>
-                            {uploadState !== "reading" ? <Check size={10} className="text-teal-400" /> : <Loader2 size={8} className="text-teal-400 animate-spin" />}
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className={uploadState === "decrypting" ? "text-teal-400 animate-pulse font-bold" : uploadState === "reading" ? "text-slate-600" : "text-slate-400"}>
-                              2. Clinical Findings Extraction (ICD-10)
-                            </span>
-                            {uploadState === "analyzing" || uploadState === "completed" ? (
-                              <Check size={10} className="text-teal-400" />
-                            ) : uploadState === "decrypting" ? (
-                              <Loader2 size={8} className="text-teal-400 animate-spin" />
-                            ) : (
-                              <span className="text-slate-600">WAITING</span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className={uploadState === "analyzing" ? "text-teal-400 animate-pulse font-bold" : (uploadState === "reading" || uploadState === "decrypting") ? "text-slate-600" : "text-slate-400"}>
-                              3. Guidelines & Insurer Rule Alignment
-                            </span>
-                            {uploadState === "completed" ? (
-                              <Check size={10} className="text-teal-400" />
-                            ) : uploadState === "analyzing" ? (
-                              <Loader2 size={8} className="text-teal-400 animate-spin" />
-                            ) : (
-                              <span className="text-slate-600">WAITING</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border-t border-white/5 pt-4">
-                    <button
-                      onClick={() => {
-                        triggerUploadSequence("thomas_muller_accident_report.pdf");
-                      }}
-                      className="px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black tracking-wider text-[11px] transition-all duration-300 w-full sm:w-auto uppercase cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <span>Ingest Sample Case (Thomas Muller)</span>
-                      <Activity size={12} />
-                    </button>
-                    <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider">
-                      S2k Clinical Guidelines Active
-                    </span>
-                  </div>
-                </div>
-
-                {/* BUTTON-CONSOLE 2: GEMINI LIVE CONSULTATION */}
-                <div className="relative rounded-2xl p-6 border border-white/10 hover:border-teal-500/40 hover:shadow-[0_15px_30px_rgba(20,184,166,0.05)] bg-slate-950/90 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
-                        <Mic size={18} className="animate-pulse" />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-mono font-bold text-teal-400 uppercase tracking-widest block">
-                          Service: Live Dialogue
-                        </span>
-                        <h4 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
-                          Gemini AI Live Talk
-                        </h4>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400 leading-normal mb-4">
-                    Initiate real-time, interactive dialogues with Gemini using the responsive Nova Voice. Ask legal, forensic, clinical-guideline, or case correlation questions.
-                  </p>
-
-                  {/* Audio Wave Indicator */}
-                  <div className="border border-white/5 bg-black/40 rounded-xl p-4 flex flex-col items-center justify-center h-[96px] gap-2">
-                    <div className="flex items-center gap-1 h-8 justify-center">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((bar) => (
-                        <div
-                          key={bar}
-                          className="w-1 bg-teal-500/40 rounded-full"
-                          style={{
-                            height: `${Math.sin(bar * 0.5) * 60 + 80}%`,
-                            animation: `bounce 1.${bar % 3}s ease-in-out infinite alternate`,
-                            animationDelay: `${bar * 0.05}s`
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[9px] font-mono tracking-wider text-teal-400 uppercase font-bold animate-pulse">
-                      Nova Voice Channel Ready
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border-t border-white/5 pt-4">
-                    <button
-                      onClick={() => setActiveView("chat")}
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-teal-400 border border-teal-500/30 hover:border-teal-400 font-extrabold tracking-wider text-[11px] transition-all duration-300 w-full sm:w-auto uppercase cursor-pointer flex items-center justify-center gap-1.5 shadow-inner"
-                    >
-                      <Mic size={12} />
-                      <span>Sprechstunde starten</span>
-                    </button>
-                    <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider">
-                      Hotword: say 'UDO' to speak
-                    </span>
-                  </div>
-                </div>
-
-              </div>
             </div>
           </div>
         ) : (
           /* =========================================================================
-             2. ACTIVE MODULE CONTAINER (Suspended overlay panel page for each function)
+             2. ACTIVE MODULE CONTAINER (100% Maximized Apple-Style Translucent Window)
              ========================================================================= */
-          <div className="flex-1 flex flex-col lg:flex-row items-stretch p-4 lg:p-6 gap-6 h-[calc(100vh-100px)] overflow-hidden pointer-events-none">
-            
-            {/* LEFT SIDEBAR: Robot Mascot floating alongside the active view */}
-            {!isMaximized && (
-              <div className="hidden lg:flex flex-col items-center justify-center lg:w-[28%] shrink-0 pointer-events-auto animate-fade-in bg-white/45 border border-slate-200/50 rounded-3xl p-6 backdrop-blur-md shadow-xl">
-                <RobotMascot 
-                  state={robotState} 
-                  messageBubble={robotBubble} 
-                  onBubbleClick={handleRobotClick}
-                />
-                <p className="text-[10px] text-slate-400 font-mono text-center mt-4 uppercase tracking-widest max-w-[180px]">
-                  Dr. Heinrich Altenberg (Köln KI-Spezialist)
-                </p>
-              </div>
-            )}
-
-            <div className={`flex-1 transition-all duration-500 relative flex flex-col min-w-0 h-full overflow-hidden animate-fade-in pointer-events-auto ${
-              isMaximized ? "max-w-full" : "lg:w-[70%]"
-            }`}>
-              
+          <div className="flex-1 flex flex-col p-4 lg:p-8 h-[calc(100vh-100px)] overflow-hidden pointer-events-none w-full max-w-7xl mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
+              animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
+              transition={{ type: "spring", stiffness: 100, damping: 16, mass: 1.15 }}
+              className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden pointer-events-auto"
+            >
               {/* Glassmorphic Active Portal Wrapper */}
-              <div className="flex-1 bg-white/85 border border-slate-200/80 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-4 lg:p-6 relative flex flex-col min-w-0 h-full overflow-hidden backdrop-blur-lg">
+              <div className="flex-1 bg-slate-900/90 border border-white/10 rounded-[28px] shadow-[0_30px_100px_rgba(0,0,0,0.85)] p-6 lg:p-8 relative flex flex-col min-w-0 h-full overflow-hidden backdrop-blur-2xl">
                 
                 {/* Module Header Bar */}
-                <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600">
-                      {activeView === "communicator" && <Mic size={16} />}
-                      {activeView === "video" && <Video size={16} />}
-                      {activeView === "workflow" && <Activity size={16} />}
-                      {activeView === "chat" && <MessageSquare size={16} />}
-                      {activeView === "upgrades" && <Sparkles size={16} />}
-                      {activeView === "analytics" && <LineChart size={16} />}
+                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4 shrink-0">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
+                      {activeView === "workflow" && <Activity size={20} />}
+                      {activeView === "chat" && <MessageSquare size={20} />}
+                      {activeView === "upgrades" && <Sparkles size={20} />}
+                      {activeView === "analytics" && <LineChart size={20} />}
+                      {activeView === "whitepaper" && <BookOpen size={20} />}
                     </div>
                     <div>
-                      <h3 className="text-md lg:text-lg font-extrabold text-slate-800 tracking-tight leading-none uppercase">
-                        {activeView === "video" && "3D Video Analysis"}
+                      <h3 className="text-lg lg:text-2xl font-black text-white tracking-tight leading-none uppercase">
                         {activeView === "workflow" && "6-Phase Workflow"}
-                        {activeView === "chat" && "Gemini Live Consultation"}
+                        {activeView === "chat" && "U.D.O. Clinical Intelligence"}
                         {activeView === "upgrades" && "Practice Upgrades"}
                         {activeView === "analytics" && "Analytics & ROI Board"}
+                        {activeView === "whitepaper" && "Technical & Clinical Whitepaper"}
                       </h3>
-                      <p className="text-[10px] font-mono text-slate-500 mt-1 font-semibold">
-                        {activeView === "video" && "BIOMECHANICAL MOTION SCREENING"}
+                      <p className="text-xs font-mono text-slate-400 mt-1 font-semibold uppercase tracking-wider">
                         {activeView === "workflow" && "EVIDENCE-BASED GUIDELINE VERIFICATION"}
-                        {activeView === "chat" && "EXPERT VOICE DIALOGUE ENGINE (NOVA)"}
+                        {activeView === "chat" && "EXPERT VOICE & CONSENSUS ENGINE (NOVA)"}
                         {activeView === "upgrades" && "PRESCRIPTIONS, APPOINTMENTS & BOARD"}
                         {activeView === "analytics" && "ROBUST CLINICAL ROI DASHBOARD"}
+                        {activeView === "whitepaper" && "S2K FORENSIC CRITERIA & AGENT SCHEMAS"}
                       </p>
                     </div>
                   </div>
 
                   {/* Clean Action Buttons */}
                   <div className="flex items-center gap-2">
+                    {/* Language Switcher in Portal */}
+                    <button
+                      onClick={() => setLanguage(language === "en" ? "de" : "en")}
+                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-teal-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
+                      title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
+                    >
+                      <span className="text-teal-400 font-mono text-[10px] font-black uppercase tracking-wider">
+                        {language === "en" ? "EN" : "DE"}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider hidden md:inline">
+                        {language === "en" ? "🇩🇪 DE" : "🇺🇸 EN"}
+                      </span>
+                    </button>
+
                     <button
                       onClick={() => setIsMaximized(!isMaximized)}
-                      className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-850 border border-slate-200 transition-all cursor-pointer flex items-center gap-1 font-bold shadow-sm"
-                      title={isMaximized ? "Restore Split Screen" : "Maximize view"}
+                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-teal-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
+                      title={isMaximized ? "Split screen view" : "Maximize view"}
                     >
-                      {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                      <span className="text-[9px] font-mono uppercase tracking-wider hidden md:inline">
-                        {isMaximized ? "Split" : "Maximize"}
+                      {isMaximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                      <span className="text-[10px] font-mono uppercase tracking-wider hidden sm:inline">
+                        {isMaximized ? "Restore Split" : "Maximize (Full)"}
                       </span>
                     </button>
 
@@ -706,25 +832,17 @@ export default function App() {
                         setActiveView(null);
                         setIsMaximized(false);
                       }}
-                      className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-rose-600 border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5 font-bold shadow-sm"
+                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-rose-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
                       title="Close view and return to main orbit"
                     >
-                      <X size={13} />
-                      <span className="text-[9px] font-mono uppercase tracking-wider hidden sm:inline">Close</span>
+                      <X size={15} />
+                      <span className="text-[10px] font-mono uppercase tracking-wider hidden sm:inline">Close Panel</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Active Component Wrapper with custom scroll */}
                 <div className="flex-1 overflow-y-auto pr-1">
-                  {activeView === "video" && (
-                    <VideoAnalysePortal 
-                      onRobotStateChange={handleRobotStateChange}
-                      activePatient={activePatient}
-                      setActivePatient={(p) => setActivePatient(p)}
-                    />
-                  )}
-
                   {activeView === "workflow" && (
                     <PhaseWorkflow 
                       onRobotStateChange={handleRobotStateChange}
@@ -734,10 +852,15 @@ export default function App() {
                   )}
 
                   {activeView === "chat" && (
-                    <CologneChatbot 
-                      onRobotStateChange={handleRobotStateChange}
-                      onDrBubbleTrigger={(text) => setRobotBubble(text)}
-                    />
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                      <CologneChatbot 
+                        onRobotStateChange={handleRobotStateChange}
+                        onDrBubbleTrigger={(text) => setRobotBubble(text)}
+                      />
+                      <GutachtenPanel 
+                        onRobotStateChange={handleRobotStateChange}
+                      />
+                    </div>
                   )}
 
                   {activeView === "upgrades" && (
@@ -747,10 +870,14 @@ export default function App() {
                   {activeView === "analytics" && (
                     <ExecutiveDashboard />
                   )}
+
+                  {activeView === "whitepaper" && (
+                    <SystemWhitepaper />
+                  )}
                 </div>
 
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
       </main>
@@ -812,11 +939,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* FOOTER */}
-      <footer className="relative z-30 px-6 py-4 bg-black/60 border-t border-slate-900 text-center text-[10px] font-mono text-slate-450 mt-auto">
-        <p>© 2026 U.D.O. Platform | Ultimate Diagnostic Operator v2.0</p>
-        <p className="mt-0.5 text-slate-500 font-semibold">DSGVO-zertifiziert | Gehostet auf deutschen Cloud Run Servern</p>
-      </footer>
+      <AccessibilityWidget />
 
     </div>
   );

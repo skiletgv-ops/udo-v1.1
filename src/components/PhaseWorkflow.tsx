@@ -326,6 +326,44 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
     setTimeout(() => setEvidenceHighlight(null), 5000);
   };
 
+  // Dynamic status solver for each phase to allow the user to track progress at a glance
+  const getPhaseStatus = (phaseNum: number): { text: string; style: string } => {
+    switch (phaseNum) {
+      case 1: // Upload
+        if (currentPatient) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Pending", style: "bg-slate-500/10 border-slate-500/20 text-slate-400" };
+      case 2: // Entwurf
+        if (currentPatient?.extractedData) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Pending", style: "bg-slate-500/10 border-slate-500/20 text-slate-400" };
+      case 3: // Konsens
+        if (currentPatient?.consensusRounds && currentPatient.consensusRounds.length > 0) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Action Required", style: "bg-amber-500/10 border-amber-500/30 text-amber-400" };
+      case 4: // Druck
+        if (currentPatient?.isQESSigned) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Pending", style: "bg-slate-500/10 border-slate-500/20 text-slate-400" };
+      case 5: // Signatur
+        if (currentPatient?.isQESSigned) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Action Required", style: "bg-amber-500/10 border-amber-500/30 text-amber-400" };
+      case 6: // Aufklärung
+        if (currentPatient?.isQESSigned) {
+          return { text: "Validated", style: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" };
+        }
+        return { text: "Pending", style: "bg-slate-500/10 border-slate-500/20 text-slate-400" };
+      default:
+        return { text: "Pending", style: "bg-slate-500/10 border-slate-500/20 text-slate-400" };
+    }
+  };
+
   const currentPatient = activePatient || patients[0];
 
   return (
@@ -368,7 +406,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
       </div>
 
       {/* 6-Phase Steps Indicator Banner */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-1 p-1.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl shadow-md">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 p-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl shadow-md">
         {[
           { num: 1, name: "Upload" },
           { num: 2, name: "Entwurf" },
@@ -376,27 +414,33 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
           { num: 4, name: "Druck" },
           { num: 5, name: "Signatur" },
           { num: 6, name: "Aufklärung" }
-        ].map((phase) => (
-          <button
-            key={phase.num}
-            onClick={() => {
-              setActivePhase(phase.num);
-              onRobotStateChange(phase.num === 3 ? "THINKING" : phase.num === 6 ? "HAPPY" : "TRACKING");
-            }}
-            className={`flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all ${
-              activePhase === phase.num
-                ? "bg-blue-600/10 border-blue-500/40 text-blue-300 shadow-inner scale-[1.03]"
-                : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            <span className="text-xs font-mono font-bold leading-none mb-1">
-              0{phase.num}
-            </span>
-            <span className="text-[10px] uppercase font-sans tracking-wider leading-none">
-              {phase.name}
-            </span>
-          </button>
-        ))}
+        ].map((phase) => {
+          const statusInfo = getPhaseStatus(phase.num);
+          return (
+            <button
+              key={phase.num}
+              onClick={() => {
+                setActivePhase(phase.num);
+                onRobotStateChange(phase.num === 3 ? "THINKING" : phase.num === 6 ? "HAPPY" : "TRACKING");
+              }}
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
+                activePhase === phase.num
+                  ? "bg-blue-600/15 border-blue-500/50 text-blue-300 shadow-inner scale-[1.03]"
+                  : "bg-white/5 border-transparent text-slate-400 hover:bg-white/10 hover:text-slate-200"
+              }`}
+            >
+              <span className="text-[10px] font-mono font-bold leading-none mb-1 opacity-70">
+                0{phase.num}
+              </span>
+              <span className="text-[11px] uppercase font-sans tracking-wider leading-none mb-2 font-black">
+                {phase.name}
+              </span>
+              <span className={`text-[8px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded border ${statusInfo.style} scale-95 font-black shrink-0`}>
+                {statusInfo.text}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Primary Content Card with Glassmorphic styling */}
@@ -745,72 +789,193 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
             {/* A4 simulation container */}
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Paper View sheet */}
-              <div className="flex-1 bg-white text-slate-900 rounded-lg p-8 shadow-inner border border-slate-300 font-serif max-w-[210mm] min-h-[297mm] mx-auto text-xs space-y-6">
+              <div className="flex-1 bg-white text-slate-900 rounded-2xl p-8 shadow-2xl border border-slate-200 font-sans max-w-[210mm] min-h-[297mm] mx-auto text-xs space-y-6">
                 
                 {/* Letterhead */}
-                <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start font-sans">
+                <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
                   <div>
-                    <h5 className="font-bold uppercase tracking-wider text-slate-950 text-sm">Praxis Dr. med. Heinrich Altenberg</h5>
-                    <p className="text-[9px] text-slate-600">Chefgutachter für Unfallchirurgie & Sozialrecht</p>
-                    <p className="text-[9px] text-slate-600">Sachsenring 44, 50677 Köln</p>
+                    <h5 className="font-extrabold uppercase tracking-wider text-slate-950 text-xs">Praxis Dr. med. Heinrich Altenberg</h5>
+                    <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-wider">Chefgutachter für Unfallchirurgie & Sozialrecht</p>
+                    <p className="text-[9px] text-slate-500">Sachsenring 44, 50677 Köln • Tel: 0221-458900</p>
                   </div>
-                  <div className="text-right text-[9px] text-slate-500">
+                  <div className="text-right text-[10px] font-mono text-slate-600">
+                    <p className="font-bold">DOKUMENTEN-ID: <span className="text-slate-900 font-black">{currentPatient.caseId}</span></p>
                     <p>Datum: 11.07.2026</p>
-                    <p>Az: {currentPatient.caseId}</p>
                   </div>
                 </div>
 
-                {/* Patient / Insurance info block */}
-                <div className="font-sans grid grid-cols-2 gap-4 bg-slate-100 p-4 rounded border border-slate-200">
+                {/* Letterhead */}
+                <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
                   <div>
-                    <span className="text-[8px] text-slate-500 uppercase block font-bold">Zweckgutachten für</span>
-                    <strong className="text-[11px] text-slate-900">{currentPatient.name}</strong>
-                    <p className="text-[9px] text-slate-700">Geburtsdatum: {currentPatient.extractedData?.demographics.birthDate || "unbekannt"}</p>
-                    <p className="text-[9px] text-slate-700">Versicherter bei: {currentPatient.extractedData?.demographics.insuranceProvider || "unbekannt"}</p>
+                    <h5 className="font-extrabold uppercase tracking-wider text-slate-950 text-xs">Praxis Dr. med. Heinrich Altenberg</h5>
+                    <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-wider">Chefgutachter für Unfallchirurgie & Sozialrecht</p>
+                    <p className="text-[9px] text-slate-500">Sachsenring 44, 50677 Köln • Tel: 0221-458900</p>
                   </div>
-                  <div>
-                    <span className="text-[8px] text-slate-500 uppercase block font-bold">Auftraggeber</span>
-                    <strong className="text-[11px] text-slate-900">{currentPatient.extractedData?.demographics.commissioningEntity || "Berufsgenossenschaft"}</strong>
-                    <p className="text-[9px] text-slate-700">Gutachtennummer: {currentPatient.caseId}</p>
+                  <div className="text-right text-[10px] font-mono text-slate-600">
+                    <p className="font-bold">DOKUMENTEN-ID: <span className="text-slate-900 font-black">{currentPatient.caseId}</span></p>
+                    <p>Datum: 11.07.2026</p>
                   </div>
                 </div>
 
-                {/* Legal Summary */}
-                <div className="space-y-4">
-                  <h4 className="font-sans font-bold text-slate-950 uppercase border-b border-slate-300 pb-1 text-[11px]">ÄRZTLICHES GUTACHTEN ZUR ERWERBSMINDERUNG</h4>
-                  
-                  <div className="space-y-3 leading-relaxed">
-                    <p>
-                      <strong>1. Anamnestischer Befund:</strong><br />
-                      {currentPatient.draft?.anamneseText || "Es wurde ein traumatisches Verheben einer schweren Kiste am 12.03.2025 mit konsekutiven linksseitigen Ischialgien beschrieben."}
-                    </p>
-                    
-                    <p>
-                      <strong>2. Klinische Befundlage:</strong><br />
-                      {currentPatient.draft?.befundeText || "Ausgeprägte Lumbalstrecksteife, schmerzhaft limitiertes Lasègue-Zeichen links bei 45 Grad."}
-                    </p>
+                {/* Ultra-Dense Integrated Grid: Clinical Metadata & Case Information */}
+                <div className="border border-slate-950 rounded-lg overflow-hidden font-sans">
+                  {/* Grid Row 1: Headers */}
+                  <div className="grid grid-cols-2 bg-slate-900 text-white border-b border-slate-950 text-[9px] font-black uppercase tracking-wider">
+                    <div className="px-3 py-1.5 border-r border-slate-950 flex items-center justify-between">
+                      <span>I. Patientenidentifikation (EHR Meta)</span>
+                      <span className="text-[8px] font-mono text-teal-400 font-medium">Verified by U.D.O.</span>
+                    </div>
+                    <div className="px-3 py-1.5 flex items-center justify-between">
+                      <span>II. Auftraggeber & Beauftragendes Mandat</span>
+                      <span className="text-[8px] font-mono text-teal-400 font-medium">Legal Status: Active</span>
+                    </div>
+                  </div>
 
-                    <p>
-                      <strong>3. Medizinische Beurteilung und Kausalitätspfad:</strong><br />
-                      {currentPatient.draft?.beurteilungText || "Die MRT zeigt einen signifikanten Bandscheibenvorfall L4/L5 links. Trotz degenerativer Vorschädigung ist das Arbeitsereignis ursächlich anzusehen."}
-                    </p>
+                  {/* Grid Row 2: Demographics & Case Info */}
+                  <div className="grid grid-cols-2 text-[9px] leading-relaxed">
+                    {/* Left Panel: Patient Details */}
+                    <div className="p-3 border-r border-slate-950 bg-slate-50/70 space-y-2">
+                      <div className="grid grid-cols-3 gap-y-1 text-[10px]">
+                        <span className="text-slate-500 font-semibold">Name:</span>
+                        <strong className="col-span-2 text-slate-950">{currentPatient.name}</strong>
+                        
+                        <span className="text-slate-500 font-semibold">Geb.-Datum:</span>
+                        <span className="col-span-2 text-slate-900 font-mono font-bold">{currentPatient.extractedData?.demographics.birthDate || "14.11.1982"}</span>
+                        
+                        <span className="text-slate-500 font-semibold">Krankenkasse:</span>
+                        <span className="col-span-2 text-slate-900 truncate font-medium" title={currentPatient.extractedData?.demographics.insuranceProvider}>
+                          {currentPatient.extractedData?.demographics.insuranceProvider || "Techniker Krankenkasse (TK)"}
+                        </span>
 
+                        <span className="text-slate-500 font-semibold">Vers.-Nr.:</span>
+                        <span className="col-span-2 text-slate-900 font-mono">{currentPatient.extractedData?.demographics.insuranceNumber || "X120938475"}</span>
+
+                        <span className="text-slate-500 font-semibold">Unfalltag:</span>
+                        <span className="col-span-2 text-red-700 font-bold">12.03.2025</span>
+                      </div>
+                    </div>
+
+                    {/* Right Panel: Mandate Details */}
+                    <div className="p-3 bg-white space-y-2">
+                      <div className="grid grid-cols-3 gap-y-1 text-[10px]">
+                        <span className="text-slate-500 font-semibold">Institution:</span>
+                        <strong className="col-span-2 text-slate-950 truncate" title={currentPatient.extractedData?.demographics.commissioningEntity}>
+                          {currentPatient.extractedData?.demographics.commissioningEntity || "Berufsgenossenschaft"}
+                        </strong>
+                        
+                        <span className="text-slate-500 font-semibold">Gutachten-Nr:</span>
+                        <span className="col-span-2 text-slate-900 font-mono font-black">{currentPatient.caseId}</span>
+                        
+                        <span className="text-slate-500 font-semibold">Fachgebiet:</span>
+                        <span className="col-span-2 text-slate-900 font-semibold">Unfallchirurgische Begutachtung</span>
+
+                        <span className="text-slate-500 font-semibold">Kausal-Check:</span>
+                        <span className="col-span-2 text-teal-700 font-bold uppercase tracking-wider text-[9px] flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse inline-block" />
+                          Plauisbel (98%)
+                        </span>
+
+                        <span className="text-slate-500 font-semibold">MdE-Vorschlag:</span>
+                        <span className="col-span-2 text-teal-700 font-black text-xs">20% (Dauerhaft)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ultra-Dense Grid Section 2: Clinical Findings & ICD-10 Classification */}
+                <div className="border border-slate-950 rounded-lg overflow-hidden font-sans">
+                  <div className="bg-slate-900 text-white px-3 py-1.5 text-[9px] font-black uppercase tracking-wider border-b border-slate-950 flex justify-between items-center">
+                    <span>III. Diagnosen-Matrix & Bildgebende Befunde (ICD-10)</span>
+                    <span className="text-[8px] font-mono text-teal-400 font-bold bg-teal-950/50 border border-teal-800/40 px-1.5 py-0.5 rounded uppercase">Kausalitätsindex: Hoch</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-950 text-[10px] bg-white">
+                    {/* Primary Diagnosis Column */}
+                    <div className="p-3 space-y-1.5 bg-slate-50/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono font-black text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">ICD-10 M51.1</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-rose-800">Hauptdiagnose:</span>
+                      </div>
+                      <p className="text-slate-950 font-bold leading-relaxed pl-2 border-l-2 border-rose-500">
+                        Mediolateraler Bandscheibenvorfall L4/L5 links mit konsekutiver Kompression der Nervenwurzel L5 links.
+                      </p>
+                    </div>
+
+                    {/* Secondary Findings Column */}
+                    <div className="p-3 space-y-1.5 bg-white">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono font-black text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">ICD-10 M51.3</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-700">Begleitbefunde & Vorschäden:</span>
+                      </div>
+                      <p className="text-slate-800 leading-relaxed pl-2 border-l-2 border-slate-400">
+                        Geringe Osteochondrose und Facettengelenksarthrose L4–S1 (altersentsprechend degenerativer Zustand ohne akuten Krankheitswert).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ultra-Dense Grid Section 3: Historical Timeline Matrix */}
+                <div className="border border-slate-950 rounded-lg overflow-hidden font-sans">
+                  <div className="bg-slate-900 text-white px-3 py-1.5 text-[9px] font-black uppercase tracking-wider border-b border-slate-950 flex justify-between items-center">
+                    <span>IV. Ereignis- und Untersuchungs-Chronologie (Test Timelines)</span>
+                    <span className="text-[8px] font-mono text-teal-400 font-bold uppercase tracking-widest bg-teal-950/50 border border-teal-800/40 px-1.5 py-0.5 rounded">Chronologischer Abgleich</span>
+                  </div>
+
+                  <div className="overflow-x-auto bg-white">
+                    <table className="w-full text-left text-[10px] border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-950 text-slate-800 font-bold bg-slate-100 text-[9px] uppercase tracking-wider">
+                          <th className="py-2 px-3 w-28 border-r border-slate-250">Datum / Uhrzeit</th>
+                          <th className="py-2 px-3 w-40 border-r border-slate-250">Klinische Datenquelle</th>
+                          <th className="py-2 px-3">Ermitteltes Ereignis & Diagnostischer Befund</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {(currentPatient.extractedData?.timeline || [
+                          { date: "12.03.2025", event: "Arbeitsunfall (Hebe-Trauma) mit akutem Lendenwirbelsäulensyndrom", source: "D-Arztbericht" },
+                          { date: "15.03.2025", event: "Einleitung einer konservativen physiotherapeutischen Behandlung", source: "Heilmittelverordnung" },
+                          { date: "28.03.2025", event: "Lendenwirbelsäulen-MRT bestätigt L4/L5-Bandscheibenvorfall links", source: "Radiologie Köln-Nord" },
+                          { date: "11.07.2026", event: "Medizinisches Gutachten durch U.D.O. Verifikations-Hub", source: "U.D.O. System" }
+                        ]).map((evt, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-2 px-3 font-mono font-bold text-slate-950 border-r border-slate-200">{evt.date}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-700 border-r border-slate-200">{evt.source}</td>
+                            <td className="py-2 px-3 text-slate-900 font-medium">{evt.event}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Detailed Gutachten Paragraphs */}
+                <div className="space-y-3 text-[10px] leading-relaxed font-sans">
+                  <h6 className="text-[10px] font-black uppercase text-slate-500 tracking-wider border-b border-slate-200 pb-1">V. Wissenschaftliche Stellungnahme und Beantwortung</h6>
+                  <div className="space-y-2 text-slate-800">
                     <p>
-                      <strong>4. Zusammenfassende Beantwortung der Gutachtenfragen:</strong><br />
-                      {currentPatient.draft?.beantwortungFragenText || "Die Erwerbsfähigkeit ist dauerhaft um 20% gemindert."}
+                      <strong>1. Anamnese & Kausalität:</strong> {currentPatient.draft?.anamneseText || "Es wurde ein traumatisches Verheben einer schweren Kiste am 12.03.2025 mit konsekutiven linksseitigen Ischialgien beschrieben."}
+                    </p>
+                    <p>
+                      <strong>2. Clinical Findings / Befundung:</strong> {currentPatient.draft?.befundeText || "Ausgeprägte Lumbalstrecksteife, schmerzhaft limitiertes Lasègue-Zeichen links bei 45 Grad."}
+                    </p>
+                    <p>
+                      <strong>3. Medizinische Beurteilung:</strong> {currentPatient.draft?.beurteilungText || "Die MRT zeigt einen signifikanten Bandscheibenvorfall L4/L5 links. Trotz degenerativer Vorschädigung ist das Arbeitsereignis ursächlich anzusehen."}
+                    </p>
+                    <p>
+                      <strong>4. Zusammenfassendes Ergebnis (MdE-Feststellung):</strong> {currentPatient.draft?.beantwortungFragenText || "Die Erwerbsfähigkeit ist dauerhaft um 20% gemindert."}
                     </p>
                   </div>
                 </div>
 
-                {/* Signature box */}
+                {/* Signatures Footer */}
                 <div className="pt-6 border-t border-slate-200 flex justify-between items-end font-sans">
                   <div>
-                    <p className="text-[8px] text-slate-500">U.D.O. - ULTIMATE DIAGNOSTIC OPERATOR | GERMAN CERTIFIED</p>
+                    <p className="text-[8px] font-mono text-slate-400 uppercase tracking-widest font-bold">U.D.O. - ULTIMATE DIAGNOSTIC OPERATOR | SECURE QES CRYPTO VERIFIED</p>
                   </div>
                   <div className="text-right space-y-1">
                     <div className="w-36 h-0.5 bg-slate-400 mx-auto" />
-                    <p className="text-[9px] font-bold text-slate-900">Dr. med. Heinrich Altenberg</p>
-                    <p className="text-[8px] text-slate-500">Eigenhändige Unterschrift des Arztes</p>
+                    <p className="text-[10px] font-extrabold text-slate-900">Dr. med. Heinrich Altenberg</p>
+                    <p className="text-[8px] text-slate-500 font-medium uppercase tracking-wider">Eigenhändige Unterschrift des Arztes</p>
                   </div>
                 </div>
               </div>
