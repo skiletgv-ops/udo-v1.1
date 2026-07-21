@@ -13,10 +13,9 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track cursor coordinates relative to the robot to animate "TRACKING" head rotation
+  // Track cursor coordinates relative to the robot to animate head rotation globally
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (state !== "TRACKING" && state !== "IDLE") return;
       if (!containerRef.current) return;
 
       const rect = containerRef.current.getBoundingClientRect();
@@ -35,7 +34,7 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [state]);
+  }, []);
 
   // Determine colors and animation speed multipliers based on active state
   const getGlowColor = () => {
@@ -60,7 +59,6 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
-        setMousePos({ x: 0, y: 0 });
       }}
     >
       {/* Dr. Altenberg's Robot Chat Bubble (if active) */}

@@ -34,7 +34,7 @@ export default function ExecutiveDashboard() {
       features: [
         "6-Phasen-Workflow",
         "Dossier-Upload (Volltext)",
-        "Gemini AI Belegbeurteilung",
+        "UDO AI Belegbeurteilung",
         "DIN A4 Drucklayouts",
         "Kryptografische Signatur (Vorschau)"
       ],

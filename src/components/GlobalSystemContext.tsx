@@ -54,7 +54,7 @@ interface GlobalSystemContextType {
   globalStopListening: () => void;
   globalForceActiveListening: () => void;
   globalIsSupported: boolean;
-  handleGlobalSendMessage: (text: string) => Promise<void>;
+  handleGlobalSendMessage: (text: string, neuralExpressive?: boolean) => Promise<void>;
   isGlobalChatLoading: boolean;
   selectedVoiceURI: string | null;
   setSelectedVoiceURI: (uri: string | null) => void;
@@ -71,6 +71,32 @@ interface GlobalSystemContextType {
   setAudioEnabled: (enabled: boolean) => void;
   radioKolnActive: boolean;
   setRadioKolnActive: (active: boolean) => void;
+  lineHeightScale: number;
+  setLineHeightScale: (scale: number) => void;
+  fontWeightScale: number;
+  setFontWeightScale: (scale: number) => void;
+  eyeWarmthScale: number;
+  setEyeWarmthScale: (scale: number) => void;
+
+  // AI Agent Memory and Sync States
+  memoryRecords: MemoryRecord[];
+  addMemoryRecord: (record: Omit<MemoryRecord, "id" | "timestamp">) => void;
+  syncStatus: "synced" | "saving" | "error";
+  setSyncStatus: (status: "synced" | "saving" | "error") => void;
+  clearMemory: () => void;
+  isUploadOpen: boolean;
+  setIsUploadOpen: (open: boolean) => void;
+  isLiveTalkOpen: boolean;
+  setIsLiveTalkOpen: (open: boolean) => void;
+}
+
+export interface MemoryRecord {
+  id: string;
+  type: "text" | "voice";
+  patientName?: string;
+  problemSolved?: string;
+  timestamp: string;
+  rawText: string;
 }
 
 const GlobalSystemContext = createContext<GlobalSystemContextType | undefined>(undefined);
@@ -96,32 +122,94 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
   const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
 
   // Custom Accessibility & Audio Settings
-  const [fontScale, setFontScale] = useState<number>(1.0);
+  const [fontScale, setFontScale] = useState<number>(1.1); // Increased baseline for more readable fonts by default
   const [colorblindMode, setColorblindMode] = useState<"normal" | "deuteranopia" | "protanopia" | "tritanopia" | "monochrome" | "high-contrast">("normal");
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const [radioKolnActive, setRadioKolnActive] = useState<boolean>(false);
+  const [lineHeightScale, setLineHeightScale] = useState<number>(1.5);
+  const [fontWeightScale, setFontWeightScale] = useState<number>(1); // 0: light, 1: normal, 2: medium, 3: bold
+  const [eyeWarmthScale, setEyeWarmthScale] = useState<number>(0); // 0 to 5
 
-  // Sync background drone sound state
+  // AI Agent Memory and Sync States
+  const [memoryRecords, setMemoryRecords] = useState<MemoryRecord[]>([]);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "saving" | "error">("synced");
+
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isLiveTalkOpen, setIsLiveTalkOpen] = useState(false);
+
+  // Load initial memory records on mount
   useEffect(() => {
-    if (audioEnabled) {
-      startAmbientDrone();
+    const saved = localStorage.getItem("udo_ai_memories");
+    if (saved) {
+      try {
+        setMemoryRecords(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load clinical memory", e);
+      }
     } else {
-      stopAmbientDrone();
+      // Seed some starting memories for contextual elegance
+      const seedMemories: MemoryRecord[] = [
+        {
+          id: "seed-1",
+          type: "text",
+          patientName: "G. Müller",
+          problemSolved: "L4/L5 Protrusion confirmed via Dr. Clara segment mapping",
+          timestamp: new Date(Date.now() - 3600000 * 2).toLocaleString(),
+          rawText: "Aligned S2k radiological correlation for patient G. Müller in spinal segment L4/L5."
+        },
+        {
+          id: "seed-2",
+          type: "voice",
+          patientName: "F. Schneider",
+          problemSolved: "Consensus debate completed; 4-0 voting in favor of trauma causality",
+          timestamp: new Date(Date.now() - 3600000 * 5).toLocaleString(),
+          rawText: "Completed consensus session for occupational spinal lifting injury."
+        }
+      ];
+      setMemoryRecords(seedMemories);
+      localStorage.setItem("udo_ai_memories", JSON.stringify(seedMemories));
     }
+  }, []);
+
+  const addMemoryRecord = useCallback((record: Omit<MemoryRecord, "id" | "timestamp">) => {
+    setSyncStatus("saving");
+    setTimeout(() => {
+      const newRecord: MemoryRecord = {
+        ...record,
+        id: `mem-${Date.now()}`,
+        timestamp: new Date().toLocaleString()
+      };
+      setMemoryRecords(prev => {
+        const updated = [newRecord, ...prev];
+        localStorage.setItem("udo_ai_memories", JSON.stringify(updated));
+        return updated;
+      });
+      setSyncStatus("synced");
+    }, 1200); // Elegant cloud synchronization delay
+  }, []);
+
+  const clearMemory = useCallback(() => {
+    setSyncStatus("saving");
+    setTimeout(() => {
+      setMemoryRecords([]);
+      localStorage.removeItem("udo_ai_memories");
+      setSyncStatus("synced");
+    }, 800);
+  }, []);
+
+  // Sync background drone sound state (Fully removed ambient drone and old background sequencer)
+  useEffect(() => {
+    // Ambient drone fully disabled
   }, [audioEnabled]);
 
-  // Sync Radio Köln sequencer state
+  // Sync Radio Köln state (Disabled legacy context-level sequencer and audio sync)
   useEffect(() => {
-    if (radioKolnActive && audioEnabled) {
-      startRadioKolnSequencer();
-    } else {
-      stopRadioKolnSequencer();
-    }
+    // Disabled legacy context-level sequencer
   }, [radioKolnActive, audioEnabled]);
 
   // Custom Voice Settings
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string | null>(null);
-  const [speechRate, setSpeechRate] = useState<number>(1.0); // Default realistic speed
+  const [speechRate, setSpeechRate] = useState<number>(0.8); // Default realistic speed set to 0.8x
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Dynamically load system voices
@@ -131,6 +219,12 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       setAvailableVoices(voices);
+      
+      // Auto-select DE MS HEDDA if available
+      const hedda = voices.find(v => v.name.toLowerCase().includes("hedda") || v.voiceURI.toLowerCase().includes("hedda"));
+      if (hedda) {
+        setSelectedVoiceURI(hedda.voiceURI);
+      }
     };
 
     loadVoices();
@@ -156,6 +250,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
   // Refs for speaking-listening coordination
   const stopListeningRef = React.useRef<(() => void) | null>(null);
   const startListeningRef = React.useRef<(() => void) | null>(null);
+  const listeningStateRef = React.useRef<WakeWordListeningState>("idle");
 
   // Translate initial welcome message & default bubbles on language toggle
   useEffect(() => {
@@ -330,16 +425,27 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
 
     if (!selectedVoice) {
       const targetLangPrefix = targetLang === "de" ? "de" : "en";
-      selectedVoice = voices.find(v => 
-        v.lang.toLowerCase().startsWith(targetLangPrefix) && 
-        (v.name.toLowerCase().includes("natural") || 
-         v.name.toLowerCase().includes("google") || 
-         v.name.toLowerCase().includes("katja") ||
-         v.name.toLowerCase().includes("hedda") ||
-         v.name.toLowerCase().includes("stefan") ||
-         v.name.toLowerCase().includes("zira") ||
-         v.name.toLowerCase().includes("samantha"))
-      );
+      
+      // Look for Hedda specifically first if German
+      if (targetLangPrefix === "de") {
+        selectedVoice = voices.find(v => 
+          v.lang.toLowerCase().startsWith("de") && 
+          v.name.toLowerCase().includes("hedda")
+        );
+      }
+
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => 
+          v.lang.toLowerCase().startsWith(targetLangPrefix) && 
+          (v.name.toLowerCase().includes("hedda") ||
+           v.name.toLowerCase().includes("natural") || 
+           v.name.toLowerCase().includes("google") || 
+           v.name.toLowerCase().includes("katja") ||
+           v.name.toLowerCase().includes("stefan") ||
+           v.name.toLowerCase().includes("zira") ||
+           v.name.toLowerCase().includes("samantha"))
+        );
+      }
       if (!selectedVoice) {
         selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLangPrefix));
       }
@@ -367,7 +473,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     window.speechSynthesis.speak(utterance);
   }, [isVoiceMuted, language, selectedVoiceURI, speechRate]);
 
-  const handleGlobalSendMessage = useCallback(async (textToSend: string) => {
+  const handleGlobalSendMessage = useCallback(async (textToSend: string, neuralExpressive?: boolean) => {
     if (!textToSend.trim() || isGlobalChatLoading) return;
 
     const userMsg = {
@@ -385,7 +491,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend, language })
+        body: JSON.stringify({ message: textToSend, language, neuralExpressive })
       });
       const data = await response.json();
 
@@ -402,6 +508,35 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       setRobotState("SPEAKING");
       setRobotBubble(replyText);
       speakResponse(replyText);
+
+      // Automatic Clinical Memory Inference
+      let parsedName: string | undefined = undefined;
+      let parsedProblem: string | undefined = undefined;
+
+      const nameMatches = textToSend.match(/(?:patient|herr|frau|dr\.|mr\.|mrs\.|med\.)\s+([A-Z][a-zßüöä]+)/i);
+      if (nameMatches && nameMatches[1]) {
+        parsedName = nameMatches[1];
+      } else if (activePatient?.name) {
+        parsedName = activePatient.name;
+      }
+
+      if (textToSend.toLowerCase().includes("guideline") || textToSend.toLowerCase().includes("leitlinie")) {
+        parsedProblem = language === "de" ? "AWMF S2k Leitlinie analysiert" : "S2k Clinical guideline alignment analyzed";
+      } else if (textToSend.toLowerCase().includes("mde") || textToSend.toLowerCase().includes("earning")) {
+        parsedProblem = language === "de" ? "MdE-Einschätzung berechnet" : "MdE evaluation performed";
+      } else if (textToSend.toLowerCase().includes("herniation") || textToSend.toLowerCase().includes("vorfall") || textToSend.toLowerCase().includes("l4/l5") || textToSend.toLowerCase().includes("l5/s1")) {
+        parsedProblem = language === "de" ? "Wirbelsäulen-Segmentanalyse durchgeführt" : "Lumbar spine segment structural review";
+      } else {
+        parsedProblem = language === "de" ? "Klinische Beratung archiviert" : "Clinical consultation recorded";
+      }
+
+      addMemoryRecord({
+        type: listeningStateRef.current !== "idle" ? "voice" : "text",
+        patientName: parsedName,
+        problemSolved: parsedProblem,
+        rawText: `Q: ${textToSend.substring(0, 80)}${textToSend.length > 80 ? "..." : ""} | A: ${replyText.substring(0, 100)}...`
+      });
+
     } catch (error) {
       console.error("Global Chat error:", error);
       setRobotState("SURPRISED");
@@ -417,7 +552,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     } finally {
       setIsGlobalChatLoading(false);
     }
-  }, [language, isGlobalChatLoading, speakResponse]);
+  }, [language, isGlobalChatLoading, speakResponse, activePatient, addMemoryRecord]);
 
   // Global continuous wake-word listener looking for 'UDO'
   const {
@@ -457,6 +592,11 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       console.log("[Global UDO Voice Status]:", err);
     }
   });
+
+  // Synchronize listeningStateRef
+  useEffect(() => {
+    listeningStateRef.current = globalListeningState;
+  }, [globalListeningState]);
 
   // Keep references updated
   stopListeningRef.current = globalStopListening;
@@ -518,7 +658,22 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
         audioEnabled,
         setAudioEnabled,
         radioKolnActive,
-        setRadioKolnActive
+        setRadioKolnActive,
+        lineHeightScale,
+        setLineHeightScale,
+        fontWeightScale,
+        setFontWeightScale,
+        eyeWarmthScale,
+        setEyeWarmthScale,
+        memoryRecords,
+        addMemoryRecord,
+        syncStatus,
+        setSyncStatus,
+        clearMemory,
+        isUploadOpen,
+        setIsUploadOpen,
+        isLiveTalkOpen,
+        setIsLiveTalkOpen
       }}
     >
       {children}

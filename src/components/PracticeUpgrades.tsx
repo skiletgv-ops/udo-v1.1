@@ -37,7 +37,12 @@ import {
   Search,
   BookOpen,
   Box,
-  Coins
+  Coins,
+  Video,
+  Mic,
+  Cpu,
+  Globe,
+  Fingerprint
 } from "lucide-react";
 import { Appointment, KanbanTask, Invoice, Prescription, InventoryItem, WikiArticle } from "../types";
 
@@ -51,7 +56,7 @@ const INITIAL_APPOINTMENTS: Appointment[] = [
 
 const INITIAL_TASKS: KanbanTask[] = [
   { id: "tsk-1", title: "MRT-Dossier anfordern", description: "Fehlendes LWS-Schnittbild aus Köln-Nord anfordern.", assignee: "Schwester Sabine", priority: "Hoch", status: "Neu", dueDate: "2026-07-13", checklist: [{ id: "cl-1", text: "Fax senden", done: true }, { id: "cl-2", text: "Telefonische Nachfrage", done: false }] },
-  { id: "tsk-2", title: "Gutachten-Konsens prüfen", description: "Multi-Modell-Votierung für Thomas Müller abgleichen.", assignee: "Dr. Altenberg", priority: "Hoch", status: "In Arbeit", dueDate: "2026-07-11", checklist: [{ id: "cl-3", text: "Gemini-Konflikte sichten", done: true }] },
+  { id: "tsk-2", title: "Gutachten-Konsens prüfen", description: "Multi-Modell-Votierung für Thomas Müller abgleichen.", assignee: "Dr. Altenberg", priority: "Hoch", status: "In Arbeit", dueDate: "2026-07-11", checklist: [{ id: "cl-3", text: "UDO-Konflikte sichten", done: true }] },
   { id: "tsk-3", title: "Rechnung BG Holz/Metall", description: "Rechnungsstellung für Fall Müller abschließen.", assignee: "Praxis-KI", priority: "Mittel", status: "Prüfung", dueDate: "2026-07-14", checklist: [] }
 ];
 
@@ -114,7 +119,12 @@ export default function PracticeUpgrades() {
     { id: 7, title: "7. Rezeptverwaltung", icon: FileSpreadsheet, desc: "Interaktions-Prüfung" },
     { id: 8, title: "8. Wissensdatenbank", icon: Database, desc: "AWMF & Leitlinien" },
     { id: 9, title: "9. Bestandsverwaltung", icon: Archive, desc: "Material & Praxisbedarf" },
-    { id: 10, title: "10. Praxis-Analytik", icon: LucideLineChart, desc: "Erfolgsmetriken & ROI" }
+    { id: 10, title: "10. Praxis-Analytik", icon: LucideLineChart, desc: "Erfolgsmetriken & ROI" },
+    { id: 11, title: "11. Telemedizin v4.0", icon: Video, desc: "Videosprechstunde & Chat" },
+    { id: 12, title: "12. KI-Diktat v4.0", icon: Mic, desc: "Voice Report Builder" },
+    { id: 13, title: "13. Gutachter-Konsens v4.0", icon: Cpu, desc: "AI Opinion Cross-Validation" },
+    { id: 14, title: "14. GOÄ Pre-Audit v4.0", icon: Fingerprint, desc: "Pre-submission Billing Check" },
+    { id: 15, title: "15. FHIR Connect v4.0", icon: Globe, desc: "Standardized EHR Integration" }
   ];
 
   // Appointment creation
@@ -804,6 +814,261 @@ export default function PracticeUpgrades() {
                 </div>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade 11: Telemedizin v4.0 */}
+        {activeUpgradeTab === 11 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-mono text-teal-400">Modul 11: Telemedizin & Videosprechstunde (v4.0 Future Preview)</span>
+              <h4 className="text-sm font-bold text-white">Integrierte Videosprechstunde & Live-Transkription</h4>
+              <p className="text-xs text-slate-300 leading-normal">
+                Ermöglicht vollverschlüsselte Online-Konsultationen direkt aus dem Gutachten-Portal. Erkennt per KI automatisch medizinische Fachbegriffe und erstellt ein Echtzeit-Gedächtnisprotokoll.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              {/* Call Control Center */}
+              <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl space-y-3">
+                <span className="text-[10px] font-mono text-slate-400 block uppercase border-b border-white/5 pb-1">Verbindungskontrolle</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center bg-black/40 p-2.5 rounded-lg border border-white/5">
+                    <div>
+                      <p className="font-semibold text-white">Nächster Patient</p>
+                      <p className="text-[10px] text-slate-500">Sabine Becker (Erstuntersuchung)</p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[9px] font-mono font-bold">BEREIT</span>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-black/40 p-2.5 rounded-lg border border-white/5">
+                    <div>
+                      <p className="font-semibold text-white">Video-Raum ID</p>
+                      <p className="text-[10px] text-slate-500 font-mono">telemed-cologne-8f49</p>
+                    </div>
+                    <span className="text-slate-400 text-[10px]">v4.0 Standard</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => alert("Telemedizin-Videosprechstunde v4.0 startet in Kürze...")}
+                  className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-slate-950 font-black uppercase rounded text-[10px] tracking-wider transition-all shadow-md shadow-teal-500/20 cursor-pointer"
+                >
+                  Sprechstunde starten
+                </button>
+              </div>
+
+              {/* Simulation Box */}
+              <div className="p-4 bg-[#05070a]/90 border border-white/10 rounded-xl flex flex-col justify-between h-[180px] relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+                <div className="relative z-20 flex justify-between items-start">
+                  <span className="bg-red-500 text-white font-mono text-[8px] font-bold px-1.5 py-0.5 rounded animate-pulse">REC Live v4.0</span>
+                  <span className="text-[9px] font-mono text-slate-400 bg-black/60 px-2 py-0.5 rounded-full border border-white/5">HD-Verschlüsselung</span>
+                </div>
+                
+                {/* Simulated webcam visual */}
+                <div className="my-auto text-center relative z-20 space-y-1">
+                  <div className="w-12 h-12 bg-teal-500/10 border border-teal-500/30 rounded-full flex items-center justify-center mx-auto text-teal-400 animate-pulse">
+                    <Video size={18} />
+                  </div>
+                  <p className="text-[10px] text-slate-300 font-bold">Kamera-Feeds werden initialisiert...</p>
+                  <p className="text-[9px] text-slate-500 font-mono">Drei-Wege-Endverschlüsselung aktiv</p>
+                </div>
+
+                <div className="relative z-20 text-[9px] font-mono text-teal-400 border-t border-white/5 pt-1 mt-1">
+                  Transkription: "Bandscheibenvorfall L4/5..."
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade 12: KI-Diktat v4.0 */}
+        {activeUpgradeTab === 12 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-mono text-indigo-400">Modul 12: KI-Diktat & Sprach-Notizen (v4.0 Future Preview)</span>
+              <h4 className="text-sm font-bold text-white">Voice Report Builder & Automatische Gliederung</h4>
+              <p className="text-xs text-slate-300 leading-normal">
+                Sprechen Sie Ihr Gutachten frei ein. Unsere speziell für medizinisch-forensische Fragestellungen optimierte KI übersetzt Ihr Diktat direkt in fehlerfreie S2k-Leitliniengerechte Absätze und fügt ICD-11 Codes ein.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              {/* Dictation Controller */}
+              <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-mono text-slate-400 block uppercase border-b border-white/5 pb-1">Diktiergerät</span>
+                  <p className="text-[11px] text-slate-400 mt-2">Diktat-Modus: <strong className="text-indigo-400">Orthopädisches Gutachten (LWS)</strong></p>
+                </div>
+
+                <div className="flex items-center justify-center py-4 bg-black/40 rounded-lg border border-white/5 relative">
+                  <div className="flex items-center gap-1.5 h-8 justify-center">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((bar) => (
+                      <div
+                        key={bar}
+                        className="w-0.5 bg-indigo-500 rounded-full animate-pulse"
+                        style={{
+                          height: `${Math.sin(bar * 0.5) * 15 + 20}px`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => alert("Sprech-Diktat v4.0 wird im nächsten Release freigeschaltet.")}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase rounded text-[10px] tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Mic size={12} />
+                  <span>Diktat starten (Mic)</span>
+                </button>
+              </div>
+
+              {/* Dynamic Transcript Output Mock */}
+              <div className="p-4 bg-[#05070a]/90 border border-white/10 rounded-xl space-y-2 h-[180px] overflow-y-auto">
+                <span className="text-[10px] font-mono text-slate-400 block uppercase border-b border-white/5 pb-1">KI-Transkript (Echtzeit-Struktur)</span>
+                <div className="space-y-2 font-mono text-[10px]">
+                  <p className="text-slate-500"><span className="text-indigo-400">[00:12]</span> "Patient klagt über lumbalen Rückenschmerz mit Ausstrahlung..."</p>
+                  <p className="text-slate-300 bg-white/5 p-1.5 rounded border border-white/5 font-sans leading-relaxed text-[11px]">
+                    <strong className="text-white">Befundberichte LWS:</strong> Chronisch rezidivierendes Lumbalsyndrom mit pseudoradikulärer Ausstrahlung in das linke Bein bei bekannter Bandscheibenprotrusion L4/5. 
+                  </p>
+                  <div className="text-[9px] text-emerald-400 flex items-center gap-1 font-sans">
+                    <Check size={10} /> 
+                    <span>S2k-konform abgeglichen | ICD-10 M54.5 hinzugefügt</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade 13: Gutachter-Konsens v4.0 */}
+        {activeUpgradeTab === 13 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-mono text-amber-400">Modul 13: Gutachter-Konsens-Prüfung (v4.0 Future Preview)</span>
+              <h4 className="text-sm font-bold text-white">Cross-Validation & Multi-Modell Gutachten-Konsens</h4>
+              <p className="text-xs text-slate-300 leading-normal">
+                Maximieren Sie die forensische Beweiskraft Ihrer Gutachten. Die Konsens-Prüfung vergleicht Ihr Gutachten mit 3 verschiedenen KI-Modellen und kennzeichnet mögliche Schwachstellen, Formulierungsrisiken oder unklare Kausalitäten.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              {/* Model A */}
+              <div className="p-3 bg-slate-900/40 border border-white/5 rounded-xl space-y-2 text-center">
+                <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                  <span className="text-[9px] font-mono text-amber-400">Agent Alpha</span>
+                  <span className="text-[9px] text-slate-500">v4.0</span>
+                </div>
+                <p className="font-bold text-white text-[11px]">Medizinische Plausibilität</p>
+                <div className="py-2">
+                  <span className="text-lg font-mono font-black text-emerald-400">98.4%</span>
+                </div>
+                <p className="text-[9px] text-slate-400">Kausalitätskette lückenlos dargelegt und begründet.</p>
+              </div>
+
+              {/* Model B */}
+              <div className="p-3 bg-slate-900/40 border border-white/5 rounded-xl space-y-2 text-center">
+                <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                  <span className="text-[9px] font-mono text-amber-400">Agent Beta</span>
+                  <span className="text-[9px] text-slate-500">v4.0</span>
+                </div>
+                <p className="font-bold text-white text-[11px]">Juristische Festigkeit</p>
+                <div className="py-2">
+                  <span className="text-lg font-mono font-black text-emerald-400">96.1%</span>
+                </div>
+                <p className="text-[9px] text-slate-400">BG-Vorgaben und Unfallrelevanz exakt ausgearbeitet.</p>
+              </div>
+
+              {/* Model C */}
+              <div className="p-3 bg-slate-900/40 border border-white/5 rounded-xl space-y-2 text-center">
+                <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                  <span className="text-[9px] font-mono text-amber-400">Agent Gamma</span>
+                  <span className="text-[9px] text-slate-500">v4.0</span>
+                </div>
+                <p className="font-bold text-white text-[11px]">Leitlinien-Check (AWMF)</p>
+                <div className="py-2">
+                  <span className="text-lg font-mono font-black text-rose-400">89.2%</span>
+                </div>
+                <p className="text-[9px] text-rose-300 animate-pulse">Hinweis: Weitere konservative Therapie-Optionen aufführen!</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade 14: GOÄ Pre-Audit v4.0 */}
+        {activeUpgradeTab === 14 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-mono text-rose-400">Modul 14: GOÄ & BG Pre-Audit (v4.0 Future Preview)</span>
+              <h4 className="text-sm font-bold text-white">Automatischer Abrechnungs- und Plausibilitätscheck</h4>
+              <p className="text-xs text-slate-300 leading-normal">
+                Verhindern Sie Honorarkürzungen durch Berufsgenossenschaften und private Kassen. Das Pre-Audit-Modul scannt Rechnungen vor dem Versand auf Ausschlüsse, falsche Ziffern-Kombinationen oder fehlende medizinische Begründungen.
+              </p>
+            </div>
+
+            <div className="p-4 bg-[#05070a]/90 border border-white/10 rounded-xl text-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                <span className="text-rose-400 font-bold flex items-center gap-1.5">
+                  <AlertTriangle size={12} />
+                  <span>Audit-Warnungen für Entwurf #2026-098</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-500">Patient: Thomas Müller</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-rose-300 font-mono">Ziffer 801 (Eingehende Untersuchung) & Ziffer 806</p>
+                    <p className="text-[10px] text-slate-400">Diese Ziffern sind im selben Behandlungsfall nicht nebeneinander berechenbar.</p>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-rose-400 bg-rose-500/5 px-2 py-0.5 rounded border border-rose-500/10">GOÄ-KONFLIKT</span>
+                </div>
+
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-amber-300 font-mono">Ziffer 85 (Gutachterliche Äußerung)</p>
+                    <p className="text-[10px] text-slate-400">Erhöhter Steigerungssatz (2.3x) erfordert eine schriftliche Begründung der Schwierigkeit.</p>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">BEGRÜNDUNG FEHLT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade 15: FHIR Connect v4.0 */}
+        {activeUpgradeTab === 15 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-mono text-blue-400">Modul 15: FHIR Connect & ISiK Krankenhaus-Schnittstelle (v4.0 Future Preview)</span>
+              <h4 className="text-sm font-bold text-white">Sichere EHR-Konnektivität nach HL7-Standard</h4>
+              <p className="text-xs text-slate-300 leading-normal">
+                Verbinden Sie Ihre Praxis nahtlos mit Kliniken (z. B. Uniklinik Köln) und dem Entlassmanagement. Tauschen Sie strukturierte Behandlungsdaten, Entlassbriefe und radiologische Befunde direkt über standardisierte FHIR-Ressourcen aus.
+              </p>
+            </div>
+
+            <div className="p-4 bg-[#05070a]/90 border border-white/10 rounded-xl text-xs space-y-2">
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-blue-400 font-bold flex items-center gap-1.5">
+                  <Database size={12} />
+                  <span>FHIR Server-Status</span>
+                </span>
+                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+              </div>
+
+              <div className="space-y-1 text-[10px] font-mono">
+                <p className="text-slate-400">Konnektor: <span className="text-white">HL7 FHIR v4.0.1 Endpoint</span></p>
+                <div className="bg-black/60 p-2.5 rounded border border-white/5 max-h-[100px] overflow-y-auto text-slate-400 leading-normal text-[9px]">
+                  {"{\n  \"resourceType\": \"Patient\",\n  \"id\": \"cologne-patient-78\",\n  \"name\": [\n    { \"family\": \"Müller\", \"given\": [\"Thomas\"] }\n  ],\n  \"gender\": \"male\",\n  \"birthDate\": \"1984-05-14\"\n}"}
+                </div>
+                <p className="text-emerald-400 flex items-center gap-1 text-[9px] font-sans pt-1">
+                  <Check size={10} />
+                  <span>Krankenhaus-Schnittstelle Uniklinik Köln verifiziert</span>
+                </p>
+              </div>
             </div>
           </div>
         )}

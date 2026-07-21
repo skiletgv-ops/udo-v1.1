@@ -36,7 +36,7 @@ export interface ExtractedData {
 }
 
 export interface ConsensusModelResult {
-  modelName: 'Gemini 3.5' | 'DeepSeek R1' | 'GPT-4o';
+  modelName: 'UDO Neuro' | 'UDO Cognitive' | 'UDO Biometrics';
   vote: 'KEEP' | 'REJECT' | 'NEUTRAL';
   findingName: string;
   statement: string;
@@ -48,9 +48,9 @@ export interface ConsensusRound {
   findingName: string;
   description: string;
   votes: {
-    'Gemini 3.5': 'KEEP' | 'REJECT' | 'NEUTRAL';
-    'DeepSeek R1': 'KEEP' | 'REJECT' | 'NEUTRAL';
-    'GPT-4o': 'KEEP' | 'REJECT' | 'NEUTRAL';
+    'UDO Neuro': 'KEEP' | 'REJECT' | 'NEUTRAL';
+    'UDO Cognitive': 'KEEP' | 'REJECT' | 'NEUTRAL';
+    'UDO Biometrics': 'KEEP' | 'REJECT' | 'NEUTRAL';
   };
   finalDecision: 'KEEP' | 'REJECT' | 'NEUTRAL';
   qaAnnotation?: string;

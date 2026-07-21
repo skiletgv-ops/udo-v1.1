@@ -21,9 +21,15 @@ import {
   Sparkles,
   ArrowRight,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  Undo,
+  RotateCcw,
+  Highlighter
 } from "lucide-react";
 import { Patient, ExtractedData, ConsensusRound, GutachtenDraft } from "../types";
+import DocumentAnnotator from "./DocumentAnnotator";
+import ExecutiveBrief from "./ExecutiveBrief";
 
 // Standard pre-defined patient cases to populate immediately on load
 const MOCK_PATIENT_LIST: Patient[] = [
@@ -76,9 +82,9 @@ const MOCK_PATIENT_LIST: Patient[] = [
         findingName: "Bandscheibenvorfall L4/L5 links gesichert",
         description: "Liegt ein struktureller Bandscheibenvorfall im angegebenen Segment vor?",
         votes: {
-          "Gemini 3.5": "KEEP",
-          "DeepSeek R1": "KEEP",
-          "GPT-4o": "KEEP"
+          "UDO Neuro": "KEEP",
+          "UDO Cognitive": "KEEP",
+          "UDO Biometrics": "KEEP"
         },
         finalDecision: "KEEP",
         qaAnnotation: "Befund durch radiologische MRT-Bildgebung vom 28.03.2025 unzweifelhaft belegt."
@@ -88,9 +94,9 @@ const MOCK_PATIENT_LIST: Patient[] = [
         findingName: "Direkte Kausalität zum Unfallereignis",
         description: "Ist der Bandscheibenvorfall ursächlich auf das Hebetrauma am 12.03.2025 zurückzuführen oder handelt es sich um eine degenerative Vorschädigung?",
         votes: {
-          "Gemini 3.5": "NEUTRAL",
-          "DeepSeek R1": "KEEP",
-          "GPT-4o": "REJECT"
+          "UDO Neuro": "NEUTRAL",
+          "UDO Cognitive": "KEEP",
+          "UDO Biometrics": "REJECT"
         },
         finalDecision: "NEUTRAL",
         qaAnnotation: "Vorschädigung durch Röntgen-Befund (Osteochondrose und Facettengelenksarthrose) gesichert. Das Hebetrauma wirkte jedoch als wesentliche Richtungsgebung für die akute Radikulopathie."
@@ -100,9 +106,9 @@ const MOCK_PATIENT_LIST: Patient[] = [
         findingName: "Dauerhafte Minderung der Erwerbsfähigkeit (MdE) von 20%",
         description: "Liegt eine dauerhafte Funktionseinschränkung vor, die eine MdE von 20% im sozialen Entschädigungsrecht rechtfertigt?",
         votes: {
-          "Gemini 3.5": "KEEP",
-          "DeepSeek R1": "KEEP",
-          "GPT-4o": "KEEP"
+          "UDO Neuro": "KEEP",
+          "UDO Cognitive": "KEEP",
+          "UDO Biometrics": "KEEP"
         },
         finalDecision: "KEEP",
         qaAnnotation: "Aufgrund der limitierten Gehstrecke (< 500m) und neurologischen Defizite (Sensibilitätsstörung L5) ist eine MdE von 20% angemessen."
@@ -203,6 +209,116 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
   const [qesSigningStatus, setQesSigningStatus] = useState<"idle" | "signing" | "success" | "error">("idle");
   const [egvpStatus, setEgvpStatus] = useState<"idle" | "transmitting" | "success">("idle");
 
+  // Phase 2 Right Rail Sub-Tabs
+  const [activeRightTab, setActiveRightTab] = useState<"evidence" | "annotator" | "brief">("evidence");
+
+  // Undo Toast States
+  const [toast, setToast] = useState<{
+    id: string;
+    message: string;
+    type: "delete_patient" | "clear_rounds";
+    timerId?: any;
+  } | null>(null);
+
+  const [deletedPatientCache, setDeletedPatientCache] = useState<{
+    patient: Patient;
+    index: number;
+  } | null>(null);
+
+  const [clearedRoundsCache, setClearedRoundsCache] = useState<{
+    patientId: string;
+    rounds: ConsensusRound[];
+  } | null>(null);
+
+  const showUndoToast = (message: string, type: "delete_patient" | "clear_rounds") => {
+    if (toast?.timerId) {
+      clearTimeout(toast.timerId);
+    }
+    const id = Date.now().toString();
+    const timerId = setTimeout(() => {
+      setToast(null);
+      setDeletedPatientCache(null);
+      setClearedRoundsCache(null);
+    }, 8000); // 8 seconds window
+    setToast({ id, message, type, timerId });
+  };
+
+  const handleDeletePatient = (patientId: string) => {
+    const index = patients.findIndex(p => p.id === patientId);
+    if (index === -1) return;
+    const patientToDelete = patients[index];
+    setDeletedPatientCache({ patient: patientToDelete, index });
+
+    const updated = patients.filter(p => p.id !== patientId);
+    setPatients(updated);
+
+    // If deleted active, activate another
+    if (activePatient?.id === patientId || (!activePatient && MOCK_PATIENT_LIST[0].id === patientId)) {
+      setActivePatient(updated[0] || null);
+    }
+
+    showUndoToast(`Patienten-Akte von "${patientToDelete.name}" wurde gelöscht.`, "delete_patient");
+    onRobotStateChange("SURPRISED");
+  };
+
+  const handleClearConsensusRounds = (patientId: string) => {
+    const targetPatient = patients.find(p => p.id === patientId);
+    if (!targetPatient || !targetPatient.consensusRounds) return;
+    setClearedRoundsCache({
+      patientId,
+      rounds: targetPatient.consensusRounds
+    });
+
+    const updated = patients.map(p => {
+      if (p.id === patientId) {
+        return { ...p, consensusRounds: [] };
+      }
+      return p;
+    });
+
+    setPatients(updated);
+    if (activePatient?.id === patientId) {
+      setActivePatient({ ...activePatient, consensusRounds: [] });
+    }
+
+    showUndoToast(`Konsens-Entscheidungen für "${targetPatient.name}" wurden zurückgesetzt.`, "clear_rounds");
+    onRobotStateChange("SURPRISED");
+  };
+
+  const handleUndoAction = () => {
+    if (!toast) return;
+
+    if (toast.type === "delete_patient" && deletedPatientCache) {
+      const { patient, index } = deletedPatientCache;
+      const updated = [...patients];
+      updated.splice(index, 0, patient);
+      setPatients(updated);
+      setActivePatient(patient);
+      setDeletedPatientCache(null);
+      onRobotStateChange("HAPPY");
+    } else if (toast.type === "clear_rounds" && clearedRoundsCache) {
+      const { patientId, rounds } = clearedRoundsCache;
+      const updated = patients.map(p => {
+        if (p.id === patientId) {
+          return { ...p, consensusRounds: rounds };
+        }
+        return p;
+      });
+      setPatients(updated);
+      const activeMatch = updated.find(p => p.id === patientId);
+      if (activeMatch) {
+        setActivePatient(activeMatch);
+      }
+      setClearedRoundsCache(null);
+      onRobotStateChange("HAPPY");
+    }
+
+    if (toast.timerId) {
+      clearTimeout(toast.timerId);
+    }
+    setToast(null);
+  };
+
   // Select active patient from listing
   const handleSelectPatient = (patient: Patient) => {
     setActivePatient(patient);
@@ -245,7 +361,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
             id: `cr-1-${Date.now()}`,
             findingName: data.imagingFindings?.[0] ? "Klinischer Befund gesichert" : "Verletzung verifiziert",
             description: "Ist der beschriebene Befund auf das angegebene Ereignis zurückzuführen?",
-            votes: { "Gemini 3.5": "KEEP", "DeepSeek R1": "KEEP", "GPT-4o": "NEUTRAL" },
+            votes: { "UDO Neuro": "KEEP", "UDO Cognitive": "KEEP", "UDO Biometrics": "NEUTRAL" },
             finalDecision: "KEEP",
             qaAnnotation: "Diagnostisch durch eingereichtes Dossier ausreichend verifiziert."
           }
@@ -385,9 +501,9 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-[10px] text-slate-400 uppercase font-mono mr-1">Wechseln:</label>
-          <div className="flex gap-1">
+        <div className="flex items-center gap-3">
+          <label className="text-[10px] text-slate-400 uppercase font-mono">Wechseln:</label>
+          <div className="flex flex-wrap items-center gap-1.5">
             {patients.map((p) => (
               <button
                 key={p.id}
@@ -401,6 +517,17 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                 {p.name.split(" ")[0]}
               </button>
             ))}
+
+            {patients.length > 1 && currentPatient && (
+              <button
+                onClick={() => handleDeletePatient(currentPatient.id)}
+                className="ml-2 px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/30 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 text-[10px] font-mono uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
+                title="Aktuellen Patienten löschen"
+              >
+                <Trash2 size={12} />
+                <span>Akte löschen</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -500,7 +627,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                   {isExtracting ? (
                     <>
                       <Clock className="animate-spin" size={16} />
-                      Extrahiere Daten mit Gemini AI...
+                      Extrahiere Daten mit UDO AI...
                     </>
                   ) : (
                     <>
@@ -576,7 +703,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
             {currentPatient.draft ? (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Text drafting workspace */}
-                <div className="lg:col-span-8 space-y-4">
+                <div className="lg:col-span-7 space-y-4">
                   <div className="space-y-3">
                     {/* Section 1: Anamnese */}
                     <div className="space-y-1">
@@ -638,42 +765,112 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                   </div>
                 </div>
 
-                {/* Right Column: Evidence Tracker (Evidenzverknüpfung) */}
-                <div className="lg:col-span-4 space-y-4">
-                  <div className="p-4 rounded-2xl bg-[#05070a]/90 border border-indigo-500/20 shadow-lg space-y-3">
-                    <div className="flex items-center gap-2 text-indigo-400 font-bold font-mono text-[10px] uppercase border-b border-white/5 pb-2">
-                      <Bookmark size={12} />
-                      <span>Evidenzverknüpfung</span>
-                    </div>
-
-                    <p className="text-[11px] text-slate-400 leading-normal">
-                      Klicken Sie auf einen Beleg, um die Beweiskette im Dossier zurückzuverfolgen. Damit ist das Gutachten rechtlich lückenlos verteidigungsfähig.
-                    </p>
-
-                    <div className="space-y-2">
-                      {currentPatient.draft.evidenceLinks.map((link) => (
+                {/* Right Column: Multi-Functional Clinical Workspace Tabs */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="bg-[#05070a]/95 border border-indigo-500/20 rounded-2xl p-4 shadow-2xl space-y-4 relative overflow-hidden flex flex-col min-h-[550px]">
+                    
+                    {/* Header with Sub-Tabs */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-indigo-400">Arbeitsmittel</span>
+                      <div className="flex gap-1 bg-black/50 p-1 rounded-lg border border-white/5">
                         <button
-                          key={link.id}
-                          onClick={() => handleHighlightSource(link.source)}
-                          className="w-full text-left p-2.5 rounded-lg bg-black/40 border border-white/5 hover:border-indigo-500/30 text-xs transition-all flex items-start gap-2 group"
+                          onClick={() => setActiveRightTab("evidence")}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer ${
+                            activeRightTab === "evidence"
+                              ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/30"
+                              : "text-slate-400 hover:text-white border border-transparent"
+                          }`}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                          <div>
-                            <p className="text-white font-semibold group-hover:text-indigo-300 transition-colors">
-                              &bdquo;{link.text}&ldquo;
-                            </p>
-                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
-                              {link.source}
-                            </span>
-                          </div>
+                          <Bookmark size={10} />
+                          <span>Belege</span>
                         </button>
-                      ))}
+                        <button
+                          onClick={() => setActiveRightTab("annotator")}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer ${
+                            activeRightTab === "annotator"
+                              ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/30"
+                              : "text-slate-400 hover:text-white border border-transparent"
+                          }`}
+                        >
+                          <Highlighter size={10} />
+                          <span>Annotation</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveRightTab("brief")}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer ${
+                            activeRightTab === "brief"
+                              ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/30"
+                              : "text-slate-400 hover:text-white border border-transparent"
+                          }`}
+                        >
+                          <Sparkles size={10} />
+                          <span>AI Briefing</span>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Audited highlight feedback bubble */}
-                    {evidenceHighlight && (
-                      <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300 font-mono animate-pulse">
-                        <strong>Prüfpfad aktiv:</strong> Quellenbeleg erfolgreich verifiziert in &bdquo;{evidenceHighlight}&ldquo;
+                    {/* Tab 1: Evidence Links */}
+                    {activeRightTab === "evidence" && (
+                      <div className="space-y-3 animate-fade-in flex flex-col flex-1">
+                        <p className="text-[11px] text-slate-400 leading-normal">
+                          Klicken Sie auf einen Beleg, um die Beweiskette im Dossier zurückzuverfolgen. Damit ist das Gutachten rechtlich lückenlos verteidigungsfähig.
+                        </p>
+
+                        <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1 flex-1">
+                          {currentPatient.draft.evidenceLinks.map((link) => (
+                            <button
+                              key={link.id}
+                              onClick={() => handleHighlightSource(link.source)}
+                              className="w-full text-left p-2.5 rounded-lg bg-black/40 border border-white/5 hover:border-indigo-500/30 text-xs transition-all flex items-start gap-2 group cursor-pointer"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                              <div>
+                                <p className="text-white font-semibold group-hover:text-indigo-300 transition-colors">
+                                  &bdquo;{link.text}&ldquo;
+                                </p>
+                                <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                                  {link.source}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Audited highlight feedback bubble */}
+                        {evidenceHighlight && (
+                          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300 font-mono animate-pulse mt-auto">
+                            <strong>Prüfpfad aktiv:</strong> Quellenbeleg erfolgreich verifiziert in &bdquo;{evidenceHighlight}&ldquo;
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tab 2: Document Annotator Canvas */}
+                    {activeRightTab === "annotator" && (
+                      <div className="space-y-3 animate-fade-in flex flex-col flex-1">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] text-slate-300 font-bold font-sans">
+                            Belegdokument &amp; Befund-Hervorhebung
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            Markieren Sie Befunde direkt auf dem Patienten-Dossier
+                          </span>
+                        </div>
+                        
+                        <div className="flex-1 bg-slate-950/60 rounded-xl border border-white/5 p-1 relative flex flex-col min-h-[340px]">
+                          <DocumentAnnotator 
+                            documentText={dossierInput || currentPatient.extractedData?.timeline.map(t => `[${t.date}] ${t.event} (Quelle: ${t.source})`).join("\n\n") || "MOCK_PATIENT_LIST - Patientendaten geladen."}
+                            patientName={currentPatient.name}
+                            caseId={currentPatient.caseId}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 3: Executive Brief */}
+                    {activeRightTab === "brief" && (
+                      <div className="space-y-3 animate-fade-in flex-1 flex flex-col">
+                        <ExecutiveBrief patient={currentPatient} />
                       </div>
                     )}
                   </div>
@@ -690,16 +887,28 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
         {/* Phase 3: Multi-Modell-Prüfung & Konsens */}
         {activePhase === 3 && (
           <div className="space-y-6 animate-fade-in" id="phase-consensus-container">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-mono uppercase text-amber-400 tracking-widest font-semibold">
-                Phase 3: Multi-Modell-Prüfung & Konsenssystem
-              </span>
-              <h3 className="text-lg font-black text-white font-sans">
-                KI-Votierung & medizinischer Abgleich
-              </h3>
-              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                U.D.O. fragt gleichzeitig Gemini, DeepSeek-R1 und GPT-4o zu kritischen Befundkonklusionen ab. Das Abstimmungssystem ermittelt nach Mehrheitsentscheid (KEEP/REJECT/NEUTRAL) das rechtssichere Gesamtergebnis und listet Abweichungen auf.
-              </p>
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-mono uppercase text-amber-400 tracking-widest font-semibold">
+                  Phase 3: Multi-Modell-Prüfung & Konsenssystem
+                </span>
+                <h3 className="text-lg font-black text-white font-sans">
+                  KI-Votierung & medizinischer Abgleich
+                </h3>
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  U.D.O. fragt gleichzeitig UDO Neuro, UDO Cognitive und UDO Biometrics zu kritischen Befundkonklusionen ab. Das Abstimmungssystem ermittelt nach Mehrheitsentscheid (KEEP/REJECT/NEUTRAL) das rechtssichere Gesamtergebnis und listet Abweichungen auf.
+                </p>
+              </div>
+
+              {currentPatient.consensusRounds && currentPatient.consensusRounds.length > 0 && (
+                <button
+                  onClick={() => handleClearConsensusRounds(currentPatient.id)}
+                  className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/30 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 text-[10px] font-mono uppercase tracking-wider font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                >
+                  <RotateCcw size={12} />
+                  <span>Konsens zurücksetzen</span>
+                </button>
+              )}
             </div>
 
             {currentPatient.consensusRounds ? (
@@ -730,14 +939,14 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                       <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5">
                         <span className="text-[8px] uppercase font-mono tracking-wider text-slate-500 block">KI-Stimmen</span>
                         <div className="grid grid-cols-3 gap-1 text-[9px] text-center font-mono font-semibold">
-                          <div className={`p-1 rounded ${round.votes["Gemini 3.5"] === "KEEP" ? "bg-green-500/10 text-green-300" : "bg-slate-900 text-slate-400"}`}>
-                            GEM: {round.votes["Gemini 3.5"]}
+                          <div className={`p-1 rounded ${round.votes["UDO Neuro"] === "KEEP" ? "bg-green-500/10 text-green-300" : "bg-slate-900 text-slate-400"}`}>
+                            UDO-N: {round.votes["UDO Neuro"]}
                           </div>
-                          <div className={`p-1 rounded ${round.votes["DeepSeek R1"] === "KEEP" ? "bg-green-500/10 text-green-300" : "bg-slate-900 text-slate-400"}`}>
-                            DSK: {round.votes["DeepSeek R1"]}
+                          <div className={`p-1 rounded ${round.votes["UDO Cognitive"] === "KEEP" ? "bg-green-500/10 text-green-300" : "bg-slate-900 text-slate-400"}`}>
+                            UDO-C: {round.votes["UDO Cognitive"]}
                           </div>
-                          <div className={`p-1 rounded ${round.votes["GPT-4o"] === "KEEP" ? "bg-green-500/10 text-green-300" : round.votes["GPT-4o"] === "REJECT" ? "bg-red-500/10 text-red-300" : "bg-slate-900 text-amber-300"}`}>
-                            GPT: {round.votes["GPT-4o"]}
+                          <div className={`p-1 rounded ${round.votes["UDO Biometrics"] === "KEEP" ? "bg-green-500/10 text-green-300" : round.votes["UDO Biometrics"] === "REJECT" ? "bg-red-500/10 text-red-300" : "bg-slate-900 text-amber-300"}`}>
+                            UDO-B: {round.votes["UDO Biometrics"]}
                           </div>
                         </div>
                       </div>
@@ -1296,6 +1505,34 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
         )}
 
       </div>
+
+      {/* Toast-based 'Undo' Notification System */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 pointer-events-auto max-w-sm">
+          <div className="bg-slate-950/95 border border-amber-500/30 text-white rounded-2xl p-4 shadow-[0_15px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex items-start gap-3">
+            <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+              <AlertTriangle size={18} className="animate-pulse" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest font-extrabold block">Aktion ausgeführt</span>
+              <p className="text-xs text-slate-300 font-semibold leading-relaxed">
+                {toast.message}
+              </p>
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={handleUndoAction}
+                  className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/30 hover:bg-emerald-500 hover:text-slate-950 rounded-lg text-[10px] font-mono font-black uppercase tracking-wider text-emerald-400 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw size={10} />
+                  <span>Rückgängig (Undo)</span>
+                </button>
+                <span className="text-[9px] text-slate-500 font-mono">Schließt in 8s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

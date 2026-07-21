@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play } from "lucide-react";
+import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play, Brain, Minus } from "lucide-react";
 import { useGlobalSystem } from "./GlobalSystemContext";
 
 interface Message {
@@ -12,6 +12,7 @@ interface Message {
 interface CologneChatbotProps {
   onRobotStateChange: (state: any) => void;
   onDrBubbleTrigger?: (text: string) => void;
+  onMinimize?: () => void;
 }
 
 const PRESET_CHIPS = [
@@ -21,7 +22,7 @@ const PRESET_CHIPS = [
   "How do I calculate reduction in earning capacity?"
 ];
 
-export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }: CologneChatbotProps) {
+export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, onMinimize }: CologneChatbotProps) {
   const { 
     chatMessages: messages, 
     language,
@@ -43,6 +44,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
   
   const [inputMessage, setInputMessage] = useState("");
   const [showVoiceConfig, setShowVoiceConfig] = useState(false);
+  const [neuralExpressive, setNeuralExpressive] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Simulated real-time consensus board states: 0 = idle, 1 = realizing, 2 = deliberating/reading each other, 3 = voting complete
@@ -72,7 +74,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
     setInputMessage("");
-    await handleGlobalSendMessage(textToSend);
+    await handleGlobalSendMessage(textToSend, neuralExpressive);
     
     // Keep parent bubble/state callbacks synchronised if needed
     if (onRobotStateChange) {
@@ -81,7 +83,11 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
   };
 
   return (
-    <div className="flex flex-col h-[640px] bg-black/40 border border-white/10 rounded-2xl overflow-hidden shadow-xl relative" id="cologne-doctor-chat-module">
+    <div className={`flex flex-col h-[640px] bg-black/40 border rounded-2xl overflow-hidden shadow-xl relative transition-all duration-500 ${
+      neuralExpressive 
+        ? "border-purple-500/40 shadow-purple-500/5 ring-1 ring-purple-500/25" 
+        : "border-white/10"
+    }`} id="cologne-doctor-chat-module">
       
       {/* Header Info Panel */}
       <div className="bg-white/5 px-5 py-4 border-b border-white/10 flex items-center justify-between">
@@ -96,11 +102,17 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
             }`} />
           </div>
           <div>
-            <h3 className="text-xs font-black text-white font-sans uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-black text-white font-sans uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
               <span>U.D.O. Clinical Intelligence</span>
               <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-950/40 border border-teal-500/30 px-1.5 py-0.5 rounded uppercase tracking-widest">
                 Nova Voice
               </span>
+              {neuralExpressive && (
+                <span className="text-[9px] font-mono font-black text-purple-300 bg-purple-950/60 border border-purple-500/40 px-2.5 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                  <Sparkles size={10} className="text-purple-400 animate-spin" />
+                  Neural Expressive
+                </span>
+              )}
             </h3>
             <p className="text-[9px] text-teal-400 font-mono tracking-widest font-semibold uppercase">
               {listeningState === "passive_listening" ? (language === "de" ? "● HÖRE AUF WECK-WORT 'UDO'" : "● LISTENING FOR 'UDO'") :
@@ -112,6 +124,16 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
 
         {/* Audio controls */}
         <div className="flex items-center gap-2">
+          {onMinimize && (
+            <button
+              onClick={onMinimize}
+              className="p-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
+              title={language === "de" ? "Minimieren" : "Minimize"}
+            >
+              <Minus size={14} />
+            </button>
+          )}
+
           {/* Voice Configuration Settings Panel Toggle */}
           <button
             onClick={() => setShowVoiceConfig(!showVoiceConfig)}
@@ -359,7 +381,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          {/* Dr. Clara (Med-Gemini) */}
+          {/* Dr. Clara (UDO Neuro) */}
           <div className={`p-2 rounded-xl border transition-all duration-300 ${
             consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
             consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
@@ -373,7 +395,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
                 consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
               }`} />
               <div className="min-w-0">
-                <span className="text-[9px] font-black text-white block truncate">Dr. Clara (Med-Gemini)</span>
+                <span className="text-[9px] font-black text-white block truncate">Dr. Clara (UDO Neuro)</span>
                 <span className="text-[7px] font-mono text-slate-400 block truncate">Neurology Expert</span>
               </div>
             </div>
@@ -385,7 +407,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
             </div>
           </div>
 
-          {/* Dr. Eric (Claude) */}
+          {/* Dr. Eric (UDO Forensic) */}
           <div className={`p-2 rounded-xl border transition-all duration-300 ${
             consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
             consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
@@ -399,7 +421,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
                 consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
               }`} />
               <div className="min-w-0">
-                <span className="text-[9px] font-black text-white block truncate">Dr. Eric (Claude-3.5)</span>
+                <span className="text-[9px] font-black text-white block truncate">Dr. Eric (UDO Forensic)</span>
                 <span className="text-[7px] font-mono text-slate-400 block truncate">S2k Forensic Legal</span>
               </div>
             </div>
@@ -411,7 +433,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
             </div>
           </div>
 
-          {/* Dr. Marcus (GPT-4o) */}
+          {/* Dr. Marcus (UDO Biomechanics) */}
           <div className={`p-2 rounded-xl border transition-all duration-300 ${
             consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
             consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
@@ -425,7 +447,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
                 consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
               }`} />
               <div className="min-w-0">
-                <span className="text-[9px] font-black text-white block truncate">Dr. Marcus (GPT-4o)</span>
+                <span className="text-[9px] font-black text-white block truncate">Dr. Marcus (UDO Biomechanics)</span>
                 <span className="text-[7px] font-mono text-slate-400 block truncate">Biomechanics Analyst</span>
               </div>
             </div>
@@ -437,7 +459,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
             </div>
           </div>
 
-          {/* Dr. Gratsiano (DeepSeek-R1) */}
+          {/* Dr. Gratsiano (UDO Cognitive) */}
           <div className={`p-2 rounded-xl border transition-all duration-300 ${
             consensusStep === 1 ? "bg-amber-950/15 border-amber-500/30 shadow-sm shadow-amber-500/5" :
             consensusStep === 2 ? "bg-teal-950/15 border-teal-500/30" :
@@ -451,7 +473,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
                 consensusStep === 3 ? "bg-green-400" : "bg-slate-500"
               }`} />
               <div className="min-w-0">
-                <span className="text-[9px] font-black text-white block truncate">Dr. Gratsiano (DeepSeek-R1)</span>
+                <span className="text-[9px] font-black text-white block truncate">Dr. Gratsiano (UDO Cognitive)</span>
                 <span className="text-[7px] font-mono text-slate-400 block truncate">Deep clinical Synthesis</span>
               </div>
             </div>
@@ -551,18 +573,54 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger }
         }}
         className="px-4 py-3 bg-[#05070a]/65 border-t border-white/10 flex gap-2 items-center"
       >
-        <input
-          type="text"
-          disabled={isLoading}
-          placeholder={language === "de" ? "Kollegiale Anfrage an die U.D.O. Facharztjury..." : "Submit collegial inquiry to the U.D.O. expert board..."}
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          className="flex-1 bg-black/25 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 leading-normal"
-        />
+        <div className="relative flex-1 flex items-center">
+          <input
+            type="text"
+            disabled={isLoading}
+            placeholder={language === "de" ? "Kollegiale Anfrage an die U.D.O. Facharztjury..." : "Submit collegial inquiry to the U.D.O. expert board..."}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="w-full bg-black/25 border border-white/10 rounded-xl pl-4 pr-24 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 leading-normal"
+          />
+          <div className="absolute right-2.5 flex items-center gap-1.5">
+            {/* Click to Talk / Force Active dictation */}
+            <button
+              type="button"
+              id="chat-input-mic-button"
+              onClick={() => {
+                forceActiveListening();
+              }}
+              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                listeningState === "active_listening"
+                  ? "bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/20 animate-pulse"
+                  : "bg-slate-900 border-slate-800 text-slate-300 hover:text-white"
+              }`}
+              title={language === "de" ? "Direkt sprechen (Diktat)" : "Direct Speech (Dictate)"}
+            >
+              <Mic size={13} />
+            </button>
+            {/* Neural Expressive toggle */}
+            <button
+              type="button"
+              id="chat-input-neural-expressive-button"
+              onClick={() => {
+                setNeuralExpressive(!neuralExpressive);
+              }}
+              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                neuralExpressive
+                  ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/30 animate-pulse"
+                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+              }`}
+              title="Neural Expressive Chat Mode"
+            >
+              <Brain size={13} />
+            </button>
+          </div>
+        </div>
         <button
           type="submit"
           disabled={isLoading || !inputMessage.trim()}
-          className={`p-2.5 rounded-xl transition-all ${
+          className={`p-2.5 rounded-xl transition-all shrink-0 ${
             isLoading || !inputMessage.trim()
               ? "bg-slate-800 text-slate-600 cursor-not-allowed"
               : "bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20"

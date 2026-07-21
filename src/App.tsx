@@ -14,7 +14,12 @@ import { FUNCTIONS_CARDS } from "./data/functionsData";
 import FunctionDetailPage from "./components/functions/FunctionPages";
 import { SplineSceneBasic } from "./components/ui/demo";
 import SystemWhitepaper from "./components/SystemWhitepaper";
+import EEGWorkspace from "./components/EEGWorkspace";
 import AccessibilityWidget from "./components/AccessibilityWidget";
+import MemorySyncStatusIndicator from "./components/MemorySyncStatusIndicator";
+import JarvisAssistant from "./components/JarvisAssistant";
+import { VoicePoweredOrb } from "./components/ui/voice-powered-orb";
+import { Button } from "./components/ui/button";
 
 // @ts-ignore
 import udoIcon from "./assets/images/udo_futuristic_icon_1783906054468.jpg";
@@ -34,10 +39,26 @@ import {
   Cpu, 
   Grid,
   Mic,
+  MicOff,
   Upload,
   Loader2,
   Check,
-  BookOpen
+  CheckCircle,
+  BookOpen,
+  Play,
+  Square,
+  Volume2,
+  ArrowLeft,
+  Copy,
+  RotateCcw,
+  Heart,
+  Sun,
+  Moon,
+  FileText,
+  ChevronRight,
+  Eye,
+  AlertTriangle,
+  Minus
 } from "lucide-react";
 
 
@@ -64,8 +85,14 @@ export default function App() {
     setLanguage,
     globalForceActiveListening,
     fontScale,
-    colorblindMode
+    colorblindMode,
+    lineHeightScale,
+    fontWeightScale,
+    eyeWarmthScale
   } = useGlobalSystem();
+
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [workspaceMinimized, setWorkspaceMinimized] = useState(false);
 
   // Sync font size scaling proportionally with the entire HTML document
   useEffect(() => {
@@ -75,23 +102,117 @@ export default function App() {
     };
   }, [fontScale]);
 
-  // Translate colorblindness modes to the standard SVG matrix filter ids
-  const getColorblindFilterStyle = () => {
-    if (colorblindMode === "deuteranopia") return "url(#deuteranopia-filter)";
-    if (colorblindMode === "protanopia") return "url(#protanopia-filter)";
-    if (colorblindMode === "tritanopia") return "url(#tritanopia-filter)";
-    if (colorblindMode === "monochrome") return "url(#monochrome-filter)";
-    return undefined;
+  // Start panel as minimized when activeView changes (do not open automatically when page opened)
+  useEffect(() => {
+    if (activeView) {
+      setIsMinimized(true);
+    }
+  }, [activeView]);
+
+  // Translate colorblindness modes & warmth level into filter strings
+  const getReadabilityStyle = () => {
+    const filterParts: string[] = [];
+    
+    if (colorblindMode === "deuteranopia") filterParts.push("url(#deuteranopia-filter)");
+    else if (colorblindMode === "protanopia") filterParts.push("url(#protanopia-filter)");
+    else if (colorblindMode === "tritanopia") filterParts.push("url(#tritanopia-filter)");
+    else if (colorblindMode === "monochrome") filterParts.push("url(#monochrome-filter)");
+
+    if (eyeWarmthScale > 0) {
+      filterParts.push(`sepia(${eyeWarmthScale * 15}%) saturate(${100 - eyeWarmthScale * 5}%) hue-rotate(-${eyeWarmthScale * 2}deg)`);
+    }
+
+    const weights = ["300", "400", "500", "700"];
+    const activeWeight = weights[fontWeightScale] || "400";
+
+    return {
+      filter: filterParts.length > 0 ? filterParts.join(" ") : undefined,
+      lineHeight: lineHeightScale,
+      fontWeight: activeWeight as any
+    };
   };
 
   const [activeFunctionId, setActiveFunctionId] = useState<string | null>(null);
   const [zoomingCardId, setZoomingCardId] = useState<string | null>(null);
   const [zoomCoordinates, setZoomCoordinates] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [introActive, setIntroActive] = useState(true);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isLiveTalkOpen, setIsLiveTalkOpen] = useState(false);
+  const { isUploadOpen, setIsUploadOpen, isLiveTalkOpen, setIsLiveTalkOpen } = useGlobalSystem();
+  const [homeViewMode, setHomeViewMode] = useState<"galaxy" | "grid">("grid");
+  const [activeGridCategory, setActiveGridCategory] = useState<string>("ALL");
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
   const [audioArmed, setAudioArmed] = useState(false);
+
+  // Reorganized Home Workspace States (Senior Friendly, Apple + Material 3, Clean Layout)
+  const [activeHubCategory, setActiveHubCategory] = useState<"gutachten" | "assistant" | "udo" | null>(null);
+  const [cleanMode, setCleanMode] = useState(true);
+  const [showPortalMenu, setShowPortalMenu] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0); // 0 to 1
+  const [isOrbRecording, setIsOrbRecording] = useState(false);
+  const [orbVoiceDetected, setOrbVoiceDetected] = useState(false);
+  const [hoveredCategory, setHoveredCategory] = useState<"gutachten" | "assistant" | null>(null);
+
+  // Determine dynamic hue reactively based on active view, category, hover state, or recording state
+  const getOrbHue = () => {
+    if (isOrbRecording) return 340; // Beautiful rose/red while recording
+    if (hoveredCategory === "gutachten") return 180; // Hovering gutachten shortcut: Teal
+    if (hoveredCategory === "assistant") return 260; // Hovering assistant shortcut: Purple-blue
+    if (activeHubCategory === "gutachten") return 180; // Active gutachten category: Teal
+    if (activeHubCategory === "assistant") return 260; // Active assistant category: Purple-blue
+    
+    // Default beautiful clinical teal
+    return 180;
+  };
+
+  // Handle single toggle behavior (Task 2)
+  const handleToggleView = (view: string | null) => {
+    if (view === null) {
+      setActiveView(null);
+      setIsMaximized(false);
+      setIsMinimized(false);
+    } else if (activeView === view) {
+      setActiveView(null);
+      setIsMaximized(false);
+      setIsMinimized(false);
+    } else {
+      setActiveView(view);
+      setIsMaximized(true);
+      setIsMinimized(false);
+      setActiveHubCategory(null);
+      setCleanMode(false);
+    }
+  };
+
+  const handleToggleHubCategory = (category: "gutachten" | "assistant" | "udo" | null) => {
+    if (category === null) {
+      setActiveHubCategory(null);
+    } else if (activeHubCategory === category) {
+      setActiveHubCategory(null);
+    } else {
+      setActiveHubCategory(category);
+      setActiveView(null);
+      setIsMinimized(false);
+      setIsMaximized(false);
+      setCleanMode(false);
+      if (category === "gutachten") {
+        setGutachtenStep("upload");
+      }
+    }
+  };
+
+  // Gutachten Pipeline States
+  const [gutachtenStep, setGutachtenStep] = useState<"upload" | "processing" | "results">("upload");
+  const [gutachtenFiles, setGutachtenFiles] = useState<string[]>([]);
+  const [pipelineProgress, setPipelineProgress] = useState(0);
+  const [pipelineStepIndex, setPipelineStepIndex] = useState(0);
+
+  // Clinical Assistant Calculator States
+  const [mdeNeuro, setMdeNeuro] = useState<"none" | "sensory" | "motor">("none");
+  const [mdeMobility, setMdeMobility] = useState<"mild" | "moderate" | "severe">("mild");
+  const [mdePain, setMdePain] = useState<"none" | "mild" | "severe">("mild");
+
+  // Box Breathing States
+  const [breathState, setBreathState] = useState<"inhale" | "holdIn" | "exhale" | "holdOut">("inhale");
+  const [breathTimer, setBreathTimer] = useState(4);
 
   // Set up audio arming on any click or interaction
   useEffect(() => {
@@ -178,6 +299,58 @@ export default function App() {
     }
   };
 
+  // Box breathing simulation loop (4 seconds each: inhale, hold, exhale, hold)
+  useEffect(() => {
+    if (activeHubCategory !== "udo") return;
+    const interval = setInterval(() => {
+      setBreathTimer(prev => {
+        if (prev <= 1) {
+          setBreathState(curr => {
+            switch (curr) {
+              case "inhale": return "holdIn";
+              case "holdIn": return "exhale";
+              case "exhale": return "holdOut";
+              case "holdOut": return "inhale";
+              default: return "inhale";
+            }
+          });
+          return 4;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [activeHubCategory]);
+
+  // Support wheel scrolling zoom and key navigation on the main landing page
+  useEffect(() => {
+    if (activeHubCategory || activeView || activeFunctionId) return;
+    
+    const handleGlobalWheel = (e: WheelEvent) => {
+      const delta = e.deltaY;
+      setScrollProgress(prev => {
+        const next = prev + (delta > 0 ? 0.05 : -0.05);
+        return Math.min(Math.max(next, 0), 1);
+      });
+    };
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        setScrollProgress(prev => Math.min(prev + 0.15, 1));
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        setScrollProgress(prev => Math.max(prev - 0.15, 0));
+      }
+    };
+
+    window.addEventListener("wheel", handleGlobalWheel, { passive: true });
+    window.addEventListener("keydown", handleGlobalKeyDown);
+
+    return () => {
+      window.removeEventListener("wheel", handleGlobalWheel);
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [activeHubCategory, activeView, activeFunctionId]);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
@@ -187,6 +360,35 @@ export default function App() {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
+
+  // Gutachten automatic progress timeline simulation
+  useEffect(() => {
+    if (gutachtenStep !== "processing") return;
+    setPipelineProgress(0);
+    setPipelineStepIndex(0);
+
+    const timer = setInterval(() => {
+      setPipelineProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setGutachtenStep("results");
+          return 100;
+        }
+        const next = prev + 3;
+        
+        // Split pipeline steps sequentially from 0 to 4
+        if (next < 20) setPipelineStepIndex(0);
+        else if (next < 45) setPipelineStepIndex(1);
+        else if (next < 70) setPipelineStepIndex(2);
+        else if (next < 90) setPipelineStepIndex(3);
+        else setPipelineStepIndex(4);
+
+        return next;
+      });
+    }, 150);
+
+    return () => clearInterval(timer);
+  }, [gutachtenStep]);
 
   // High-fidelity Interactive Patient File Upload state
   const [uploadState, setUploadState] = useState<"idle" | "reading" | "decrypting" | "analyzing" | "completed">("idle");
@@ -254,9 +456,9 @@ export default function App() {
                   findingName: "Confirmed left L4/L5 disc herniation",
                   description: "Is there an objective structural disc herniation in the specified segment?",
                   votes: {
-                    "Gemini 3.5": "KEEP",
-                    "DeepSeek R1": "KEEP",
-                    "GPT-4o": "KEEP"
+                    "UDO Neuro": "KEEP",
+                    "UDO Cognitive": "KEEP",
+                    "UDO Biometrics": "KEEP"
                   },
                   finalDecision: "KEEP",
                   qaAnnotation: "Finding is unequivocally confirmed by the radiological MRI imaging dated 28.03.2025."
@@ -323,7 +525,7 @@ export default function App() {
 
     <div 
       className="relative min-h-screen bg-transparent text-slate-100 overflow-hidden font-sans flex flex-col"
-      style={{ filter: getColorblindFilterStyle() }}
+      style={getReadabilityStyle()}
     >
       
       {/* DYNAMIC MOUSE GLOW TRAILING AURA */}
@@ -333,7 +535,85 @@ export default function App() {
           background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, rgba(20, 184, 166, 0.08), transparent 80%)`
         }}
       />
+
+      {/* GLOBAL PERSISTENT VOICE POWERED ORB (Persistent behind active portals with z-index 5) */}
+      <div className={`fixed inset-0 flex items-center justify-center pointer-events-none transition-all duration-1000 z-[5] ${
+        activeView || activeHubCategory ? "opacity-35 scale-90 blur-[12px]" : "opacity-100 scale-100"
+      }`}>
+        <div className="w-80 h-80 sm:w-96 sm:h-96 rounded-full overflow-hidden relative">
+          <VoicePoweredOrb
+            hue={getOrbHue()}
+            enableVoiceControl={isOrbRecording}
+            className="w-full h-full scale-110 animate-pulse-slow"
+            onVoiceDetected={setOrbVoiceDetected}
+          />
+        </div>
+      </div>
+
+      {/* GLOBAL COGNITIVE WORKSPACE HEADER */}
+      {!cleanMode && !(activeView === "chat" && workspaceMinimized) && (
+        <header className="fixed top-6 left-6 right-6 z-40 flex justify-between items-center pointer-events-none">
+          {/* Left: Futuristic Brand Badge */}
+          <div 
+            onClick={() => {
+              setActiveView(null);
+              setActiveFunctionId(null);
+              setActiveHubCategory(null);
+            }}
+            className="flex items-center gap-3 bg-slate-950/80 border border-white/10 backdrop-blur-xl px-4 py-2.5 rounded-2xl pointer-events-auto shadow-2xl hover:bg-slate-950 hover:border-teal-500/30 transition-all cursor-pointer group"
+            title={language === "en" ? "Return to main screen" : "Zurück zum Hauptbildschirm"}
+          >
+            <div className="w-8 h-8 rounded-xl overflow-hidden bg-teal-500/10 border border-teal-500/25 flex items-center justify-center relative">
+              <img src={udoIcon} alt="U.D.O." className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-teal-400/5 group-hover:bg-transparent transition-all" />
+            </div>
+            <div>
+              <span className="text-[9px] font-mono text-teal-400 font-black uppercase tracking-widest block leading-none">CORTICAL CORE v3.8</span>
+              <h1 className="text-xs font-extrabold text-white uppercase tracking-wider mt-0.5 leading-none flex items-center gap-1.5">
+                <span>Ultimate Diagnostic Operator</span>
+                <span className="text-slate-500 font-mono text-[9px] font-bold">U.D.O.</span>
+              </h1>
+            </div>
+          </div>
+
+          {/* Center/Right: Simplified Memory & Reset Menu */}
+          <div className="flex items-center gap-3 pointer-events-auto">
+            {activeHubCategory && (
+              <button
+                onClick={() => {
+                  setActiveHubCategory(null);
+                  setGutachtenStep("upload");
+                }}
+                className="px-4 py-2 bg-slate-900 border border-teal-500/40 text-xs font-bold tracking-wider text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl shadow-lg transition-all uppercase cursor-pointer"
+              >
+                ← {language === "en" ? "Overview" : "Übersicht"}
+              </button>
+            )}
+
+            <button
+              onClick={() => setLanguage(language === "en" ? "de" : "en")}
+              className="px-3 py-2 bg-slate-900 border border-white/10 text-[10px] font-mono tracking-widest font-black text-slate-300 hover:text-white rounded-xl uppercase cursor-pointer transition-all"
+              title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
+            >
+              {language === "en" ? "DE" : "EN"}
+            </button>
+
+            <MemorySyncStatusIndicator />
+          </div>
+        </header>
+      )}
       
+      {/* Hidden SVG with linearGradient defs for rail button light-up-icon styling */}
+      <svg width="0" height="0" style={{ position: "absolute", width: 0, height: 0, pointerEvents: "none" }} aria-hidden="true">
+        <defs>
+          <linearGradient id="enter-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2dd4bf" />
+            <stop offset="50%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#34d399" />
+          </linearGradient>
+        </defs>
+      </svg>
+
       {/* 3D PARTICLE STARFIELD & INTERACTIVE CARDS GALAXY */}
       <ParticleSphereBackground 
         activeView={activeView}
@@ -346,198 +626,19 @@ export default function App() {
       {/* =========================================================================
          4 CORNERS CONTROL DOCK & FLOATING NAVIGATION SYSTEM
          ========================================================================= */}
-      {!activeView && !activeFunctionId && (
-        <>
-          {/* LEFT RAIL: PRACTICE MANAGEMENT, SYSTEMS & ACTIONS (Spaced Vertically across full screen) */}
-          <div className="fixed left-6 top-6 bottom-6 z-40 flex flex-col justify-between items-start pointer-events-none">
-            {/* Practice Upgrades */}
-            <button
-              onClick={() => setActiveView("upgrades")}
-              className="h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pl-[15px] pointer-events-auto"
-              title={language === "en" ? "Practice Upgrades" : "Praxis-Upgrades"}
-            >
-              <Sparkles size={16} className="text-teal-400 shrink-0" />
-              <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "Practice Upgrades" : "Praxis-Upgrades"}
-              </span>
-            </button>
-
-            {/* KPI Analytics */}
-            <button
-              onClick={() => setActiveView("analytics")}
-              className="h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pl-[15px] pointer-events-auto"
-              title={language === "en" ? "KPI Analytics" : "Kennzahlen & ROI"}
-            >
-              <LineChart size={16} className="text-teal-400 shrink-0" />
-              <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "KPI Analytics" : "Kennzahlen & ROI"}
-              </span>
-            </button>
-
-            {/* System Actions Hub */}
-            <div className="relative pointer-events-auto">
-              <button
-                onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
-                className={`h-12 w-12 hover:w-56 group relative flex items-center justify-start rounded-2xl border transition-all duration-300 shadow-2xl backdrop-blur-xl cursor-pointer overflow-hidden pl-[15px] ${
-                  isMasterMenuOpen 
-                    ? "bg-teal-500 text-slate-950 border-teal-400 shadow-[0_0_25px_rgba(20,184,166,0.25)]" 
-                    : "bg-slate-900/80 hover:bg-slate-950 text-white border-white/10 hover:border-teal-500/40"
-                }`}
-                title={language === "en" ? "System Actions Hub" : "System-Aktionen"}
-              >
-                <Cpu size={16} className={`${isMasterMenuOpen ? "animate-spin text-slate-950" : "animate-pulse text-teal-400"} shrink-0`} />
-                <span className="ml-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                  {language === "en" ? "System Actions" : "System-Aktionen"}
-                </span>
-              </button>
-
-              {isMasterMenuOpen && (
-                <div className="absolute bottom-16 left-0 w-80 bg-slate-950/95 backdrop-blur-2xl border border-white/15 rounded-[28px] p-5 shadow-[0_25px_70px_rgba(0,0,0,0.9)] z-50 animate-fade-in text-white space-y-4">
-                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                    <span className="text-[11px] font-mono uppercase tracking-widest text-teal-400 font-extrabold flex items-center gap-2">
-                      <Grid size={14} />
-                      System Controls
-                    </span>
-                    <button 
-                      onClick={() => setIsMasterMenuOpen(false)}
-                      className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        setRobotState("HAPPY");
-                        setRobotBubble('"Here is the consensus vote: all 12 leading medical experts agree that the left L4/L5 herniation is causally linked to the patient\'s occupational incident."');
-                        setIsMasterMenuOpen(false);
-                      }}
-                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
-                    >
-                      <span>🧪 Consensus Vote</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRobotState("THINKING");
-                        setRobotBubble('"Initiating S2k-Guideline Verification for segment L4/L5. All checks are fully aligned."');
-                        setTimeout(() => setRobotState("WAVING"), 1800);
-                        setIsMasterMenuOpen(false);
-                      }}
-                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
-                    >
-                      <span>📜 Guideline Check</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRobotState("HAPPY");
-                        setRobotBubble('"Qualified Electronic Signature (QES) has been successfully generated and securely transmitted to the insurer."');
-                        setIsMasterMenuOpen(false);
-                      }}
-                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
-                    >
-                      <span>🔑 Sign with QES</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleRobotClick();
-                        setIsMasterMenuOpen(false);
-                      }}
-                      className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-2.5 font-bold"
-                    >
-                      <span>💬 Assistant Dialogue</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT RAIL: DIAGNOSTICS, TRANSLATION & LIVE DIALOGUE (Spaced Vertically across full screen) */}
-          <div className="fixed right-6 top-6 bottom-6 z-40 flex flex-col justify-between items-end pointer-events-none">
-            {/* Elegant Language Switcher Button */}
-            <button
-              onClick={() => setLanguage(language === "en" ? "de" : "en")}
-              className="h-12 w-12 hover:w-36 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[14px] pointer-events-auto"
-              title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
-            >
-              <span className="text-teal-400 font-mono font-black text-xs shrink-0 w-5 text-center">
-                {language === "en" ? "EN" : "DE"}
-              </span>
-              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "Deutsch 🇩🇪" : "English 🇺🇸"}
-              </span>
-            </button>
-
-            {/* 6-Phase Workflow */}
-            <button
-              onClick={() => setActiveView("workflow")}
-              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
-              title={language === "en" ? "6-Phase Workflow" : "6-Phasen-Workflow"}
-            >
-              <Activity size={16} className="text-teal-400 shrink-0" />
-              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "6-Phase Workflow" : "6-Phasen-Workflow"}
-              </span>
-            </button>
-
-            {/* Next AIs */}
-            <button
-              onClick={() => setActiveView("chat")}
-              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
-              title={language === "en" ? "Next AIs Consultation" : "Nächste KIs Konsilium"}
-            >
-              <Sparkles size={16} className="text-teal-400 shrink-0 animate-pulse" />
-              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "Next AIs Board" : "Nächste KIs"}
-              </span>
-            </button>
-
-            {/* Upload Patient Data */}
-            <button
-              onClick={() => setIsUploadOpen(true)}
-              className="h-12 w-12 hover:w-56 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto"
-              title={language === "en" ? "Upload Patient Data" : "Patientendaten hochladen"}
-            >
-              <Upload size={16} className="text-teal-400 shrink-0 animate-bounce" />
-              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "Upload Data" : "Daten hochladen"}
-              </span>
-            </button>
-
-            {/* Start Live Talk to UDO */}
-            <button
-              onClick={() => {
-                setActiveView("chat");
-                setTimeout(() => {
-                  if (globalForceActiveListening) {
-                    globalForceActiveListening();
-                  }
-                }, 400);
-              }}
-              className="h-12 w-12 hover:w-60 group relative flex flex-row-reverse items-center justify-start rounded-2xl bg-slate-900/80 hover:bg-slate-950 text-white hover:text-teal-400 border border-white/10 hover:border-teal-500/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden pr-[15px] pointer-events-auto animate-pulse"
-              title={language === "en" ? "Start Live Talk to UDO" : "Live-Gespräch mit UDO"}
-            >
-              <Mic size={16} className="text-teal-400 shrink-0" />
-              <span className="mr-3 font-extrabold uppercase tracking-widest text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                {language === "en" ? "Live Talk to UDO" : "U.D.O. Live Talk"}
-              </span>
-            </button>
-          </div>
-        </>
-      )}
+      {/* Old side rails have been consolidated into JarvisAssistant docks */}
 
       {/* =========================================================================
          APPLE-STYLE TRANSLUCENT POP-UP WINDOWS
          ========================================================================= */}
       <AnimatePresence>
         {isUploadOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm pointer-events-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm pointer-events-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              initial={{ opacity: 0, scale: 0.75, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 30 }}
-              transition={{ type: "spring", damping: 26, stiffness: 170 }}
+              exit={{ opacity: 0, scale: 0.75, y: 40 }}
+              transition={{ type: "spring", damping: 18, stiffness: 140 }}
               className="w-full max-w-2xl bg-slate-950/95 border border-white/15 rounded-[32px] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.95)] relative"
               onDragEnter={handleDrag}
               onDragOver={handleDrag}
@@ -652,12 +753,12 @@ export default function App() {
 
       <AnimatePresence>
         {isLiveTalkOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm pointer-events-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm pointer-events-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              initial={{ opacity: 0, scale: 0.75, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 30 }}
-              transition={{ type: "spring", damping: 26, stiffness: 170 }}
+              exit={{ opacity: 0, scale: 0.75, y: 40 }}
+              transition={{ type: "spring", damping: 18, stiffness: 140 }}
               className="w-full max-w-2xl bg-slate-950/95 border border-white/15 rounded-[32px] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.95)] relative"
             >
               {/* Minimize/Close Button */}
@@ -738,120 +839,398 @@ export default function App() {
       </AnimatePresence>
 
       {/* MAIN CONTAINER: Hub Dashboard vs. Selected Active Portal Overlay */}
-      <main className="flex-1 w-full relative z-20 flex flex-col pt-16 pointer-events-none">
-        {activeFunctionId ? (
-          /* =========================================================================
-             DEDICATED SELF-CONTAINED INTERACTIVE FUNCTION PAGE
-             ========================================================================= */
-          <div className="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-6 bg-slate-950/90 backdrop-blur-2xl rounded-[32px] border border-slate-800 text-white shadow-[0_25px_80px_rgba(0,0,0,0.95)] mt-8 mb-8 pointer-events-auto">
-            <FunctionDetailPage cardId={activeFunctionId} onBack={() => setActiveFunctionId(null)} />
-          </div>
-        ) : !activeView ? (
-          /* =========================================================================
-             1. CENTRAL HUB DASHBOARD (Unobstructed view of rotating card galaxy)
-             - Maximized negative space for elegant Apple aesthetics
-             ========================================================================= */
-          <div className="flex-1 flex flex-col items-center justify-center p-6 w-full relative pointer-events-none">
-            {/* Interactive 3D Sphere landing hero page hidden/loaded silently */}
-            <div className="w-full opacity-0 h-0 select-none pointer-events-none overflow-hidden">
-              <SplineSceneBasic />
-            </div>
-          </div>
-        ) : (
-          /* =========================================================================
-             2. ACTIVE MODULE CONTAINER (100% Maximized Apple-Style Translucent Window)
-             ========================================================================= */
-          <div className="flex-1 flex flex-col p-4 lg:p-8 h-[calc(100vh-100px)] overflow-hidden pointer-events-none w-full max-w-7xl mx-auto">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
-              animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
-              transition={{ type: "spring", stiffness: 100, damping: 16, mass: 1.15 }}
-              className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden pointer-events-auto"
-            >
-              {/* Glassmorphic Active Portal Wrapper */}
-              <div className="flex-1 bg-slate-900/90 border border-white/10 rounded-[28px] shadow-[0_30px_100px_rgba(0,0,0,0.85)] p-6 lg:p-8 relative flex flex-col min-w-0 h-full overflow-hidden backdrop-blur-2xl">
-                
-                {/* Module Header Bar */}
-                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4 shrink-0">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
-                      {activeView === "workflow" && <Activity size={20} />}
-                      {activeView === "chat" && <MessageSquare size={20} />}
-                      {activeView === "upgrades" && <Sparkles size={20} />}
-                      {activeView === "analytics" && <LineChart size={20} />}
-                      {activeView === "whitepaper" && <BookOpen size={20} />}
+      {!cleanMode && (
+        <main className="flex-1 w-full relative z-20 flex flex-col pt-16 pointer-events-none">
+          <AnimatePresence mode="wait">
+            {activeFunctionId ? (
+              /* =========================================================================
+                 DEDICATED SELF-CONTAINED INTERACTIVE FUNCTION PAGE
+                 ========================================================================= */
+              <motion.div
+                key="function-detail"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-6 bg-slate-950/90 backdrop-blur-2xl rounded-[32px] border border-slate-800 text-white shadow-[0_25px_80px_rgba(0,0,0,0.95)] mt-8 mb-8 pointer-events-auto"
+              >
+                <FunctionDetailPage cardId={activeFunctionId} onBack={() => setActiveFunctionId(null)} />
+              </motion.div>
+            ) : !activeView ? (
+              /* =========================================================================
+                 1. CENTRAL HUB DASHBOARD (Reorganized Premium 3-Category Layout)
+                 ========================================================================= */
+              <motion.div
+                key="hub-dashboard"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col p-6 w-full relative max-h-[85vh] overflow-y-auto scrollbar-thin pointer-events-auto"
+              >
+            {!activeHubCategory ? (
+              /* =========================================================================
+                 A. CHIEF LANDING PAGE: "Was möchten Sie heute tun?"
+                 ========================================================================= */
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center py-8 md:py-16"
+              >
+                {/* UDO Voice Orb Hub */}
+                <div className="flex flex-col items-center gap-6 w-full max-w-2xl relative z-10">
+                  
+                  {/* Glowing Title badge */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center gap-1 mb-2"
+                  >
+                    <span className="text-[10px] font-mono font-black text-teal-400 uppercase tracking-[0.25em]">
+                      UDO AI COGNITIVE CORE
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-wider">
+                      UDO VOICE SYSTEM
+                    </h2>
+                    <p className="text-sm text-slate-400 mt-1 max-w-md">
+                      {language === "en" 
+                        ? "Real-time AI cognitive voice integration. Click to activate recording & speak."
+                        : "Echtzeit-KI-Sprachsteuerung. Klicken Sie zum Aufnehmen und sprechen Sie."}
+                    </p>
+                  </motion.div>
+
+                  {/* Majestic Glowing Orb Container */}
+                  <div className="relative w-80 h-80 sm:w-96 sm:h-96 flex items-center justify-center">
+                    {/* Pulsing circular outer rings */}
+                    <div className={`absolute inset-0 rounded-full border ${isOrbRecording ? "border-rose-500/10" : (hoveredCategory === "assistant" || activeHubCategory === "assistant") ? "border-violet-500/10" : "border-teal-500/10"} animate-[ping_3s_infinite] pointer-events-none`} />
+                    <div className={`absolute inset-4 rounded-full border ${isOrbRecording ? "border-rose-400/5" : (hoveredCategory === "assistant" || activeHubCategory === "assistant") ? "border-violet-400/5" : "border-teal-400/5"} animate-[pulse_4s_infinite] pointer-events-none`} />
+                    <div className={`absolute inset-12 rounded-full border ${isOrbRecording ? "border-rose-300/10" : (hoveredCategory === "assistant" || activeHubCategory === "assistant") ? "border-violet-300/10" : "border-teal-300/10"} pointer-events-none`} />
+                    
+                    {/* Spacer where the persistent background voice orb shows through */}
+                    <div className="w-full h-full bg-transparent pointer-events-none" />
+
+                    {/* Central Recording Trigger Button inside the Orb */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+                      <motion.button
+                        onClick={() => setIsOrbRecording(!isOrbRecording)}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`w-20 h-20 rounded-full flex flex-col items-center justify-center transition-all duration-500 border shadow-2xl ${
+                          isOrbRecording
+                            ? "bg-rose-500 text-slate-950 border-rose-300 shadow-[0_0_35px_rgba(239,68,68,0.7)]"
+                            : (hoveredCategory === "assistant" || activeHubCategory === "assistant")
+                            ? "bg-slate-950/80 hover:bg-slate-900/90 text-violet-400 border-violet-500/40 shadow-[0_0_25px_rgba(139,92,246,0.4)]"
+                            : "bg-slate-950/80 hover:bg-slate-900/90 text-teal-400 border-teal-500/40 shadow-[0_0_25px_rgba(20,184,166,0.4)]"
+                        } cursor-pointer z-10`}
+                      >
+                        <div className="relative flex items-center justify-center">
+                          {isOrbRecording ? (
+                            <>
+                              <span className="absolute inset-0 w-full h-full bg-rose-400 rounded-full blur-md animate-ping opacity-60" />
+                              <MicOff size={28} className="relative z-10" />
+                            </>
+                          ) : (
+                            <Mic size={28} className="relative z-10" />
+                          )}
+                        </div>
+                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider mt-1.5 leading-none">
+                          {isOrbRecording ? "Live" : "Record"}
+                        </span>
+                      </motion.button>
                     </div>
-                    <div>
-                      <h3 className="text-lg lg:text-2xl font-black text-white tracking-tight leading-none uppercase">
-                        {activeView === "workflow" && "6-Phase Workflow"}
-                        {activeView === "chat" && "U.D.O. Clinical Intelligence"}
-                        {activeView === "upgrades" && "Practice Upgrades"}
-                        {activeView === "analytics" && "Analytics & ROI Board"}
-                        {activeView === "whitepaper" && "Technical & Clinical Whitepaper"}
-                      </h3>
-                      <p className="text-xs font-mono text-slate-400 mt-1 font-semibold uppercase tracking-wider">
-                        {activeView === "workflow" && "EVIDENCE-BASED GUIDELINE VERIFICATION"}
-                        {activeView === "chat" && "EXPERT VOICE & CONSENSUS ENGINE (NOVA)"}
-                        {activeView === "upgrades" && "PRESCRIPTIONS, APPOINTMENTS & BOARD"}
-                        {activeView === "analytics" && "ROBUST CLINICAL ROI DASHBOARD"}
-                        {activeView === "whitepaper" && "S2K FORENSIC CRITERIA & AGENT SCHEMAS"}
-                      </p>
+
+                    {/* Integrated Shortcut Icons - Moving Right Bottom Icons inside/around Orb */}
+                    
+                    {/* Left: Gutachten Portal Shortcut */}
+                    <div className="absolute left-[-50px] sm:left-[-70px] top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-auto">
+                      <motion.button
+                        onClick={() => handleToggleHubCategory("gutachten")}
+                        onMouseEnter={() => setHoveredCategory("gutachten")}
+                        onMouseLeave={() => setHoveredCategory(null)}
+                        whileHover={{ scale: 1.1, x: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-14 h-14 rounded-2xl bg-slate-950/95 border border-white/15 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-all duration-300 cursor-pointer"
+                        title={language === "en" ? "S2k Gutachten Pipeline" : "S2k Gutachten Pipeline"}
+                      >
+                        <FileText size={22} />
+                      </motion.button>
+                      <span className="text-[9px] font-mono font-black tracking-widest text-slate-400 select-none">
+                        GUTACHTEN
+                      </span>
                     </div>
+
+                    {/* Right: Assistant Hub Shortcut */}
+                    <div className="absolute right-[-50px] sm:right-[-70px] top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-auto">
+                      <motion.button
+                        onClick={() => handleToggleHubCategory("assistant")}
+                        onMouseEnter={() => setHoveredCategory("assistant")}
+                        onMouseLeave={() => setHoveredCategory(null)}
+                        whileHover={{ scale: 1.1, x: 4 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-14 h-14 rounded-2xl bg-slate-950/95 border border-white/15 hover:border-violet-500/50 text-slate-300 hover:text-violet-450 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-all duration-300 cursor-pointer"
+                        title={language === "en" ? "Clinical Assistant Hub" : "Klinischer Assistenz-Hub"}
+                      >
+                        <Activity size={22} />
+                      </motion.button>
+                      <span className="text-[9px] font-mono font-black tracking-widest text-slate-400 select-none">
+                        ASSISTANT
+                      </span>
+                    </div>
+
                   </div>
 
-                  {/* Clean Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    {/* Language Switcher in Portal */}
-                    <button
-                      onClick={() => setLanguage(language === "en" ? "de" : "en")}
-                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-teal-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
-                      title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
-                    >
-                      <span className="text-teal-400 font-mono text-[10px] font-black uppercase tracking-wider">
-                        {language === "en" ? "EN" : "DE"}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider hidden md:inline">
-                        {language === "en" ? "🇩🇪 DE" : "🇺🇸 EN"}
-                      </span>
-                    </button>
+                  {/* Dynamic transcript / status log */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-4 px-5 py-2.5 rounded-full bg-slate-950/60 border border-white/10 backdrop-blur-md max-w-sm"
+                  >
+                    <span className="text-[10px] font-mono tracking-wider text-teal-400 uppercase">
+                      {isOrbRecording 
+                        ? (orbVoiceDetected ? "⚡ Voice Signal Detected" : "🎙️ Listening... Speak Now") 
+                        : "😴 Core Idle — Click center to start UDO"}
+                    </span>
+                  </motion.div>
 
-                    <button
-                      onClick={() => setIsMaximized(!isMaximized)}
-                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-teal-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
-                      title={isMaximized ? "Split screen view" : "Maximize view"}
-                    >
-                      {isMaximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-                      <span className="text-[10px] font-mono uppercase tracking-wider hidden sm:inline">
-                        {isMaximized ? "Restore Split" : "Maximize (Full)"}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView(null);
-                        setIsMaximized(false);
-                      }}
-                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-rose-400 border border-white/10 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
-                      title="Close view and return to main orbit"
-                    >
-                      <X size={15} />
-                      <span className="text-[10px] font-mono uppercase tracking-wider hidden sm:inline">Close Panel</span>
-                    </button>
+                </div>
+              </motion.div>
+            ) : activeHubCategory === "gutachten" ? (
+              /* =========================================================================
+                 B. NESTED WORKFLOW: 🩺 GUTACHTEN REPORT pipeline
+                 ========================================================================= */
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-6xl mx-auto bg-slate-950/80 border border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl relative space-y-6"
+              >
+                {/* Header Row */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
+                  <div>
+                    <span className="text-[10px] font-mono font-black text-teal-400 uppercase tracking-widest block">
+                      🩺 GUTACHTEN HUB & PROCESSING PIPELINE
+                    </span>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-wide mt-1">
+                      {language === "en" ? "Medical Document Diagnostics" : "Klinische Dokumenten-Analyse"}
+                    </h2>
                   </div>
+                  <button
+                    onClick={() => {
+                      setActiveHubCategory(null);
+                      setGutachtenStep("upload");
+                    }}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 rounded-xl text-xs font-bold tracking-wider text-slate-300 hover:text-white transition-all uppercase"
+                  >
+                    ← {language === "en" ? "Back to Hub" : "Zurück"}
+                  </button>
                 </div>
 
-                {/* Active Component Wrapper with custom scroll */}
-                <div className="flex-1 overflow-y-auto pr-1">
-                  {activeView === "workflow" && (
-                    <PhaseWorkflow 
-                      onRobotStateChange={handleRobotStateChange}
-                      activePatient={activePatient}
-                      setActivePatient={setActivePatient}
-                    />
-                  )}
+                {gutachtenStep === "upload" && (
+                  <div className="space-y-6">
+                    {/* Simulated Drag and Drop File box */}
+                    <div 
+                      onDragEnter={handleDrag} 
+                      onDragOver={handleDrag} 
+                      onDragLeave={handleDrag} 
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-[24px] p-8 md:p-12 text-center transition-all ${
+                        dragActive 
+                          ? "border-teal-400 bg-teal-400/5" 
+                          : "border-white/10 bg-black/40 hover:bg-black/50 hover:border-teal-500/20"
+                      }`}
+                    >
+                      <input 
+                        type="file" 
+                        id="gutachten-file-input" 
+                        multiple 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            const names = Array.from(e.target.files).map(f => f.name);
+                            setGutachtenFiles(prev => [...prev, ...names]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="gutachten-file-input" className="cursor-pointer flex flex-col items-center">
+                        <Upload size={40} className="text-teal-400 mb-4" />
+                        <h3 className="text-lg font-extrabold text-white uppercase tracking-wide">
+                          {language === "en" ? "Upload Clinical Documents" : "Klinische Befunde hochladen"}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                          {language === "en"
+                            ? "Drag & drop radiologist MRI reports, outpatient doctor letters, or neurological findings here."
+                            : "Ziehen Sie MRT-Befunde, Arztberichte oder neurologische Unterlagen direkt hierher, um sie zu analysieren."}
+                        </p>
+                        <span className="mt-4 px-4 py-2 bg-slate-900 border border-white/10 hover:border-teal-500/30 text-xs font-bold rounded-xl text-slate-300">
+                          {language === "en" ? "Select Local Files" : "Dateien auswählen"}
+                        </span>
+                      </label>
+                    </div>
 
-                  {activeView === "chat" && (
+                    {/* Pre-configured clinical samples for extremely smooth elderly demo */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-mono uppercase tracking-widest text-slate-500 font-extrabold">
+                        {language === "en" ? "Select Interactive Demo Findings:" : "Oder wählen Sie einen Musterbefund zum Testen:"}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {[
+                          { file: "MRT_Lendenwirbelsaeule_L4_L5_Mueller.pdf", desc: "🩺 Lumbar Spine Disc Herniation finding with neural root compression." },
+                          { file: "Entlassungsbrief_Neurologie_Koeln_Kliniken.pdf", desc: "📄 Spine Clinic discharge letter indicating motor paresis of the drop foot." },
+                          { file: "AWMF_S2k_Gutachterliches_Zeugnis_Referenz.pdf", desc: "📜 Official reference outline for legal S2k guidelines correlation." }
+                        ].map((sample, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              if (!gutachtenFiles.includes(sample.file)) {
+                                setGutachtenFiles(prev => [...prev, sample.file]);
+                              }
+                            }}
+                            className="bg-slate-900/60 hover:bg-slate-900/90 border border-white/5 hover:border-teal-500/30 rounded-2xl p-4 cursor-pointer text-left transition-all group"
+                          >
+                            <span className="text-xs font-bold text-white group-hover:text-teal-400 block truncate font-mono">
+                              📄 {sample.file}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block mt-1 leading-snug">
+                              {sample.desc}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Selected File list */}
+                    {gutachtenFiles.length > 0 && (
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                            {language === "en" ? "Uploaded Files Queue" : "Hochgeladene Dateien:"}
+                          </span>
+                          <button 
+                            onClick={() => setGutachtenFiles([])}
+                            className="text-[10px] text-rose-400 font-bold uppercase tracking-wider hover:underline"
+                          >
+                            {language === "en" ? "Clear Queue" : "Alles löschen"}
+                          </button>
+                        </div>
+                        <div className="space-y-2 max-h-[140px] overflow-y-auto pr-2">
+                          {gutachtenFiles.map((f, index) => (
+                            <div key={index} className="flex justify-between items-center bg-slate-900/40 px-3 py-2 rounded-xl border border-white/5">
+                              <span className="text-xs font-mono text-slate-200 block truncate">
+                                🟢 {f}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                Ready for AI Analysis
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* BEGIN CORTICAL CORRELATION ACTION */}
+                        <div className="pt-4 flex justify-end">
+                          <motion.button
+                            onClick={() => setGutachtenStep("processing")}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-8 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 font-extrabold rounded-2xl shadow-lg hover:shadow-teal-500/10 cursor-pointer uppercase text-xs tracking-wider flex items-center gap-2"
+                          >
+                            <span>⚡ {language === "en" ? "Run S2k Guideline Correlation" : "S2k-konforme Analyse starten"}</span>
+                          </motion.button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {gutachtenStep === "processing" && (
+                  <div className="py-12 flex flex-col items-center justify-center space-y-8">
+                    <Loader2 size={44} className="text-teal-400 animate-spin" />
+                    
+                    <div className="text-center space-y-2">
+                      <h3 className="text-xl font-extrabold text-white uppercase tracking-wider">
+                        {language === "en" ? "Analyzing Spine Findings" : "Befundanalyse wird durchgeführt..."}
+                      </h3>
+                      <p className="text-xs text-slate-400 max-w-md">
+                        {language === "en"
+                          ? "S2k guidelines correlations engine mapping lumbar spine herniation criteria..."
+                          : "AWMF S2k-Kriterien werden mit den hochgeladenen Dokumenten abgeglichen..."}
+                      </p>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full max-w-md h-2 bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
+                      <div 
+                        className="h-full bg-gradient-to-r from-teal-400 to-teal-500 transition-all duration-150"
+                        style={{ width: `${pipelineProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono text-teal-400 font-extrabold">
+                      {pipelineProgress}% COMPLETED
+                    </span>
+
+                    {/* Sequential checklist steps */}
+                    <div className="w-full max-w-sm space-y-3 bg-black/30 p-5 rounded-2xl border border-white/5 text-left">
+                      {[
+                        "1. Clinical document OCR recognition & validation",
+                        "2. Spine L4/L5 & L5/S1 root compression mapping",
+                        "3. Reflex loss & motor drop-foot deficit extraction",
+                        "4. S2k guideline criteria conformity check",
+                        "5. Draft report synthesis & consensus check"
+                      ].map((stepText, idx) => {
+                        const isDone = pipelineStepIndex > idx;
+                        const isCurrent = pipelineStepIndex === idx;
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`flex items-center gap-3 transition-colors ${
+                              isDone ? "text-emerald-400" : isCurrent ? "text-teal-400 font-bold" : "text-slate-600"
+                            }`}
+                          >
+                            {isDone ? (
+                              <CheckCircle size={15} className="shrink-0 text-emerald-400" />
+                            ) : isCurrent ? (
+                              <Loader2 size={15} className="shrink-0 animate-spin text-teal-400" />
+                            ) : (
+                              <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />
+                            )}
+                            <span className="text-xs font-mono">{stepText}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {gutachtenStep === "results" && (
+                  <div className="space-y-6">
+                    {/* Diagnostic Summary Header */}
+                    <div className="bg-slate-900/80 border border-teal-500/20 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                          <CheckCircle size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-white uppercase tracking-wider font-mono">
+                            {language === "en" ? "Guideline Conformity Report Generated" : "AWMF S2k-Konformitätsbericht erstellt"}
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            {language === "en" 
+                              ? "Correlated with L4/L5 protrusion criteria. Dropped foot paresis confirmed."
+                              : "Abgeglichen mit L4/L5-Prolaps-Kriterien. Fußheberparese verifiziert."}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setGutachtenStep("upload")}
+                          className="px-3.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-[10px] uppercase font-mono rounded-xl border border-white/10"
+                        >
+                          {language === "en" ? "Analyze New" : "Neu Analysieren"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* DYNAMIC TWO-PANE INTEGRATION WORKSPACE */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                       <CologneChatbot 
                         onRobotStateChange={handleRobotStateChange}
@@ -861,26 +1240,493 @@ export default function App() {
                         onRobotStateChange={handleRobotStateChange}
                       />
                     </div>
-                  )}
-
-                  {activeView === "upgrades" && (
-                    <PracticeUpgrades />
-                  )}
-
-                  {activeView === "analytics" && (
-                    <ExecutiveDashboard />
-                  )}
-
-                  {activeView === "whitepaper" && (
-                    <SystemWhitepaper />
-                  )}
+                  </div>
+                )}
+              </motion.div>
+            ) : activeHubCategory === "assistant" ? (
+              /* =========================================================================
+                 C. NESTED WORKFLOW: 🏥 CLINICAL ASSISTANT CORE
+                 ========================================================================= */
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-6xl mx-auto bg-slate-950/80 border border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl space-y-8"
+              >
+                {/* Header Row */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
+                  <div>
+                    <span className="text-[10px] font-mono font-black text-teal-400 uppercase tracking-widest block">
+                      🏥 ASSISTANT CENTRE & DIAGNOSTICS HUB
+                    </span>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-wide mt-1">
+                      {language === "en" ? "Clinical Guideline Tools" : "Klinische Assistenz & Rechner"}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setActiveHubCategory(null)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 rounded-xl text-xs font-bold tracking-wider text-slate-300 hover:text-white transition-all uppercase"
+                  >
+                    ← {language === "en" ? "Back to Hub" : "Zurück"}
+                  </button>
                 </div>
+
+                {/* Section 1: Main Workflows (Simplified & Touch-Friendly) */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-slate-500 font-extrabold">
+                    {language === "en" ? "Select Interactive Module:" : "Hauptanwendungen starten:"}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Workflow 1: 6-Phase S2k */}
+                    <div 
+                      onClick={() => handleToggleView("workflow")}
+                      className="p-5 rounded-2xl bg-slate-900/60 hover:bg-slate-900/90 border border-white/5 hover:border-teal-500/30 cursor-pointer transition-all text-left flex justify-between items-center group"
+                    >
+                      <div>
+                        <span className="text-[9px] font-mono text-teal-400 uppercase tracking-widest block font-bold">WORKFLOW ENGINE</span>
+                        <h4 className="text-sm font-bold text-white uppercase mt-1">6-Phase S2k Check</h4>
+                        <p className="text-[11px] text-slate-400 mt-1">Guided forensic guidelines assessment.</p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-500 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+
+                    {/* Workflow 2: Clinical Consult Chat */}
+                    <div 
+                      onClick={() => handleToggleView("chat")}
+                      className="p-5 rounded-2xl bg-slate-900/60 hover:bg-slate-900/90 border border-white/5 hover:border-teal-500/30 cursor-pointer transition-all text-left flex justify-between items-center group"
+                    >
+                      <div>
+                        <span className="text-[9px] font-mono text-teal-400 uppercase tracking-widest block font-bold">EXPERT ADVISER</span>
+                        <h4 className="text-sm font-bold text-white uppercase mt-1">Clinical Chat</h4>
+                        <p className="text-[11px] text-slate-400 mt-1">Speak to Dr. Clara & Dr. Eric.</p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-500 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+
+                    {/* Workflow 3: Gait Biomechanical analysis */}
+                    <div 
+                      onClick={() => setActiveFunctionId("video-analyse-portal")}
+                      className="p-5 rounded-2xl bg-slate-900/60 hover:bg-slate-900/90 border border-white/5 hover:border-teal-500/30 cursor-pointer transition-all text-left flex justify-between items-center group"
+                    >
+                      <div>
+                        <span className="text-[9px] font-mono text-teal-400 uppercase tracking-widest block font-bold">BIOMECHANICAL ANALYTICS</span>
+                        <h4 className="text-sm font-bold text-white uppercase mt-1">Gait & Mobility</h4>
+                        <p className="text-[11px] text-slate-400 mt-1">Analyse patient video footage.</p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-500 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Interactive MdE Rechner Calculator (Designed with huge touch points for age 50+) */}
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wide flex items-center gap-2">
+                      <span>🧮</span>
+                      <span>{language === "en" ? "Guideline MdE Calculator (Spine Herniation)" : "S2k MdE-Kalkulator (Lendenwirbelsäule)"}</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {language === "en" 
+                        ? "Interactive reduction of earning capacity (MdE) calculator based on forensic consensus values."
+                        : "Konsensbasierter Rechner zur Minderung der Erwerbsfähigkeit (MdE) bei Bandscheibenvorfällen."}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+                    {/* Neuro deficit picker */}
+                    <div className="space-y-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block font-bold">
+                        1. Neurologische Defizite:
+                      </span>
+                      <div className="flex flex-col gap-2">
+                        {[
+                          { id: "none", label: "Keine (0% Base)" },
+                          { id: "sensory", label: "Sensibel (Hypästhesie) (+5%)" },
+                          { id: "motor", label: "Motorisch (Fußheber-Parese) (+20%)" }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => setMdeNeuro(opt.id as any)}
+                            className={`p-3 rounded-xl text-xs text-left font-bold border transition-all cursor-pointer ${
+                              mdeNeuro === opt.id 
+                                ? "bg-teal-500/10 border-teal-400 text-teal-400" 
+                                : "bg-slate-900 border-white/5 hover:border-white/10 text-slate-300"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Spinal Mobility picker */}
+                    <div className="space-y-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block font-bold">
+                        2. LWS-Beweglichkeit:
+                      </span>
+                      <div className="flex flex-col gap-2">
+                        {[
+                          { id: "mild", label: "Leicht eingeschränkt (+10%)" },
+                          { id: "moderate", label: "Mittelschwer eingeschränkt (+20%)" },
+                          { id: "severe", label: "Schwer (Versteifung) (+30%)" }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => setMdeMobility(opt.id as any)}
+                            className={`p-3 rounded-xl text-xs text-left font-bold border transition-all cursor-pointer ${
+                              mdeMobility === opt.id 
+                                ? "bg-teal-500/10 border-teal-400 text-teal-400" 
+                                : "bg-slate-900 border-white/5 hover:border-white/10 text-slate-300"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Spinal Pain picker */}
+                    <div className="space-y-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block font-bold">
+                        3. Radikuläre Schmerzen:
+                      </span>
+                      <div className="flex flex-col gap-2">
+                        {[
+                          { id: "none", label: "Keine (0%)" },
+                          { id: "mild", label: "Leicht/intermittierend (+5%)" },
+                          { id: "severe", label: "Schwer/chronisch (+10%)" }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => setMdePain(opt.id as any)}
+                            className={`p-3 rounded-xl text-xs text-left font-bold border transition-all cursor-pointer ${
+                              mdePain === opt.id 
+                                ? "bg-teal-500/10 border-teal-400 text-teal-400" 
+                                : "bg-slate-900 border-white/5 hover:border-white/10 text-slate-300"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Calculated Result Block */}
+                  <div className="mt-6 p-5 bg-slate-900/80 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block font-bold">
+                        {language === "en" ? "AWMF S2k Calculated MdE Value" : "Berechneter S2k MdE-Richtwert"}
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-3xl md:text-4xl font-black text-teal-400">
+                          {(() => {
+                            let total = 10;
+                            if (mdeNeuro === "sensory") total += 5;
+                            if (mdeNeuro === "motor") total += 20;
+                            
+                            if (mdeMobility === "mild") total += 10;
+                            if (mdeMobility === "moderate") total += 20;
+                            if (mdeMobility === "severe") total += 30;
+
+                            if (mdePain === "mild") total += 5;
+                            if (mdePain === "severe") total += 10;
+
+                            // Clamp values based on medical guidelines standards
+                            return Math.min(Math.max(total, 10), 40);
+                          })()}%
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">MdE (Minderung der Erwerbsfähigkeit)</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-2 max-w-lg">
+                        {language === "en"
+                          ? "*Notice: Spine S2k guidelines clamp MdE recommendations to standard ranges (10% - 40%) depending on neurological drop signs."
+                          : "*Hinweis: Die AWMF S2k Leitlinie empfiehlt bei Bandscheibenschäden mit motorischem Defekt Richtwerte von 20% bis max 40% MdE."}
+                      </p>
+                    </div>
+
+                    {/* Copy justification paragraph */}
+                    <div className="w-full md:w-auto shrink-0">
+                      <button
+                        onClick={() => {
+                          const neuroText = mdeNeuro === "motor" ? "einer motorischen Parese" : mdeNeuro === "sensory" ? "sensibler Hypästhesien" : "ohne wesentliche neurologische Ausfälle";
+                          const mobilityText = mdeMobility === "severe" ? "schwerer Wirbelsäulenversteifung" : mdeMobility === "moderate" ? "mittelschwerer Funktionsminderung" : "leichter Bewegungseinschränkung";
+                          const totalPercent = Math.min(Math.max(10 + (mdeNeuro === "sensory" ? 5 : mdeNeuro === "motor" ? 20 : 0) + (mdeMobility === "mild" ? 10 : mdeMobility === "moderate" ? 20 : 30) + (mdePain === "mild" ? 5 : mdePain === "severe" ? 10 : 0), 10), 40);
+                          
+                          const justification = `Forensischer Befundbericht: Der Patient präsentiert sich mit ${mobilityText} im LWS-Segment und ${neuroText}. Nach Abgleich mit den AWMF S2k Leitlinien zur Begutachtung von Bandscheibenschäden wird ein MdE-Richtwert von ${totalPercent}% empfohlen.`;
+                          
+                          navigator.clipboard.writeText(justification);
+                          alert(language === "en" ? "Copied medical justification to clipboard!" : "Klinische Begründung in die Zwischenablage kopiert!");
+                        }}
+                        className="w-full md:w-auto px-5 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Copy size={14} className="text-teal-400" />
+                        <span>{language === "en" ? "Copy Justification Text" : "Begründungstext Kopieren"}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Operations & Whitepaper Access */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+                  <div 
+                    onClick={() => handleToggleView("upgrades")}
+                    className="p-4 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 cursor-pointer text-left transition-all"
+                  >
+                    <h5 className="text-xs font-bold text-slate-300 uppercase">📈 Practice Upgrades</h5>
+                    <p className="text-[10px] text-slate-500 mt-1">Practice and scheduling boards.</p>
+                  </div>
+
+                  <div 
+                    onClick={() => handleToggleView("analytics")}
+                    className="p-4 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 cursor-pointer text-left transition-all"
+                  >
+                    <h5 className="text-xs font-bold text-slate-300 uppercase">📊 Analytics ROI</h5>
+                    <p className="text-[10px] text-slate-500 mt-1">Practice case throughput metrics.</p>
+                  </div>
+
+                  <div 
+                    onClick={() => handleToggleView("eeg")}
+                    className="p-4 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/10 cursor-pointer text-left transition-all ring-1 ring-teal-500/20"
+                  >
+                    <h5 className="text-xs font-bold text-teal-400 uppercase">🧠 EEG AI Portal</h5>
+                    <p className="text-[10px] text-slate-400 mt-1">Neurology waveform & spike-and-wave suite.</p>
+                  </div>
+
+                  <div 
+                    onClick={() => handleToggleView("whitepaper")}
+                    className="p-4 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 cursor-pointer text-left transition-all"
+                  >
+                    <h5 className="text-xs font-bold text-slate-300 uppercase">📜 Technical Whitepaper</h5>
+                    <p className="text-[10px] text-slate-500 mt-1">S2k criteria forensic schemas.</p>
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
+          </motion.div>
+        ) : (
+          /* =========================================================================
+             2. ACTIVE MODULE CONTAINER (100% Maximized Apple-Style Translucent Window)
+             ========================================================================= */
+          <motion.div
+            key="active-portal-module"
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: "spring", stiffness: 110, damping: 18 }}
+            className={`flex-1 flex flex-col p-4 lg:p-8 overflow-hidden pointer-events-none w-full max-w-7xl mx-auto transition-all duration-500 ease-in-out ${
+              isMinimized ? "h-[180px] mt-auto" : isMaximized ? "h-screen p-2" : "h-[calc(100vh-100px)]"
+            } ${activeView === "chat" && workspaceMinimized ? "max-w-none p-0 h-screen" : ""}`}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
+              animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.85, y: 35, filter: "blur(15px)" }}
+              transition={{ type: "spring", stiffness: 100, damping: 16, mass: 1.15 }}
+              className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden pointer-events-auto"
+            >
+              {/* Glassmorphic Active Portal Wrapper */}
+              <div className={`flex-1 relative flex flex-col min-w-0 h-full overflow-hidden transition-all duration-500 ${
+                activeView === "chat" && workspaceMinimized
+                  ? "bg-transparent border-none shadow-none backdrop-blur-none p-0"
+                  : "bg-slate-900/95 border border-white/10 rounded-[28px] shadow-[0_30px_100px_rgba(0,0,0,0.85)] p-6 lg:p-8 relative flex flex-col min-w-0 h-full overflow-hidden backdrop-blur-2xl"
+              }`}>
+                
+                {/* Module Header Bar */}
+                {!(activeView === "chat" && workspaceMinimized) && (
+                  <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4 shrink-0 flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
+                        {activeView === "workflow" && <Activity size={20} />}
+                        {activeView === "chat" && <MessageSquare size={20} />}
+                        {activeView === "upgrades" && <Sparkles size={20} />}
+                        {activeView === "analytics" && <LineChart size={20} />}
+                        {activeView === "whitepaper" && <BookOpen size={20} />}
+                        {activeView === "eeg" && <Cpu size={20} />}
+                      </div>
+                      <div>
+                        <h3 className="text-lg lg:text-2xl font-black text-white tracking-tight leading-none uppercase">
+                          {activeView === "workflow" && "6-Phase Workflow"}
+                          {activeView === "chat" && "U.D.O. Clinical Intelligence"}
+                          {activeView === "upgrades" && "Practice Upgrades"}
+                          {activeView === "analytics" && "Analytics & ROI Board"}
+                          {activeView === "whitepaper" && "Technical & Clinical Whitepaper"}
+                          {activeView === "eeg" && "EEG AI-Workspace"}
+                        </h3>
+                        <p className="text-xs font-mono text-slate-400 mt-1 font-semibold uppercase tracking-wider">
+                          {activeView === "workflow" && "EVIDENCE-BASED GUIDELINE VERIFICATION"}
+                          {activeView === "chat" && "EXPERT VOICE & CONSENSUS ENGINE (NOVA)"}
+                          {activeView === "upgrades" && "PRESCRIPTIONS, APPOINTMENTS & BOARD"}
+                          {activeView === "analytics" && "ROBUST CLINICAL ROI DASHBOARD"}
+                          {activeView === "whitepaper" && "S2K FORENSIC CRITERIA & AGENT SCHEMAS"}
+                          {activeView === "eeg" && "S2K CLINICAL DECISION SUPPORT & NEURO-DIAGNOSTICS"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Clean Action Buttons */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Language Switcher in Portal */}
+                      <button
+                        onClick={() => setLanguage(language === "en" ? "de" : "en")}
+                        className="h-11 px-3 rounded-xl bg-slate-950 border border-white/20 text-teal-400 hover:bg-teal-500 hover:text-slate-950 focus:outline focus:outline-2 focus:outline-teal-400 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
+                        title={language === "en" ? "Auf Deutsch umstellen" : "Switch to English"}
+                      >
+                        <span className="font-mono text-xs font-black uppercase tracking-wider">
+                          {language === "en" ? "EN" : "DE"}
+                        </span>
+                        <span className="text-xs font-mono uppercase tracking-wider hidden md:inline">
+                          {language === "en" ? "🇩🇪 DE" : "🇺🇸 EN"}
+                        </span>
+                      </button>
+
+                      {/* Close Button */}
+                      <button
+                        onClick={() => {
+                          setActiveView(null);
+                          setIsMaximized(false);
+                          setIsMinimized(false);
+                        }}
+                        className="h-11 px-3.5 rounded-xl bg-slate-950 border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-slate-950 focus:outline focus:outline-2 focus:outline-rose-400 transition-all cursor-pointer flex items-center gap-2 font-bold shadow-md"
+                        title="Close panel and return to home screen"
+                      >
+                        <X size={16} strokeWidth={2.5} />
+                        <span className="text-[10px] font-mono uppercase tracking-wider hidden sm:inline">
+                          Close
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Component Wrapper with custom scroll */}
+                {!isMinimized && (
+                  <div className="flex-1 overflow-y-auto pr-1">
+                    {activeView === "workflow" && (
+                      <PhaseWorkflow 
+                        onRobotStateChange={handleRobotStateChange}
+                        activePatient={activePatient}
+                        setActivePatient={setActivePatient}
+                      />
+                    )}
+
+                    {activeView === "chat" && (
+                      <div className="flex flex-col h-full relative" style={{ perspective: "1500px" }}>
+                        {/* Unified Floating Left Side Button for Minimized Workspace */}
+                        {workspaceMinimized && (
+                          <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center">
+                            <button
+                              onClick={() => setWorkspaceMinimized(false)}
+                              className="w-24 h-24 rounded-3xl bg-slate-950/90 border-2 border-teal-500/50 hover:border-teal-400 text-teal-400 hover:text-teal-300 shadow-[0_0_50px_rgba(20,184,166,0.4)] hover:shadow-[0_0_80px_rgba(20,184,166,0.7)] flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-xl group relative overflow-hidden"
+                              title="Restore Clinical Workspace"
+                            >
+                              {/* 3D-like Glowing Aura */}
+                              <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/15 via-transparent to-amber-500/15 opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+                              
+                              {/* Holographic scanning effect */}
+                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/80 to-transparent shadow-[0_0_15px_rgba(20,184,166,1)] animate-[bounce_4s_infinite]" />
+
+                              <div className="relative flex flex-col items-center gap-1.5 z-10">
+                                <div className="relative">
+                                  <div className="absolute inset-0 bg-teal-500/20 rounded-full blur-md animate-ping" />
+                                  <BookOpen size={34} className="relative z-10 text-teal-400 group-hover:rotate-[-12deg] transition-transform duration-500" />
+                                </div>
+                                <span className="text-[10px] font-mono font-black tracking-widest text-teal-300 group-hover:text-teal-200 uppercase leading-none">
+                                  RESTORE
+                                </span>
+                                <span className="text-[8px] font-mono text-slate-400 font-bold uppercase tracking-wider leading-none">
+                                  WORKSPACE
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Adaptive Grid Column Structure with elegant book-fold animation */}
+                        <AnimatePresence mode="wait">
+                          {!workspaceMinimized && (
+                            <motion.div 
+                              key="workspace-grid"
+                              initial={{ 
+                                opacity: 0, 
+                                scaleX: 0.1, 
+                                scaleY: 0.85,
+                                rotateY: -75, // open like a book page 
+                                originX: 0, // open from left edge 
+                                x: -180, // start near the left button position
+                                z: -150,
+                              }}
+                              animate={{ 
+                                opacity: 1, 
+                                scaleX: 1, 
+                                scaleY: 1,
+                                rotateY: 0, 
+                                originX: 0,
+                                x: 0,
+                                z: 0,
+                              }}
+                              exit={{ 
+                                opacity: 0, 
+                                scaleX: 0.1, 
+                                scaleY: 0.85,
+                                rotateY: -75,
+                                originX: 0,
+                                x: -180,
+                                z: -150,
+                              }}
+                              transition={{ 
+                                type: "spring",
+                                stiffness: 85,
+                                damping: 16,
+                                mass: 1.1,
+                                duration: 0.85 
+                              }}
+                              style={{ transformStyle: "preserve-3d" }}
+                              className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full h-full"
+                            >
+                              {/* Cologne Assistant Window */}
+                              <CologneChatbot 
+                                onRobotStateChange={handleRobotStateChange}
+                                onDrBubbleTrigger={(text) => setRobotBubble(text)}
+                                onMinimize={() => setWorkspaceMinimized(true)}
+                              />
+
+                              {/* Gutachten Editor Window */}
+                              <GutachtenPanel 
+                                onRobotStateChange={handleRobotStateChange}
+                                onMinimize={() => setWorkspaceMinimized(true)}
+                              />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
+                    {activeView === "upgrades" && (
+                      <PracticeUpgrades />
+                    )}
+
+                    {activeView === "analytics" && (
+                      <ExecutiveDashboard />
+                    )}
+
+                    {activeView === "eeg" && (
+                      <EEGWorkspace />
+                    )}
+
+                    {activeView === "whitepaper" && (
+                      <SystemWhitepaper />
+                    )}
+                  </div>
+                )}
 
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
-      </main>
+          </AnimatePresence>
+        </main>
+      )}
 
 
       {/* Zoom Animation Overlay for Function Pages */}
@@ -939,7 +1785,35 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <AccessibilityWidget />
+      {!cleanMode && (
+        <AccessibilityWidget 
+          showPortalMenu={showPortalMenu}
+          setShowPortalMenu={setShowPortalMenu}
+        />
+      )}
+      
+      {!cleanMode && <JarvisAssistant />}
+
+      {/* Sleek Floating Glass Trigger to Enter/Exit Clean Mode */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+        <button
+          onClick={() => setCleanMode(!cleanMode)}
+          className="px-6 py-3 rounded-full bg-slate-950/70 hover:bg-slate-900/90 text-teal-400 hover:text-teal-300 border border-teal-500/30 hover:border-teal-400 transition-all duration-300 cursor-pointer font-sans font-bold tracking-widest text-xs uppercase backdrop-blur-xl shadow-[0_0_30px_rgba(20,184,166,0.25)] flex items-center gap-2.5 hover:scale-105 active:scale-95"
+          title={cleanMode ? "Open Clinical Portal" : "Clean Screen"}
+        >
+          {cleanMode ? (
+            <>
+              <Eye size={15} className="stroke-[2.5px]" />
+              <span>{language === "en" ? "Open Clinical Portal" : "Klinisches Portal öffnen"}</span>
+            </>
+          ) : (
+            <>
+              <X size={15} className="stroke-[2.5px] text-rose-400" />
+              <span>{language === "en" ? "Clean Full Screen" : "Bildschirm leeren"}</span>
+            </>
+          )}
+        </button>
+      </div>
 
     </div>
   );

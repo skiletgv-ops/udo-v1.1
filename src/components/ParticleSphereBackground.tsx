@@ -10,7 +10,7 @@ import {
   Plane,
   Sphere,
 } from "@react-three/drei";
-import { Download, Heart, X, Sparkles, Activity, Video, MessageSquare, LineChart } from "lucide-react";
+import { Download, Heart, X, Sparkles, Activity, Video, MessageSquare, LineChart, Cpu } from "lucide-react";
 import { FUNCTIONS_CARDS, Card } from "../data/functionsData";
 import { Component as AsciiOrbBackground } from "./ui/artificial-hero";
 import { SplineScene } from "./ui/splite";
@@ -385,6 +385,7 @@ function CardModal({ setActiveView }: CardModalProps) {
               {selectedCard.moduleId === "chat" && <MessageSquare size={13} />}
               {selectedCard.moduleId === "upgrades" && <Sparkles size={13} />}
               {selectedCard.moduleId === "analytics" && <LineChart size={13} />}
+              {selectedCard.moduleId === "eeg" && <Cpu size={13} />}
               <span>In U.D.O. Bereich laden &rarr;</span>
             </button>
           </div>
@@ -466,29 +467,40 @@ interface ParticleSphereBackgroundProps {
   activeView: string | null;
   setActiveView: (view: string | null) => void;
   setActiveFunctionId?: (id: string | null) => void;
+  scrollProgress?: number;
 }
 
 export default function ParticleSphereBackground({
   activeView,
   setActiveView,
   setActiveFunctionId,
+  scrollProgress = 0,
 }: ParticleSphereBackgroundProps) {
+  // Cinematic zoom out: scale from 1.15 down to 0.85
+  const currentScale = 1.15 - scrollProgress * 0.30;
+
   return (
     <CardProvider activeView={activeView} setActiveView={setActiveView} setActiveFunctionId={setActiveFunctionId}>
       <div className="fixed inset-0 z-0 bg-[#030712] overflow-hidden pointer-events-auto flex items-center justify-center select-none">
         
         {/* Atmospheric Background Ambient Glow behind the sphere */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.1),transparent_75%)] blur-3xl pointer-events-none" />
+        <div 
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.12),transparent_75%)] blur-3xl pointer-events-none transition-all duration-700" 
+          style={{ opacity: 1 - scrollProgress * 0.4 }}
+        />
         
         {/* Grounding Shadow mimicking a real contact light falloff */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-96 h-6 bg-teal-950/40 rounded-full blur-xl pointer-events-none border-t border-teal-500/10" />
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-64 h-3 bg-teal-900/30 rounded-full blur-md pointer-events-none" />
 
         {/* 3D Spline Interactive Canvas Background */}
-        <div className="w-full h-full relative z-10">
+        <div 
+          className="w-full h-full relative z-10 transition-transform duration-700 ease-out"
+          style={{ transform: `scale(${currentScale})` }}
+        >
           <SplineScene 
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-            className="w-full h-full scale-105"
+            className="w-full h-full"
           />
         </div>
 

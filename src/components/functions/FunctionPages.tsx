@@ -719,17 +719,17 @@ export default function FunctionDetailPage({ cardId, onBack }: FunctionPagesProp
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
-                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">Gemini 3.5</span>
+                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">UDO Neuro</span>
                   <div className="my-3 text-lg font-black text-emerald-600">KEEP (BEHALTEN)</div>
                   <p className="text-[10px] text-slate-500 leading-normal">98.2% biomechanische Korrelation mit MRT-Befund.</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
-                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">DeepSeek R1</span>
+                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">UDO Cognitive</span>
                   <div className="my-3 text-lg font-black text-emerald-600">KEEP (BEHALTEN)</div>
                   <p className="text-[10px] text-slate-500 leading-normal">Logische Kausalitätskette schließt Degeneration aus.</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
-                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">GPT-4o</span>
+                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase bg-slate-200/50 px-2 py-0.5 rounded-full">UDO Biometrics</span>
                   <div className="my-3 text-lg font-black text-amber-600">NEUTRAL (PRÜFEN)</div>
                   <p className="text-[10px] text-slate-500 leading-normal">Möglicher Vorzustand nicht hinreichend dokumentiert.</p>
                 </div>

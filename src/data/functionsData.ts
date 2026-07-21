@@ -230,5 +230,27 @@ export const FUNCTIONS_CARDS: Card[] = [
     moduleName: "Analytik & ROI",
     numberLabel: "n20",
     detailedDescription: "Wissenschaftliche Prüfung des ursächlichen Zusammenhangs zwischen Unfallereignis und Gesundheitsschaden gem. den Standards der gesetzlichen Unfallversicherung."
+  },
+  {
+    id: "21",
+    imageUrl: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=300&q=80",
+    alt: "AI-Assisted EEG Neuromonitoring",
+    title: "EEG AI-Neuromonitoring",
+    category: "NEUROLOGY",
+    moduleId: "eeg",
+    moduleName: "EEG AI-Workspace",
+    numberLabel: "n21",
+    detailedDescription: "Automated event detection, spike-and-wave pattern tracking, and epileptiform discharge localization utilizing advanced neural signal analysis models."
+  },
+  {
+    id: "22",
+    imageUrl: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=300&q=80",
+    alt: "EHR & FHIR EEG Integration",
+    title: "FHIR EEG-Datenimport",
+    category: "INTEGRATION",
+    moduleId: "eeg",
+    moduleName: "EEG AI-Workspace",
+    numberLabel: "n22",
+    detailedDescription: "Seamless clinical integration with electronic health records supporting EDF, EDF+, and HL7/FHIR neurodiagnostic data streams."
   }
 ];

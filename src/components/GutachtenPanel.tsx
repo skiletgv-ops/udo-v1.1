@@ -18,6 +18,7 @@ import {
   Share2, 
   Layers, 
   X, 
+  Minus,
   FileCheck,
   AlertTriangle,
   Code,
@@ -26,12 +27,14 @@ import {
 } from "lucide-react";
 import { Patient } from "../types";
 import { useGlobalSystem } from "./GlobalSystemContext";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
 
 interface GutachtenPanelProps {
   onRobotStateChange?: (state: any) => void;
+  onMinimize?: () => void;
 }
 
-export default function GutachtenPanel({ onRobotStateChange }: GutachtenPanelProps) {
+export default function GutachtenPanel({ onRobotStateChange, onMinimize }: GutachtenPanelProps) {
   const { language, activePatient, setActivePatient } = useGlobalSystem();
   
   // Default fallback data if no patient is active
@@ -45,7 +48,29 @@ export default function GutachtenPanel({ onRobotStateChange }: GutachtenPanelPro
     commissioningEntity: "BGHM (Berufsgenossenschaft Holz und Metall)",
   };
 
-  const [activeTab, setActiveTab] = useState<"editor" | "apisetup" | "preview">("editor");
+  const [activeTab, setActiveTab] = useState<"editor" | "apisetup" | "preview" | "v4upgrade">("editor");
+
+  // v4.0 Predictive Analytics, Blockchain Ledger & Multi-User Collaboration States
+  const [physioEngagement, setPhysioEngagement] = useState<number>(2); // 1 to 5 scale
+  const [biomechanicalLoad, setBiomechanicalLoad] = useState<number>(4); // 1 to 5 scale
+  const [blockchainStatus, setBlockchainStatus] = useState<"unanchored" | "anchoring" | "secured">("unanchored");
+  const [blockchainHash, setBlockchainHash] = useState<string>("7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991b7852c92a");
+  const [blockchainProgress, setBlockchainProgress] = useState<number>(0);
+  const [blockchainLedger, setBlockchainLedger] = useState<Array<{ block: number; hash: string; timestamp: string; action: string; status: string }>>([
+    { block: 108241, hash: "3fa85f64...2f8a", timestamp: "2026-07-20 09:12:04", action: "SYSTEM_INITIALIZED", status: "VERIFIED" },
+    { block: 108245, hash: "90a1f28b...a912", timestamp: "2026-07-20 11:34:52", action: "DOSSIER_INGESTED", status: "VERIFIED" }
+  ]);
+  const [multiplayerDocs, setMultiplayerDocs] = useState([
+    { name: "Dr. Clara (Med-Gemini)", section: "Section II. MRI L4/L5 radiological correlation", status: "Active Typing...", color: "border-teal-400 bg-teal-500/10 text-teal-300" },
+    { name: "Dr. Eric (Claude S2k)", section: "Section III. Biomechanical temporal criteria check", status: "idle", color: "border-cyan-400 bg-cyan-500/10 text-cyan-300" },
+    { name: "Dr. Marcus (GPT-4o)", section: "Section IV. MdE 20% consensus recommendation", status: "Active Reviewing", color: "border-purple-400 bg-purple-500/10 text-purple-300" }
+  ]);
+  const [collabMessages, setCollabMessages] = useState<string[]>([
+    "[Multi-User] Dr. Clara: Completed initial MRI segment cross-referencing.",
+    "[Multi-User] Dr. Eric: S2k guidelines matches lifting kinematics criteria.",
+    "[Multi-User] Dr. Marcus: Force vector load >4800 N confirmed."
+  ]);
+  const [newMessageText, setNewMessageText] = useState("");
 
   // Local state for the Gutachten sections
   const [demographics, setDemographics] = useState(fallbackDemographics);
@@ -255,6 +280,17 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
             {language === "de" ? "Thomas Müller laden" : "Load Thomas Müller Demo"}
           </button>
           
+          {onMinimize && (
+            <button
+              onClick={onMinimize}
+              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-mono text-[10px] tracking-wider transition-all uppercase cursor-pointer flex items-center gap-1"
+              title={language === "de" ? "Minimieren" : "Minimize"}
+            >
+              <Minus size={11} />
+              <span>MIN</span>
+            </button>
+          )}
+
           <div className="h-5 w-px bg-white/10 mx-1" />
 
           {/* Tab Selection */}
@@ -278,6 +314,17 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
               }`}
             >
               {language === "de" ? "Gutachten-Druck" : "Print Preview"}
+            </button>
+            <button
+              onClick={() => setActiveTab("v4upgrade")}
+              className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg transition-all flex items-center gap-1 ${
+                activeTab === "v4upgrade" 
+                  ? "bg-teal-600 text-white font-black" 
+                  : "text-[#39FF14] hover:text-[#39FF14]/80"
+              }`}
+            >
+              <Cpu size={11} className="text-[#39FF14] animate-pulse" />
+              <span>v4.0 Engine</span>
             </button>
             <button
               onClick={() => setActiveTab("apisetup")}
@@ -447,7 +494,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-mono text-teal-400 uppercase block">Clara's Clinical Finding Statement</label>
+                    <label className="text-[8px] font-mono text-teal-400 uppercase block">Clara's UDO Neuro Clinical Finding Statement</label>
                     <textarea 
                       rows={4}
                       disabled={!includeClara}
@@ -458,7 +505,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                 </div>
 
-                {/* AI 2: Dr. Eric (Claude-3.5) */}
+                {/* AI 2: Dr. Eric (UDO Forensic) */}
                 <div className={`p-4 rounded-xl border transition-all duration-300 ${
                   includeEric 
                     ? "bg-slate-900/75 border-amber-500/30 shadow-md shadow-amber-500/5" 
@@ -468,7 +515,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                     <div className="flex items-center gap-2.5">
                       <div className={`w-3 h-3 rounded-full ${includeEric ? "bg-amber-400 animate-pulse" : "bg-slate-600"}`} />
                       <div>
-                        <span className="text-xs font-black text-white block">Dr. Eric (Claude-3.5)</span>
+                        <span className="text-xs font-black text-white block">Dr. Eric (UDO Forensic)</span>
                         <span className="text-[8px] font-mono text-slate-400 block uppercase tracking-wider">Forensic & Guideline</span>
                       </div>
                     </div>
@@ -488,7 +535,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-mono text-amber-400 uppercase block">Eric's Forensic/MdE Assessment</label>
+                    <label className="text-[8px] font-mono text-amber-400 uppercase block">Eric's UDO Forensic/MdE Assessment</label>
                     <textarea 
                       rows={4}
                       disabled={!includeEric}
@@ -499,7 +546,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                 </div>
 
-                {/* AI 3: Dr. Marcus (GPT-4o) */}
+                {/* AI 3: Dr. Marcus (UDO Biomechanics) */}
                 <div className={`p-4 rounded-xl border transition-all duration-300 ${
                   includeMarcus 
                     ? "bg-slate-900/75 border-purple-500/30 shadow-md shadow-purple-500/5" 
@@ -509,7 +556,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                     <div className="flex items-center gap-2.5">
                       <div className={`w-3 h-3 rounded-full ${includeMarcus ? "bg-purple-400 animate-pulse" : "bg-slate-600"}`} />
                       <div>
-                        <span className="text-xs font-black text-white block">Dr. Marcus (GPT-4o)</span>
+                        <span className="text-xs font-black text-white block">Dr. Marcus (UDO Biomechanics)</span>
                         <span className="text-[8px] font-mono text-slate-400 block uppercase tracking-wider">Kinetic Vector Analysis</span>
                       </div>
                     </div>
@@ -529,7 +576,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-mono text-purple-400 uppercase block">Marcus' Biomechanical Assessment</label>
+                    <label className="text-[8px] font-mono text-purple-400 uppercase block">Marcus' UDO Biomechanical Assessment</label>
                     <textarea 
                       rows={4}
                       disabled={!includeMarcus}
@@ -540,7 +587,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                 </div>
 
-                {/* AI 4: Dr. Gratsiano (DeepSeek-R1) */}
+                {/* AI 4: Dr. Gratsiano (UDO Cognitive) */}
                 <div className={`p-4 rounded-xl border transition-all duration-300 ${
                   includeGratsiano 
                     ? "bg-slate-900/75 border-rose-500/30 shadow-md shadow-rose-500/5" 
@@ -550,7 +597,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                     <div className="flex items-center gap-2.5">
                       <div className={`w-3 h-3 rounded-full ${includeGratsiano ? "bg-rose-400 animate-pulse" : "bg-slate-600"}`} />
                       <div>
-                        <span className="text-xs font-black text-white block">Dr. Gratsiano (DeepSeek-R1)</span>
+                        <span className="text-xs font-black text-white block">Dr. Gratsiano (UDO Cognitive)</span>
                         <span className="text-[8px] font-mono text-slate-400 block uppercase tracking-wider">Deep clinical Synthesis</span>
                       </div>
                     </div>
@@ -570,7 +617,7 @@ QES_SECURE_HASH::SHA256::7e40c442a8fc1c549afbf4c8996fb92427ae41e4649b934ca495991
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-mono text-rose-400 uppercase block">Gratsiano's Chain-of-Thought Synthesis</label>
+                    <label className="text-[8px] font-mono text-rose-400 uppercase block">Gratsiano's UDO Cognitive Synthesis</label>
                     <textarea 
                       rows={4}
                       disabled={!includeGratsiano}
@@ -849,6 +896,296 @@ app.post("/api/consensus", async (req, res) => {
                 <p>
                   Connect the `Consolidate Report` button to trigger the `/api/consensus` POST request instead of using local mock states. This enables absolute, real-time live-updating of all expert views simultaneously!
                 </p>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {activeTab === "v4upgrade" && (
+          <div className="space-y-6">
+            
+            {/* V4 SUB-HEADER */}
+            <div className="bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border border-[#39FF14]/30 rounded-2xl p-5 shadow-[0_0_20px_rgba(57,255,20,0.1)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 border border-[#39FF14]/50 flex items-center justify-center text-[#39FF14]">
+                  <Cpu size={20} className="animate-spin" style={{ animationDuration: "10s" }} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white tracking-wider uppercase font-sans">
+                    CORTICAL CORE v4.0 - Active Architecture Upgrades
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    PROACTIVE PREDICTIVE ANALYTICS • BLOCKCHAIN INTEGRITY DECK • MULTI-USER COLLABORATIVE REAL-TIME CONSENSUS
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* THREE-COLUMN BENTO GRID FOR V4 FEATURES */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+              {/* COLUMN 1: PROACTIVE PREDICTIVE ANALYTICS */}
+              <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="font-mono font-black text-[#39FF14] text-[10px] uppercase block tracking-wider">
+                    MODULE I: Outcome Prognosis Engine
+                  </span>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Recalculate patient clinical outcomes, chronicity risk indices, and pain reduction projections by modifying rehabilitative parameters dynamically.
+                  </p>
+
+                  {/* Dynamic Sliders */}
+                  <div className="space-y-3.5 bg-black/30 p-3 rounded-xl border border-white/5">
+                    <div>
+                      <div className="flex justify-between text-[10px] font-mono">
+                        <span className="text-teal-400 font-bold uppercase">1. Early Physiotherapy Engagement</span>
+                        <span className="text-[#39FF14] font-black">{physioEngagement}/5 (Level)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="5" 
+                        value={physioEngagement}
+                        onChange={(e) => setPhysioEngagement(parseInt(e.target.value))}
+                        className="w-full mt-1.5 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#39FF14]"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[10px] font-mono">
+                        <span className="text-teal-400 font-bold uppercase">2. Biomechanical Load Unloading</span>
+                        <span className="text-[#39FF14] font-black">{6 - biomechanicalLoad}/5 (Unloaded)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="5" 
+                        value={biomechanicalLoad}
+                        onChange={(e) => setBiomechanicalLoad(parseInt(e.target.value))}
+                        className="w-full mt-1.5 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#39FF14]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Calculated Outputs */}
+                  <div className="grid grid-cols-2 gap-2 bg-black/40 p-3 rounded-xl border border-white/5 font-mono text-center">
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block">Chronicity Risk</span>
+                      <span className={`text-sm font-black ${
+                        Math.max(10, Math.round(95 - physioEngagement * 15 + biomechanicalLoad * 8)) > 50 
+                          ? "text-rose-400" : "text-[#39FF14]"
+                      }`}>
+                        {Math.max(10, Math.round(95 - physioEngagement * 15 + biomechanicalLoad * 8))}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block">Recovery Period</span>
+                      <span className="text-sm font-black text-cyan-400">
+                        {Math.max(3, Math.round(14 - physioEngagement * 2.2 + biomechanicalLoad * 1.1))} Weeks
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Outcome Projection Chart */}
+                <div className="h-40 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={Array.from({ length: 8 }, (_, i) => {
+                        const week = i * 2;
+                        const wMax = Math.max(3, Math.round(14 - physioEngagement * 2.2 + biomechanicalLoad * 1.1));
+                        const progress = Math.min(100, Math.round((week / wMax) * 100));
+                        const pain = Math.max(0, Math.round(8 - (week * (8 / wMax))));
+                        return { week: "W" + week, Recovery: progress, Pain: pain };
+                      })}
+                      margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
+                      <XAxis dataKey="week" stroke="#ffffff50" fontSize={8} />
+                      <YAxis stroke="#ffffff50" fontSize={8} />
+                      <Tooltip contentStyle={{ backgroundColor: "#020617", borderColor: "#ffffff15" }} />
+                      <Area type="monotone" dataKey="Recovery" stroke="#39FF14" fill="rgba(57,255,20,0.06)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="Pain" stroke="#ef4444" fill="rgba(239,68,68,0.03)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* COLUMN 2: BLOCKCHAIN-BASED DOCUMENT INTEGRITY LEDGER */}
+              <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="font-mono font-black text-[#39FF14] text-[10px] uppercase block tracking-wider">
+                    MODULE II: Blockchain Verifier Ledger
+                  </span>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Anchor clinical consensus reports on decentralized ledger nodes to generate immutable cryptographic time-stamps and QES validation proofs.
+                  </p>
+
+                  {/* SHA-256 Hash Block */}
+                  <div className="bg-black/40 border border-white/5 p-3 rounded-xl font-mono text-[9px] space-y-1">
+                    <span className="text-slate-500 uppercase block">Gutachten Payload Seal (SHA-256)</span>
+                    <span className="text-teal-400 block truncate select-all">{blockchainHash}</span>
+                  </div>
+
+                  {/* Action trigger button */}
+                  {blockchainStatus === "unanchored" ? (
+                    <button
+                      onClick={() => {
+                        setBlockchainStatus("anchoring");
+                        setBlockchainProgress(0);
+                        const interval = setInterval(() => {
+                          setBlockchainProgress(prev => {
+                            if (prev >= 100) {
+                              clearInterval(interval);
+                              setBlockchainStatus("secured");
+                              const newBlockNum = blockchainLedger[blockchainLedger.length - 1].block + 4;
+                              const newHash = "f9a4" + Math.random().toString(16).substring(2, 10) + "...92c1";
+                              setBlockchainHash("SHA256::" + newHash + "c8e9b81a" + Math.round(Math.random() * 9000));
+                              setBlockchainLedger(prevLedger => [
+                                ...prevLedger,
+                                {
+                                  block: newBlockNum,
+                                  hash: newHash,
+                                  timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
+                                  action: "GUTACHTEN_ANCHORED",
+                                  status: "SECURED"
+                                }
+                              ]);
+                              return 100;
+                            }
+                            return prev + 10;
+                          });
+                        }, 250);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-sans font-black text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-teal-500/15"
+                    >
+                      <Database size={13} />
+                      <span>Anchor Document to Node</span>
+                    </button>
+                  ) : blockchainStatus === "anchoring" ? (
+                    <div className="bg-black/30 border border-teal-500/20 p-3 rounded-xl space-y-2">
+                      <div className="flex justify-between text-[9px] font-mono text-teal-400">
+                        <span className="animate-pulse">BROADCASTING TRANSACTION...</span>
+                        <span>{blockchainProgress}%</span>
+                      </div>
+                      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-teal-400" style={{ width: `${blockchainProgress}%` }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-center space-y-1">
+                      <div className="flex items-center justify-center gap-1.5 text-[#39FF14] text-xs font-black uppercase tracking-wider font-mono">
+                        <CheckCircle size={14} />
+                        <span>Anchor Block Secured</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 block font-mono">Transaction locked on ledger index.</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Interactive Ledger list */}
+                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin pt-2 border-t border-white/5">
+                  <span className="text-[8px] font-mono text-slate-500 uppercase block">Active Blockchain Registry</span>
+                  {blockchainLedger.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center text-[10px] font-mono bg-black/25 p-2 rounded-lg border border-white/5">
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-white font-bold">Block #{item.block}</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-slate-400 text-[9px] truncate max-w-[80px]">{item.action}</span>
+                        </div>
+                        <span className="text-[8px] text-slate-500 block mt-0.5">{item.timestamp}</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[#39FF14] text-[8px] font-black uppercase">
+                        {item.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* COLUMN 3: REAL-TIME COLLABORATIVE EDITING SIMULATOR */}
+              <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="font-mono font-black text-[#39FF14] text-[10px] uppercase block tracking-wider">
+                    MODULE III: Real-Time Multiplayer Room
+                  </span>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Collaborate instantly with concurrent medical specialists. Monitor active text updates, presence cursors, and coordinate medical consensus in real-time.
+                  </p>
+
+                  {/* Active specialists presence */}
+                  <div className="space-y-1.5 max-h-24 overflow-y-auto">
+                    {multiplayerDocs.map((doc, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-[10px] font-mono p-1.5 border border-white/5 bg-black/25 rounded-lg">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] animate-pulse" />
+                          <span className="text-white font-bold">{doc.name}</span>
+                        </div>
+                        <span className="text-slate-400 text-[9px] max-w-[120px] truncate">{doc.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Collaborative log/chat terminal */}
+                <div className="space-y-2">
+                  <div className="bg-black/50 border border-white/10 rounded-xl p-3 h-28 overflow-y-auto font-mono text-[9px] text-teal-300 space-y-2.5 scrollbar-thin">
+                    {collabMessages.map((msg, idx) => (
+                      <div key={idx} className="leading-relaxed">
+                        {msg}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Typing input simulation */}
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newMessageText}
+                      onChange={(e) => setNewMessageText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (!newMessageText.trim()) return;
+                          setCollabMessages(prev => [...prev, `[User] Obergutachter: ${newMessageText}`]);
+                          setNewMessageText("");
+                          setTimeout(() => {
+                            const replies = [
+                              "[Multi-User] Dr. Clara: Copy that. Applying corresponding adjustments.",
+                              "[Multi-User] Dr. Eric: Consensus recommendation aligned successfully.",
+                              "[Multi-User] Dr. Marcus: Biomechanical vector models synced."
+                            ];
+                            setCollabMessages(prev => [...prev, replies[Math.floor(Math.random() * replies.length)]]);
+                          }, 1000);
+                        }
+                      }}
+                      placeholder="Send live consensus update..."
+                      className="flex-1 bg-black/60 border border-white/15 px-3 py-1.5 text-[10px] text-white rounded-xl placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        if (!newMessageText.trim()) return;
+                        setCollabMessages(prev => [...prev, `[User] Obergutachter: ${newMessageText}`]);
+                        setNewMessageText("");
+                        setTimeout(() => {
+                          const replies = [
+                            "[Multi-User] Dr. Clara: Copy that. Applying corresponding adjustments.",
+                            "[Multi-User] Dr. Eric: Consensus recommendation aligned successfully.",
+                            "[Multi-User] Dr. Marcus: Biomechanical vector models synced."
+                          ];
+                          setCollabMessages(prev => [...prev, replies[Math.floor(Math.random() * replies.length)]]);
+                        }, 1000);
+                      }}
+                      className="px-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl text-[10px] uppercase tracking-wider cursor-pointer transition-all"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
               </div>
 
             </div>

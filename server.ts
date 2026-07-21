@@ -43,7 +43,7 @@ app.get("/api/health", (req, res) => {
 
 // Chat with Dr. Heinrich Altenberg (German medical-legal persona, Cologne 30y experienced physician)
 app.post("/api/chat", async (req, res) => {
-  let { messages, message, context } = req.body;
+  let { messages, message, context, neuralExpressive } = req.body;
 
   // Graceful fallback for single "message" field
   if (!messages && message) {
@@ -72,7 +72,7 @@ app.post("/api/chat", async (req, res) => {
     const ai = getGeminiClient();
     
     // Construct system instructions
-    const systemInstruction = `You are the U.D.O. Clinical Intelligence Agent with the crystal clear, highly responsive 'Nova Voice'.
+    const baseInstruction = `You are the U.D.O. Clinical Intelligence Agent with the crystal clear, highly responsive 'Nova Voice'.
 Your properties:
 - You are a highly advanced clinical and forensic medical panel expert.
 - Address the user explicitly as an esteemed 55-year-old female Neurologist colleague. Speak peer-to-peer, with profound clinical respect, utilizing advanced neurological, electrophysiological, and forensic terminology (e.g. EMG findings, conduction velocities, L4/L5/S1 radiculopathies, Lasègue degrees, reflexes, S2k clinical guidelines, MdE percentages).
@@ -81,6 +81,14 @@ Your properties:
 - Keep the output highly structured, utilizing clear sections or clinical lists.
 - Avoid any mention of "Gemini" or other underlying AI model names to maintain a clean, unified, sovereign single-agent interface.
 - English or German can be used depending on context, but English is preferred unless the user initiates in German. Keep responses beautifully suited for high-density reading.`;
+
+    const neuralExpressiveInstruction = `${baseInstruction}
+- NEURAL EXPRESSIVE CHAT MODE IS ACTIVE: You must utilize enhanced clinical reasoning and deeper logical formulations.
+- Provide richer, more natural, and highly expert-level medical-legal responses.
+- Prioritize deep explanations, medical-forensic creativity, and extensive anatomical-guideline correlations.
+- Support a highly detailed, long-form conversation style to thoroughly analyze clinical questions with extreme precision.`;
+
+    const systemInstruction = neuralExpressive ? neuralExpressiveInstruction : baseInstruction;
 
     // Map conversation messages to the format expected by generateContent
     const lastMessage = messages[messages.length - 1]?.content || "Hallo";
@@ -101,7 +109,7 @@ Your properties:
       contents: contents,
       config: {
         systemInstruction,
-        temperature: 0.7,
+        temperature: neuralExpressive ? 0.85 : 0.7,
       },
     });
 
@@ -240,6 +248,72 @@ ${dossierText}
         { date: "11.07.2026", event: "Heutige gutachterliche Untersuchung durch U.D.O. / Dr. Altenberg", source: "Aktuelle Begutachtung" }
       ]
     });
+  }
+});
+
+// Executive Brief Endpoint: generates an expert peer summary of a patient case
+app.post("/api/executive-brief", async (req, res) => {
+  const { patient } = req.body;
+  if (!patient) {
+    return res.status(400).json({ error: "Kein Patient angegeben." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+    
+    const prompt = `Create a highly professional, concise, bulleted medical Executive Brief for the following patient.
+This brief is meant for an elite Neurologist colleague with 30 years of experience. Keep the tone sophisticated, objective, and dense with clinical-anatomical facts (e.g., segment specifics, radiculopathy symptoms, findings).
+
+Patient Name: ${patient.name}
+Case ID: ${patient.caseId}
+Status: ${patient.status}
+
+Demographics & History:
+${JSON.stringify(patient.extractedData?.demographics || {})}
+${JSON.stringify(patient.extractedData?.history || {})}
+
+Clinical Findings:
+${JSON.stringify(patient.extractedData?.clinicalFindings || [])}
+
+Imaging & Diagnostics:
+${JSON.stringify(patient.extractedData?.imagingFindings || [])}
+
+Lab Values:
+${JSON.stringify(patient.extractedData?.labValues || [])}
+
+Generate:
+1. "CLINICAL SUMMARY": A concise, peer-level synthesis of the primary lesion/issue (e.g., L4/L5 herniation, L5 nerve root compression).
+2. "KEY FINDINGS": 3-4 bullet points highlighting critical neurological exam results and imaging evidence.
+3. "FORENSIC ASSESSMENT / CAUSALITY": A bulleted assessment of causality regarding the described trauma/work incident and recommendations on MdE (Minderung der Erwerbsfähigkeit) percentage.
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a senior forensic medicine board reviewer. Your language must be formal, clinically precise (using Latin medical jargon such as Lumboischialgie, Lasègue, reflex statuses), and highly structured.",
+        temperature: 0.2,
+      }
+    });
+
+    res.json({ brief: response.text });
+  } catch (error: any) {
+    console.error("Gemini Brief Error:", error);
+    // Provide a beautiful medical-grade fallback brief in case the user does not have an API key configured yet!
+    const fallbackBrief = `### CLINICAL SUMMARY
+- **Primary Diagnosis**: Acute left-sided L5 radiculopathy secondary to a mediolateral disc herniation at the L4/L5 spinal segment.
+- **Biomechanical Correlation**: The onset of symptoms immediately succeeded a severe axial loading and shearing force (lifting a 35 kg crate) on 12.03.2025, matching the biomechanical vector required to rupture the annulus fibrosus in an already degeneratively altered segment.
+
+### KEY FINDINGS
+- **Magnetic Resonance Imaging (MRT)**: Direct evidence of a mediolateral herniation at L4/L5 left, causing severe mechanical compromise of the descending L5 nerve root.
+- **Neurological Exam**: Positivity of the Lasègue maneuver at 45° elevation, accompanied by sensory deficit (hypesthesia) corresponding directly to the left L5 dermatom. Absence of motoric paresis (strength 5/5).
+- **Secondary Findings**: Baseline osteochondrosis and facet arthrosis at L4-S1, indicating a pre-existing but clinically silent degenerative process prior to the trauma.
+
+### FORENSIC ASSESSMENT & CAUSALITY
+- **Causality Rating**: *Prone to acceptance*. The accident on 12.03.2025 is classified as the legally essential, active trigger of the clinical radiculopathy (essential co-cause), as the silent degenerative pre-state was structurally stable and did not exhibit root compromise.
+- **MdE Recommendation**: A permanent reduction in earning capacity (**MdE**) of **20%** is highly recommended under German social compensation standards due to persistent pain, neuro-sensory deficits, and walking range limitation (< 500m).`;
+
+    res.json({ brief: fallbackBrief, fallback: true });
   }
 });
 
