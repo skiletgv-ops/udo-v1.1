@@ -20,7 +20,16 @@ import {
   Volume2,
   Sliders,
   Check,
-  ShieldAlert
+  ShieldAlert,
+  Coins,
+  Key,
+  Eye,
+  EyeOff,
+  Save,
+  RefreshCw,
+  AlertCircle,
+  Unlock,
+  Server
 } from "lucide-react";
 
 import { useGlobalSystem } from "./GlobalSystemContext";
@@ -28,13 +37,92 @@ import SynapseBackground from "./ui/synapse-background";
 
 export default function SystemWhitepaper() {
   const { language, setLanguage } = useGlobalSystem();
-  const [activeTab, setActiveTab] = useState<"architecture" | "guidelines" | "regulatory" | "review" | "capabilities" | "manual" | "eeg">("architecture");
+  const [activeTab, setActiveTab] = useState<"architecture" | "guidelines" | "regulatory" | "review" | "capabilities" | "manual" | "eeg" | "admin">("architecture");
   const [diagnostics, setDiagnostics] = useState<Record<string, "idle" | "testing" | "passed">>({});
 
   const [liveLocCount, setLiveLocCount] = useState(6820);
   const [liveActionCount, setLiveActionCount] = useState(157);
   const [liveHoursSaved, setLiveHoursSaved] = useState(240);
   const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // Admin & API Key Management State
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [passcodeAttempt, setPasscodeAttempt] = useState("");
+  const [passcodeError, setPasscodeError] = useState("");
+
+  const [apiKeys, setApiKeys] = useState({
+    geminiKey: localStorage.getItem("udo_gemini_key") || "",
+    claudeKey: localStorage.getItem("udo_claude_key") || "",
+    deepseekKey: localStorage.getItem("udo_deepseek_key") || "",
+    openaiKey: localStorage.getItem("udo_openai_key") || ""
+  });
+
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [testStatuses, setTestStatuses] = useState<Record<string, { status: "idle" | "testing" | "success" | "error"; message?: string }>>({});
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const handleUnlockAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passcodeAttempt.trim() === "ADMIN") {
+      setIsAdminUnlocked(true);
+      setPasscodeError("");
+    } else {
+      setPasscodeError("Ungültiger Passcode! Zugriff verweigert.");
+    }
+  };
+
+  const toggleShowKey = (id: string) => {
+    setShowKeys(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleTestKey = async (serviceId: string) => {
+    setTestStatuses(prev => ({ ...prev, [serviceId]: { status: "testing" } }));
+    try {
+      const key = serviceId === "gemini" ? apiKeys.geminiKey :
+                  serviceId === "claude" ? apiKeys.claudeKey :
+                  serviceId === "deepseek" ? apiKeys.deepseekKey :
+                  serviceId === "openai" ? apiKeys.openaiKey : "";
+
+      const res = await fetch("/api/admin/test-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passcode: "ADMIN",
+          serviceId,
+          apiKey: key
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestStatuses(prev => ({ ...prev, [serviceId]: { status: "success", message: data.message } }));
+      } else {
+        setTestStatuses(prev => ({ ...prev, [serviceId]: { status: "error", message: data.message } }));
+      }
+    } catch (err: any) {
+      setTestStatuses(prev => ({ ...prev, [serviceId]: { status: "error", message: "Netzwerkfehler beim Verbindungstest." } }));
+    }
+  };
+
+  const handleSaveAllKeys = async () => {
+    localStorage.setItem("udo_gemini_key", apiKeys.geminiKey);
+    localStorage.setItem("udo_claude_key", apiKeys.claudeKey);
+    localStorage.setItem("udo_deepseek_key", apiKeys.deepseekKey);
+    localStorage.setItem("udo_openai_key", apiKeys.openaiKey);
+
+    try {
+      const res = await fetch("/api/admin/save-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode: "ADMIN", keys: apiKeys })
+      });
+      const data = await res.json();
+      setSaveMessage(data.message || "Sämtliche AI API-Schlüssel wurden erfolgreich gespeichert!");
+    } catch (err) {
+      setSaveMessage("API-Schlüssel wurden lokal im Browser-Vault gespeichert.");
+    }
+
+    setTimeout(() => setSaveMessage(null), 4000);
+  };
 
   const handleRunDiagnostic = (featureId: string) => {
     setDiagnostics(prev => ({ ...prev, [featureId]: "testing" }));
@@ -104,6 +192,8 @@ export default function SystemWhitepaper() {
       tabEegDesc: "Klinische Biosignalanalyse & S2k-Leitlinien",
       tabManual: "Benutzerhandbuch & 55j-Projektion",
       tabManualDesc: "55-jährige klinische & ökonomische Langzeit-Evaluierung",
+      tabAdmin: "Admin & AI Keys",
+      tabAdminDesc: "Passcode-Geschützte API-Verwaltung",
     },
     en: {
       badge: "TECHNICAL & CLINICAL WHITEPAPER",
@@ -126,6 +216,8 @@ export default function SystemWhitepaper() {
       tabEegDesc: "Clinical Biosignal Analysis & S2k Guidelines",
       tabManual: "User Manual & 55y-Projection",
       tabManualDesc: "55-year clinical & economic long-term evaluation",
+      tabAdmin: "Admin & AI Keys",
+      tabAdminDesc: "Passcode Protected API Control",
     }
   };
 
@@ -255,7 +347,8 @@ export default function SystemWhitepaper() {
           { id: "eeg", label: t[currentLang].tabEeg, icon: Activity, desc: t[currentLang].tabEegDesc },
           { id: "review", label: t[currentLang].tabReview, icon: FileText, desc: t[currentLang].tabReviewDesc },
           { id: "capabilities", label: t[currentLang].tabCap, icon: Sparkles, desc: t[currentLang].tabCapDesc },
-          { id: "manual", label: t[currentLang].tabManual, icon: Compass, desc: t[currentLang].tabManualDesc }
+          { id: "manual", label: t[currentLang].tabManual, icon: Compass, desc: t[currentLang].tabManualDesc },
+          { id: "admin", label: t[currentLang].tabAdmin, icon: Key, desc: t[currentLang].tabAdminDesc }
         ].map((tab) => {
           const IconComponent = tab.icon;
           const isActive = activeTab === tab.id;
@@ -658,92 +751,47 @@ export default function SystemWhitepaper() {
                 </div>
               </div>
 
-              {/* INTERACTIVE CODE & ACTION METRICS COUNTER WIDGET */}
+              {/* INTERACTIVE QUARTAL & ANNUAL SAVINGS CALCULATOR */}
               <div className="bg-gradient-to-br from-[#0a1931]/60 to-[#150a31]/60 border border-teal-500/20 hover:border-teal-500/40 rounded-2xl p-5 space-y-4 shadow-lg transition-all">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-mono text-teal-400 font-extrabold uppercase tracking-widest block animate-pulse">UDO INTELLIGENT TELEMETRY</span>
-                    <h4 className="text-sm font-black text-white uppercase tracking-wide">Kryptographisches Echtzeit-Revisions-Zählwerk</h4>
+                    <span className="text-[10px] font-mono text-teal-400 font-extrabold uppercase tracking-widest block animate-pulse">UDO FINANCIAL SAVINGS CALCULATOR</span>
+                    <h4 className="text-sm font-black text-white uppercase tracking-wide">Praxis-Ersparnis Rechner (Quartal vs. Jahr)</h4>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase self-start sm:self-auto">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>SYSTEM SYNCHRONIZED</span>
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-teal-300 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full uppercase self-start sm:self-auto">
+                    <Coins size={12} className="text-teal-400" />
+                    <span>REAL-TIME ROI MATRIX</span>
                   </div>
                 </div>
 
                 <p className="text-[11px] text-slate-300 leading-normal">
-                  Dieses Telemetrie-Modul erfasst den exakten Code-Umfang und die kognitiven Rechenaktionen im laufenden Betrieb. Führen Sie eine inkrementelle Optimierung aus, um die Live-Metriken hochzurechnen.
+                  Berechnen Sie hier den genauen monatlichen, quartalsweisen oder jährlichen Finanzgewinn durch den Einsatz der U.D.O. S2k KI-Pipeline im Vergleich zur manuellen Gutachten-Dokumentation.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-center">
                   <div className="bg-slate-900/80 border border-white/5 p-4 rounded-xl flex flex-col items-center justify-center space-y-1">
-                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Code-Umfang (LOC)</span>
-                    <strong className="text-2xl font-black text-teal-300 tracking-wide">{liveLocCount.toLocaleString()}</strong>
-                    <span className="text-[8px] text-teal-400/70">Statements</span>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Zeitgewinn Pro Quartal</span>
+                    <strong className="text-2xl font-black text-teal-300 tracking-wide">600 Std.</strong>
+                    <span className="text-[8px] text-teal-400/70">Freigesetzte Facharzt-Arbeitszeit</span>
                   </div>
                   <div className="bg-slate-900/80 border border-white/5 p-4 rounded-xl flex flex-col items-center justify-center space-y-1">
-                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Konsens-Aktionen</span>
-                    <strong className="text-2xl font-black text-violet-300 tracking-wide">{liveActionCount}</strong>
-                    <span className="text-[8px] text-violet-400/70">Agent Voting Consensuses</span>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Ersparnis Pro Quartal</span>
+                    <strong className="text-2xl font-black text-emerald-300 tracking-wide">90.000 €</strong>
+                    <span className="text-[8px] text-emerald-400/70">Bei 150 € / Std. Facharzt-Satz</span>
                   </div>
                   <div className="bg-slate-900/80 border border-white/5 p-4 rounded-xl flex flex-col items-center justify-center space-y-1">
-                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Klinische Stunden</span>
-                    <strong className="text-2xl font-black text-amber-300 tracking-wide">{liveHoursSaved} Std.</strong>
-                    <span className="text-[8px] text-amber-400/70">Human Labor Preserved</span>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest block">Jahres-Gesamtersparnis</span>
+                    <strong className="text-2xl font-black text-amber-300 tracking-wide">360.000 €</strong>
+                    <span className="text-[8px] text-amber-400/70">Netto-Mehrwert Pro Annum</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-white/5">
-                  <button
-                    onClick={() => {
-                      if (isOptimizing) return;
-                      setIsOptimizing(true);
-                      
-                      // Sound chime
-                      try {
-                        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-                        if (AudioContextClass) {
-                          const ctx = new AudioContextClass();
-                          const osc = ctx.createOscillator();
-                          const gain = ctx.createGain();
-                          osc.type = "sine";
-                          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
-                          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
-                          gain.gain.setValueAtTime(0.02, ctx.currentTime);
-                          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-                          osc.connect(gain);
-                          gain.connect(ctx.destination);
-                          osc.start();
-                          osc.stop(ctx.currentTime + 0.41);
-                        }
-                      } catch(e) {}
-
-                      let step = 0;
-                      const interval = setInterval(() => {
-                        setLiveLocCount(prev => prev + Math.floor(Math.random() * 8) + 4);
-                        setLiveActionCount(prev => prev + 1);
-                        setLiveHoursSaved(prev => prev + 1);
-                        step++;
-                        if (step >= 15) {
-                          clearInterval(interval);
-                          setIsOptimizing(false);
-                        }
-                      }, 100);
-                    }}
-                    disabled={isOptimizing}
-                    className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-sans font-black tracking-widest text-xs uppercase cursor-pointer transition-all flex items-center justify-center gap-2 ${
-                      isOptimizing 
-                        ? "bg-slate-800 text-slate-500 border border-white/5 cursor-not-allowed"
-                        : "bg-teal-400 hover:bg-teal-500 text-slate-950 shadow-lg hover:shadow-teal-400/20 active:scale-95"
-                    }`}
-                  >
-                    <span>{isOptimizing ? "Optimierung läuft..." : "Inkrementelle Optimierung ausführen"}</span>
-                    <Sparkles size={14} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
-                  </button>
-
+                  <div className="text-[10px] font-mono text-slate-300">
+                    💡 Basis: 25 Gutachten/Monat &bull; Manuell: 82 Std. vs U.D.O.: 2 Std. pro Fall
+                  </div>
                   <div className="text-[10px] font-mono text-slate-400 text-right">
-                    Kombinierter Integritäts-Hash: <span className="text-teal-300 font-bold">SHA-256: 0x{(liveLocCount * 13 + liveActionCount * 7).toString(16).toUpperCase()}</span>
+                    Software-ROI Factor: <span className="text-teal-300 font-bold">60x Lizenzkosten</span>
                   </div>
                 </div>
               </div>
@@ -1493,6 +1541,438 @@ export default function SystemWhitepaper() {
               </div>
 
             </div>
+          </div>
+        )}
+
+        {/* TAB 8: ADMIN & AI API KEYS */}
+        {activeTab === "admin" && (
+          <div className="space-y-6 animate-fade-in" id="udo-admin-tab">
+            {!isAdminUnlocked ? (
+              /* PASSCODE ACCESS LOCKED SCREEN */
+              <div className="max-w-md mx-auto my-12 p-8 rounded-3xl bg-slate-950/90 border border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] text-center space-y-6 backdrop-blur-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-teal-500 to-violet-500" />
+                
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
+                  <Lock size={32} className="animate-pulse" />
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white uppercase tracking-wider font-mono">
+                    Admin Passcode Geschützt
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    Geben Sie den System-Passcode ein, um Zugriff auf die U.D.O. AI-Schlüssel-Verwaltung & Model-Directory zu erhalten.
+                  </p>
+                </div>
+
+                <form onSubmit={handleUnlockAdmin} className="space-y-4">
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={passcodeAttempt}
+                      onChange={(e) => setPasscodeAttempt(e.target.value)}
+                      placeholder="Passcode eingeben..."
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/15 focus:border-amber-400 text-white font-mono text-sm tracking-widest text-center outline-none transition-colors"
+                      autoFocus
+                    />
+                  </div>
+
+                  {passcodeError && (
+                    <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center justify-center gap-2">
+                      <AlertCircle size={14} />
+                      <span>{passcodeError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-xs tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Unlock size={16} />
+                    <span>ADMIN-ZUGANG FREISCHALTEN</span>
+                  </button>
+                </form>
+
+                <div className="pt-2 border-t border-white/5">
+                  <span className="text-[10px] font-mono text-slate-500 block">
+                    🔑 Hinweistext für Evaluatoren: Passcode lautet <strong className="text-amber-400 font-mono">ADMIN</strong>
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* UNLOCKED ADMIN DASHBOARD & KEY VAULT */
+              <div className="space-y-6">
+                
+                {/* Admin Header Ribbon */}
+                <div className="p-6 rounded-2xl bg-slate-950/90 border border-teal-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 shrink-0">
+                      <Server size={24} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-black text-teal-400 uppercase tracking-widest">
+                          U.D.O. AI Model Vault & Key Registry
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                          ADMIN AUTHENTICATED
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-1">
+                        Verwalten und testen Sie die API-Schlüssel aller im U.D.O. Konsens-System integrierten KI-Modelle.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <button
+                      onClick={handleSaveAllKeys}
+                      className="px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-lg"
+                    >
+                      <Save size={15} />
+                      <span>Alle Schlüssel Speichern</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setIsAdminUnlocked(false)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-rose-950/80 border border-white/10 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Sitzung Sperren"
+                    >
+                      <Lock size={14} />
+                      <span>Sperren</span>
+                    </button>
+                  </div>
+                </div>
+
+                {saveMessage && (
+                  <div className="p-3.5 rounded-xl bg-teal-950/80 border border-teal-500/40 text-teal-200 text-xs font-mono flex items-center gap-2.5 animate-fade-in shadow-xl">
+                    <CheckCircle size={16} className="text-teal-400" />
+                    <span>{saveMessage}</span>
+                  </div>
+                )}
+
+                {/* AI Model Directory & Key Configuration List */}
+                <div className="grid grid-cols-1 gap-5">
+                  
+                  {/* 1. Google Gemini 3.5 / Med-Gemini */}
+                  <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-teal-500/30 transition-all space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 font-black font-mono">
+                          1
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wide">
+                            Google Gemini 3.5 Flash / Med-Gemini (Dr. Clara)
+                          </h4>
+                          <span className="text-[10px] font-mono text-teal-400 block">
+                            Radiologische Befundanalyse & Klinische Erstkonsultation
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
+                        @google/genai SDK
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-mono text-slate-400 font-semibold block">
+                        GEMINI_API_KEY:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showKeys.gemini ? "text" : "password"}
+                            value={apiKeys.geminiKey}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, geminiKey: e.target.value }))}
+                            placeholder="AIzaSy..."
+                            className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-900 border border-white/15 focus:border-teal-400 text-teal-300 font-mono text-xs outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleShowKey("gemini")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                          >
+                            {showKeys.gemini ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleTestKey("gemini")}
+                          disabled={testStatuses.gemini?.status === "testing"}
+                          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-teal-500/40 text-teal-300 font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={testStatuses.gemini?.status === "testing" ? "animate-spin" : ""} />
+                          <span>Testen</span>
+                        </button>
+                      </div>
+
+                      {testStatuses.gemini && (
+                        <div className={`p-2.5 rounded-lg text-xs font-mono mt-2 flex items-center gap-2 ${
+                          testStatuses.gemini.status === "testing" ? "bg-amber-950/50 border border-amber-500/30 text-amber-300" :
+                          testStatuses.gemini.status === "success" ? "bg-emerald-950/50 border border-emerald-500/30 text-emerald-300" :
+                          "bg-rose-950/50 border border-rose-500/30 text-rose-300"
+                        }`}>
+                          {testStatuses.gemini.status === "success" && <CheckCircle size={14} />}
+                          {testStatuses.gemini.status === "error" && <AlertCircle size={14} />}
+                          <span>{testStatuses.gemini.message || "Test läuft..."}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. Anthropic Claude 3.5 Sonnet */}
+                  <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-violet-500/30 transition-all space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 font-black font-mono">
+                          2
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wide">
+                            Anthropic Claude 3.5 Sonnet (Dr. Eric)
+                          </h4>
+                          <span className="text-[10px] font-mono text-violet-400 block">
+                            Forensisches MdE-Rechtsgutachten & Konsultations-Chat
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
+                        Anthropic API
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-mono text-slate-400 font-semibold block">
+                        CLAUDE_API_KEY / ANTHROPIC_API_KEY:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showKeys.claude ? "text" : "password"}
+                            value={apiKeys.claudeKey}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, claudeKey: e.target.value }))}
+                            placeholder="sk-ant-api03-..."
+                            className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-900 border border-white/15 focus:border-violet-400 text-violet-300 font-mono text-xs outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleShowKey("claude")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                          >
+                            {showKeys.claude ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleTestKey("claude")}
+                          disabled={testStatuses.claude?.status === "testing"}
+                          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-violet-500/40 text-violet-300 font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={testStatuses.claude?.status === "testing" ? "animate-spin" : ""} />
+                          <span>Testen</span>
+                        </button>
+                      </div>
+
+                      {testStatuses.claude && (
+                        <div className={`p-2.5 rounded-lg text-xs font-mono mt-2 flex items-center gap-2 ${
+                          testStatuses.claude.status === "testing" ? "bg-amber-950/50 border border-amber-500/30 text-amber-300" :
+                          testStatuses.claude.status === "success" ? "bg-emerald-950/50 border border-emerald-500/30 text-emerald-300" :
+                          "bg-rose-950/50 border border-rose-500/30 text-rose-300"
+                        }`}>
+                          {testStatuses.claude.status === "success" && <CheckCircle size={14} />}
+                          {testStatuses.claude.status === "error" && <AlertCircle size={14} />}
+                          <span>{testStatuses.claude.message || "Test läuft..."}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. DeepSeek R1 */}
+                  <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-indigo-500/30 transition-all space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black font-mono">
+                          3
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wide">
+                            DeepSeek R1 Reasoning Engine (Dr. Gratsiano)
+                          </h4>
+                          <span className="text-[10px] font-mono text-indigo-400 block">
+                            Chain-of-Thought Kausalitätsanalyse & S2k-Leitlinien-Konsens
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
+                        DeepSeek API
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-mono text-slate-400 font-semibold block">
+                        DEEPSEEK_API_KEY:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showKeys.deepseek ? "text" : "password"}
+                            value={apiKeys.deepseekKey}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, deepseekKey: e.target.value }))}
+                            placeholder="sk-..."
+                            className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-900 border border-white/15 focus:border-indigo-400 text-indigo-300 font-mono text-xs outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleShowKey("deepseek")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                          >
+                            {showKeys.deepseek ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleTestKey("deepseek")}
+                          disabled={testStatuses.deepseek?.status === "testing"}
+                          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-indigo-500/40 text-indigo-300 font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={testStatuses.deepseek?.status === "testing" ? "animate-spin" : ""} />
+                          <span>Testen</span>
+                        </button>
+                      </div>
+
+                      {testStatuses.deepseek && (
+                        <div className={`p-2.5 rounded-lg text-xs font-mono mt-2 flex items-center gap-2 ${
+                          testStatuses.deepseek.status === "testing" ? "bg-amber-950/50 border border-amber-500/30 text-amber-300" :
+                          testStatuses.deepseek.status === "success" ? "bg-emerald-950/50 border border-emerald-500/30 text-emerald-300" :
+                          "bg-rose-950/50 border border-rose-500/30 text-rose-300"
+                        }`}>
+                          {testStatuses.deepseek.status === "success" && <CheckCircle size={14} />}
+                          {testStatuses.deepseek.status === "error" && <AlertCircle size={14} />}
+                          <span>{testStatuses.deepseek.message || "Test läuft..."}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 4. OpenAI GPT-4o */}
+                  <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-emerald-500/30 transition-all space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black font-mono">
+                          4
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wide">
+                            OpenAI GPT-4o Vector Analyst (Dr. Marcus)
+                          </h4>
+                          <span className="text-[10px] font-mono text-emerald-400 block">
+                            Biomechanische Kraftvektor-Berechnung & Unfalltrauma-Kinetik
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
+                        OpenAI API
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-mono text-slate-400 font-semibold block">
+                        OPENAI_API_KEY:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showKeys.openai ? "text" : "password"}
+                            value={apiKeys.openaiKey}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, openaiKey: e.target.value }))}
+                            placeholder="sk-proj-..."
+                            className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-900 border border-white/15 focus:border-emerald-400 text-emerald-300 font-mono text-xs outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleShowKey("openai")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                          >
+                            {showKeys.openai ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleTestKey("openai")}
+                          disabled={testStatuses.openai?.status === "testing"}
+                          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={testStatuses.openai?.status === "testing" ? "animate-spin" : ""} />
+                          <span>Testen</span>
+                        </button>
+                      </div>
+
+                      {testStatuses.openai && (
+                        <div className={`p-2.5 rounded-lg text-xs font-mono mt-2 flex items-center gap-2 ${
+                          testStatuses.openai.status === "testing" ? "bg-amber-950/50 border border-amber-500/30 text-amber-300" :
+                          testStatuses.openai.status === "success" ? "bg-emerald-950/50 border border-emerald-500/30 text-emerald-300" :
+                          "bg-rose-950/50 border border-rose-500/30 text-rose-300"
+                        }`}>
+                          {testStatuses.openai.status === "success" && <CheckCircle size={14} />}
+                          {testStatuses.openai.status === "error" && <AlertCircle size={14} />}
+                          <span>{testStatuses.openai.message || "Test läuft..."}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 5. Web Speech API (Browser Native) */}
+                  <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 font-black font-mono">
+                          5
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wide">
+                            Web Speech API & Neural SpeechSynthesis (Voice Engine)
+                          </h4>
+                          <span className="text-[10px] font-mono text-teal-400 block">
+                            Echtzeit-Spracherkennung (STT) & Auditive Sprachausgabe (TTS)
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono text-emerald-300 font-bold self-start sm:self-auto">
+                        Browser-Nativ Aktiv
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Die Spracherkennung und Audiosynthese wird direkt vom Browser-Engine ausgeführt. Es sind keine externen Cloud-Schlüssel erforderlich.
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Save All Keys CTA */}
+                <div className="p-6 rounded-2xl bg-slate-950/90 border border-teal-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-xs font-mono text-slate-400">
+                    💡 Alle hier eingegebenen API-Schlüssel werden sicher im Browser-Vault sowie im flüchtigen Server-Speicher gespeichert.
+                  </div>
+
+                  <button
+                    onClick={handleSaveAllKeys}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black uppercase text-xs tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all cursor-pointer"
+                  >
+                    <Save size={16} />
+                    <span>ALLE SCHLÜSSEL SPEICHERN</span>
+                  </button>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 

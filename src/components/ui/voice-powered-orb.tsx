@@ -9,9 +9,12 @@ interface VoicePoweredOrbProps {
   hue?: number;
   enableVoiceControl?: boolean;
   voiceSensitivity?: number;
+  volumeThreshold?: number;
+  vizStyle?: "waveform" | "pulse";
   maxRotationSpeed?: number;
   maxHoverIntensity?: number;
   onVoiceDetected?: (detected: boolean) => void;
+  glowIntensity?: number;
 }
 
 export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
@@ -19,9 +22,12 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
   hue = 0,
   enableVoiceControl = true,
   voiceSensitivity = 1.5,
+  volumeThreshold = 0.05,
+  vizStyle = "waveform",
   maxRotationSpeed = 1.2,
   maxHoverIntensity = 0.8,
   onVoiceDetected,
+  glowIntensity = 1.0,
 }) => {
   const ctnDom = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -50,6 +56,7 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
     uniform float hover;
     uniform float rot;
     uniform float hoverIntensity;
+    uniform float glowIntensity;
     varying vec2 vUv;
 
     vec3 rgb2yiq(vec3 c) {
@@ -145,14 +152,14 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
       float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
       float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
       float d0 = distance(uv, (r0 * invLen) * uv);
-      float v0 = light1(1.0, 10.0, d0);
+      float v0 = light1(1.0 * glowIntensity, 10.0, d0);
       v0 *= smoothstep(r0 * 1.05, r0, len);
       float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
 
       float a = iTime * -1.0;
       vec2 pos = vec2(cos(a), sin(a)) * r0;
       float d = distance(uv, pos);
-      float v1 = light2(1.5, 5.0, d);
+      float v1 = light2(1.5 * glowIntensity, 5.0, d);
       v1 *= light1(1.0, 50.0, d0);
 
       float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
@@ -335,6 +342,7 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
           hover: { value: 0 },
           rot: { value: 0 },
           hoverIntensity: { value: 0 },
+          glowIntensity: { value: glowIntensity },
         },
       });
 
@@ -388,27 +396,35 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
         lastTime = t;
         program.uniforms.iTime.value = t * 0.001;
         program.uniforms.hue.value = hue;
+        program.uniforms.glowIntensity.value = glowIntensity;
 
         // Handle voice input
         if (enableVoiceControl && isMicrophoneInitialized) {
           voiceLevel = analyzeAudio();
+          const isAboveThreshold = voiceLevel >= volumeThreshold;
 
-          // Notify parent component about voice detection
+          // Notify parent component about voice detection based on threshold
           if (onVoiceDetected) {
-            onVoiceDetected(voiceLevel > 0.1);
+            onVoiceDetected(isAboveThreshold);
           }
 
-          // Map voice level to rotation speed with more visible effect
-          const voiceRotationSpeed = baseRotationSpeed + (voiceLevel * maxRotationSpeed * 2.0);
+          // Map voice level to rotation speed
+          const effectiveLevel = isAboveThreshold ? voiceLevel : 0;
+          const voiceRotationSpeed = baseRotationSpeed + (effectiveLevel * maxRotationSpeed * 2.0);
 
-          // Always rotate when there's voice input, even at low levels
-          if (voiceLevel > 0.05) {
+          if (isAboveThreshold) {
             currentRot += dt * voiceRotationSpeed;
           }
 
-          // Use voice level to drive hover effects for visual feedback
-          program.uniforms.hover.value = Math.min(voiceLevel * 2.0, 1.0);
-          program.uniforms.hoverIntensity.value = Math.min(voiceLevel * maxHoverIntensity * 0.8, maxHoverIntensity);
+          // Depending on vizStyle, drive waveform distortion or keep minimal pulse
+          if (vizStyle === "waveform") {
+            program.uniforms.hover.value = Math.min(effectiveLevel * 2.0, 1.0);
+            program.uniforms.hoverIntensity.value = Math.min(effectiveLevel * maxHoverIntensity * 0.8, maxHoverIntensity);
+          } else {
+            // Pulse mode: zero wave deformation for clean, smooth sphere shape
+            program.uniforms.hover.value = 0;
+            program.uniforms.hoverIntensity.value = 0;
+          }
         } else {
           // Keep effects at 0 when not using voice control
           program.uniforms.hover.value = 0;
@@ -467,6 +483,7 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
     voiceSensitivity,
     maxRotationSpeed,
     maxHoverIntensity,
+    glowIntensity,
     vert,
     frag
   ]);
@@ -497,9 +514,15 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
     <div
       ref={ctnDom}
       className={cn(
-        "w-full h-full relative",
+        "w-full h-full relative transition-all duration-500",
         className
       )}
+      style={{
+        filter: glowIntensity > 1.0 
+          ? `drop-shadow(0 0 ${15 * (glowIntensity - 1.0)}px rgba(244, 63, 94, 0.6))` 
+          : undefined,
+        transform: glowIntensity > 1.0 ? "scale(1.08)" : "scale(1.0)",
+      }}
     />
   );
 };

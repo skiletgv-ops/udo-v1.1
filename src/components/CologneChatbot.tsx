@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play, Brain, Minus } from "lucide-react";
+import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play, Brain, Minus, PhoneCall } from "lucide-react";
 import { useGlobalSystem } from "./GlobalSystemContext";
+import ColognePhoneTriage from "./ColognePhoneTriage";
 
 interface Message {
   id: string;
@@ -45,6 +46,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
   const [inputMessage, setInputMessage] = useState("");
   const [showVoiceConfig, setShowVoiceConfig] = useState(false);
   const [neuralExpressive, setNeuralExpressive] = useState(false);
+  const [activeMode, setActiveMode] = useState<"chat" | "triage">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Simulated real-time consensus board states: 0 = idle, 1 = realizing, 2 = deliberating/reading each other, 3 = voting complete
@@ -205,6 +207,46 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
           </div>
         </div>
       </div>
+
+      {/* Mode Sub-Header Bar */}
+      <div className="bg-black/60 border-b border-white/10 px-5 py-2 flex items-center justify-between gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveMode("chat")}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeMode === "chat"
+                ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20"
+                : "bg-white/5 text-slate-400 hover:text-white border border-white/5"
+            }`}
+          >
+            <MessageSquare size={12} />
+            <span>{language === "de" ? "💬 KI-Konsil & Chat" : "💬 Clinical Chat"}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveMode("triage")}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeMode === "triage"
+                ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20"
+                : "bg-white/5 text-slate-400 hover:text-white border border-white/5"
+            }`}
+          >
+            <PhoneCall size={12} />
+            <span>{language === "de" ? "📞 Praxis Dr. Bongartz Telefon-Triage" : "📞 Practice Phone Triage"}</span>
+          </button>
+        </div>
+
+        <span className="text-[9px] font-mono text-slate-500 font-bold uppercase hidden md:inline-block">
+          U.D.O. Cologne Medical Core
+        </span>
+      </div>
+
+      {activeMode === "triage" ? (
+        <div className="p-4 overflow-y-auto flex-1">
+          <ColognePhoneTriage />
+        </div>
+      ) : (
+        <>
 
       {/* Voice Selection & Speed Control Panel */}
       {showVoiceConfig && (
@@ -629,6 +671,8 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
           <Send size={14} />
         </button>
       </form>
+      </>
+      )}
     </div>
   );
 }

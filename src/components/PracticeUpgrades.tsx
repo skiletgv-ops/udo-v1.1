@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import CalendarManager from "./CalendarManager";
+import CompliancePanel from "./CompliancePanel";
 import { 
   BarChart, 
   Bar, 
@@ -124,7 +126,8 @@ export default function PracticeUpgrades() {
     { id: 12, title: "12. KI-Diktat v4.0", icon: Mic, desc: "Voice Report Builder" },
     { id: 13, title: "13. Gutachter-Konsens v4.0", icon: Cpu, desc: "AI Opinion Cross-Validation" },
     { id: 14, title: "14. GOÄ Pre-Audit v4.0", icon: Fingerprint, desc: "Pre-submission Billing Check" },
-    { id: 15, title: "15. FHIR Connect v4.0", icon: Globe, desc: "Standardized EHR Integration" }
+    { id: 15, title: "15. FHIR Connect v4.0", icon: Globe, desc: "Standardized EHR Integration" },
+    { id: 16, title: "16. DSGVO & Compliance", icon: ShieldCheck, desc: "Art. 15/17 Datenauskunft & Löschung" }
   ];
 
   // Appointment creation
@@ -284,102 +287,10 @@ export default function PracticeUpgrades() {
           </div>
         )}
 
-        {/* Upgrade 2: Integrated Appointment Scheduler */}
+        {/* Upgrade 2: Integrated Real Calendar Manager */}
         {activeUpgradeTab === 2 && (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase font-mono text-indigo-400">Modul 2: Integrierte Terminplanung</span>
-              <h4 className="text-sm font-bold text-white">Google Calendar-Sync & SMS-Erinnerung</h4>
-              <p className="text-xs text-slate-300 leading-normal">
-                Schnittstelle für Online-Buchung und automatische Erinnerungen (24h vor dem Termin), um die Nichterscheinen-Quote auf unter 2% zu senken.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-              {/* Form to add appointment */}
-              <form onSubmit={handleAddAppointment} className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-3">
-                <span className="text-[10px] font-mono text-slate-400 block uppercase border-b border-white/5 pb-1">Neuen Termin eintragen</span>
-                
-                <div className="space-y-1">
-                  <label className="text-[9px] text-slate-400">Patientenname</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="z. B. Thomas Müller"
-                    value={newAptName}
-                    onChange={(e) => setNewAptName(e.target.value)}
-                    className="w-full bg-[#05070a] border border-white/10 rounded px-2.5 py-1.5 focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[9px] text-slate-400">Datum</label>
-                    <input
-                      type="date"
-                      value={newAptDate}
-                      onChange={(e) => setNewAptDate(e.target.value)}
-                      className="w-full bg-[#05070a] border border-white/10 rounded px-2.5 py-1.5 text-slate-300"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] text-slate-400">Uhrzeit</label>
-                    <input
-                      type="time"
-                      value={newAptTime}
-                      onChange={(e) => setNewAptTime(e.target.value)}
-                      className="w-full bg-[#05070a] border border-white/10 rounded px-2.5 py-1.5 text-slate-300"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] text-slate-400">Untersuchungs-Typ</label>
-                  <select
-                    value={newAptType}
-                    onChange={(e) => setNewAptType(e.target.value as any)}
-                    className="w-full bg-[#05070a] border border-white/10 rounded px-2 py-1.5 text-slate-300"
-                  >
-                    <option value="Erstuntersuchung">Erstuntersuchung</option>
-                    <option value="Gutachtertermin">Gutachtertermin</option>
-                    <option value="Wiedervorstellung">Wiedervorstellung</option>
-                    <option value="Therapiegespräch">Therapiegespräch</option>
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase rounded text-[10px] tracking-wider transition-all shadow-md shadow-blue-600/10"
-                >
-                  Termin buchen & SMS schalten
-                </button>
-              </form>
-
-              {/* Booked Appointments Listing */}
-              <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-2 max-h-[250px] overflow-y-auto">
-                <span className="text-[10px] font-mono text-slate-400 block uppercase border-b border-white/5 pb-1">Gebuchte Termine</span>
-                
-                {appointments.map((a) => (
-                  <div key={a.id} className="p-2 bg-[#05070a] rounded border border-white/5 space-y-1 text-[11px]">
-                    <div className="flex justify-between items-center">
-                      <strong className="text-white font-sans">{a.patientName}</strong>
-                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[8px] font-mono uppercase">{a.type}</span>
-                    </div>
-                    <p className="text-slate-400 text-[10px] font-mono">📅 {a.date} um {a.time} Uhr ({a.durationMin} Min.)</p>
-                    <div className="flex items-center gap-1.5 text-[9px]">
-                      <span className="text-green-500 flex items-center gap-0.5">
-                        <Check size={10} /> Sync Bestätigt
-                      </span>
-                      {a.reminderSent && (
-                        <span className="text-indigo-400 flex items-center gap-0.5">
-                          <Mail size={10} /> SMS-Erinnerung scharf
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <CalendarManager />
           </div>
         )}
 
@@ -1070,6 +981,13 @@ export default function PracticeUpgrades() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Upgrade 16: DSGVO & Compliance Center */}
+        {activeUpgradeTab === 16 && (
+          <div className="space-y-4 animate-fade-in">
+            <CompliancePanel />
           </div>
         )}
 

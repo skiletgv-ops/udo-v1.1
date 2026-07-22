@@ -1221,7 +1221,7 @@ export default function JarvisAssistant() {
 
       {/* RE-CONSOLIDATED BOTTOM RIGHT AI ORB */}
       <div 
-        className="fixed bottom-8 right-8 z-50 pointer-events-auto"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 pointer-events-auto"
         id="jarvis-assistant-orb"
       >
         <div className="relative">
@@ -1243,7 +1243,7 @@ export default function JarvisAssistant() {
               e.preventDefault();
               setShowRadialMenu(!showRadialMenu);
             }}
-            className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all duration-300 shadow-2xl relative cursor-pointer ${
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border transition-all duration-300 shadow-2xl relative cursor-pointer ${
               orbState === "idle"
                 ? "bg-slate-900 border-teal-400/50 shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:scale-105"
                 : orbState === "thinking"
