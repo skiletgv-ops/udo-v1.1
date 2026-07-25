@@ -28,17 +28,21 @@ export const ScanPage: React.FC<ScanPageProps> = ({
   findings,
   onFinishScan
 }) => {
-  const [isScanning, setIsScanning] = useState(true);
-  const [overallProgress, setOverallProgress] = useState(0);
+  const overallProgress =
+    agents.length > 0
+      ? Math.round(agents.reduce((acc, a) => acc + a.progress, 0) / agents.length)
+      : 0;
+
+  const isScanning = agents.some((a) => a.progress < 100);
 
   useEffect(() => {
     // Simulate parallel scan progression for all 4 agents
     const interval = setInterval(() => {
       setAgents((prevAgents) => {
-        let allDone = true;
+        let anyIncomplete = false;
         const updated = prevAgents.map((agent) => {
           if (agent.progress < 100) {
-            allDone = false;
+            anyIncomplete = true;
             const inc = Math.floor(Math.random() * 15) + 10;
             const nextProg = Math.min(100, agent.progress + inc);
             return {
@@ -50,13 +54,7 @@ export const ScanPage: React.FC<ScanPageProps> = ({
           return agent;
         });
 
-        const totalProg = Math.round(
-          updated.reduce((acc, a) => acc + a.progress, 0) / updated.length
-        );
-        setOverallProgress(totalProg);
-
-        if (allDone) {
-          setIsScanning(false);
+        if (!anyIncomplete) {
           clearInterval(interval);
         }
 

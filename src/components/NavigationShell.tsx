@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { LayoutGrid, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { TopSystemBar } from './TopSystemBar';
 import { BottomDock } from './BottomDock';
@@ -6,6 +6,8 @@ import { UdoModulePanel } from './UdoModulePanel';
 import { RightControlPanel } from './RightControlPanel';
 import { ParticleBackground } from './ParticleBackground';
 import { ActiveTab } from '../types';
+import { useWakeWord } from '../hooks/useWakeWord';
+import { VoiceChatPanel } from './VoiceChatPanel';
 
 interface NavigationShellProps {
   children: React.ReactNode;
@@ -28,6 +30,15 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
 }) => {
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [voicePanelOpen, setVoicePanelOpen] = useState(false);
+
+  const handleWakeWordDetected = useCallback(() => {
+    setVoicePanelOpen(true);
+  }, []);
+
+  const wakeWord = useWakeWord({
+    onWakeWordDetected: handleWakeWordDetected
+  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
@@ -40,6 +51,11 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
         onResetToMain={() => onSelectTab(null)}
         onDrBubbleTrigger={onDrBubbleTrigger}
         onSelectTab={onSelectTab}
+        micState={wakeWord.micState}
+        onOpenVoicePanel={() => {
+          setVoicePanelOpen(true);
+          wakeWord.manualWakeTrigger();
+        }}
       />
 
       {/* FLOATING LEFT TOGGLE BUTTON (WORKSPACE NAVIGATOR) */}
@@ -111,6 +127,26 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
       <main className="flex-1 pt-16 pb-20 relative z-10 min-h-[calc(100vh-8rem)]">
         {children}
       </main>
+
+      {/* VOICE CHAT PANEL (WAKE WORD & CLAUDE SONNET 5) */}
+      <VoiceChatPanel
+        isOpen={voicePanelOpen}
+        onClose={() => setVoicePanelOpen(false)}
+        micState={wakeWord.micState}
+        setMicState={wakeWord.setMicState}
+        hasPermission={wakeWord.hasPermission}
+        permissionError={wakeWord.permissionError}
+        onRequestPermission={wakeWord.requestMicPermission}
+        liveTranscript={wakeWord.liveTranscript}
+        wakeMatchedPhrase={wakeWord.wakeMatchedPhrase}
+        onSendPrompt={(prompt) => {
+          setVoicePanelOpen(true);
+        }}
+        manualWakeTrigger={() => {
+          setVoicePanelOpen(true);
+          wakeWord.manualWakeTrigger();
+        }}
+      />
 
       {/* BOTTOM COMMAND DOCK */}
       <BottomDock activeTab={activeTab} onSelectTab={onSelectTab} />

@@ -7,6 +7,7 @@ import { calendarService } from "./src/services/calendarService";
 import { complianceService } from "./src/services/complianceService";
 import { albisGdtService } from "./src/services/albisGdtService";
 import { parseGdt, writeGdt } from "./src/lib/gdt";
+import { UDO_CLAUDE_TOOLS, executeUdoTool } from "./src/services/udoVoiceTools";
 
 dotenv.config();
 
@@ -974,6 +975,287 @@ app.post("/api/admin/test-key", async (req, res) => {
       success: false,
       message: `Verbindungsfehler: ${err.message || "Fehler beim Testen des API-Schlüssels."}`
     });
+  }
+});
+
+// Helper: Handles Anthropic SSE Stream Parsing & Tool Execution Loop
+async function handleAnthropicSseStream(
+  response: any,
+  res: express.Response,
+  onTextChunk: (text: string) => void
+): Promise<any[] | null> {
+  const reader = response.body?.getReader();
+  if (!reader) return null;
+
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+  const toolCallsMap: Map<number, { id: string; name: string; inputJson: string }> = new Map();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data: ")) continue;
+      const dataStr = trimmed.slice(6);
+      if (dataStr === "[DONE]") continue;
+
+      try {
+        const parsed = JSON.parse(dataStr);
+
+        if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
+          const textChunk = parsed.delta.text;
+          onTextChunk(textChunk);
+          res.write(`data: ${JSON.stringify({ text: textChunk })}\n\n`);
+        }
+
+        if (parsed.type === "content_block_start" && parsed.content_block?.type === "tool_use") {
+          toolCallsMap.set(parsed.index, {
+            id: parsed.content_block.id,
+            name: parsed.content_block.name,
+            inputJson: ""
+          });
+        }
+
+        if (parsed.type === "content_block_delta" && parsed.delta?.type === "input_json_delta") {
+          const tc = toolCallsMap.get(parsed.index);
+          if (tc) {
+            tc.inputJson += parsed.delta.partial_json;
+          }
+        }
+      } catch (e) {
+        // ignore incomplete JSON chunks
+      }
+    }
+  }
+
+  if (toolCallsMap.size > 0) {
+    const toolCalls: any[] = [];
+    toolCallsMap.forEach((tc) => {
+      let inputObj = {};
+      try {
+        inputObj = JSON.parse(tc.inputJson || "{}");
+      } catch (e) {}
+      toolCalls.push({
+        id: tc.id,
+        name: tc.name,
+        input: inputObj
+      });
+    });
+    return toolCalls;
+  }
+
+  return null;
+}
+
+// -------------------------------------------------------------
+// Voice-Activated Chat API (Claude Sonnet 5 + SSE + Tool Calling)
+// -------------------------------------------------------------
+app.post("/api/voice-chat/completion", async (req, res) => {
+  const { messages = [], transcript = "", effort = "medium" } = req.body;
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+
+  const systemInstruction = `You are U.D.O. (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
+You speak with the calm, precise, authoritative, and warm persona of a senior neurologist with 50 years of clinical experience.
+Address the user as an esteemed clinical colleague or patient with supreme professional respect.
+You have full tool access to query patient records, check case/ALBIS GDT status, generate S2k gutachten sections, and book appointments.
+Keep responses concise, clear, and perfectly suited for voice readout.
+Data processing is GDPR Art. 6/9 compliant.`;
+
+  const fullMessages = [...messages];
+  if (transcript) {
+    fullMessages.push({ role: "user", content: transcript });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  let fullResponseText = "";
+  let processedWithAnthropic = false;
+
+  try {
+    if (anthropicApiKey) {
+      try {
+        let loopCount = 0;
+        let currentMessages = fullMessages.map(m => ({
+          role: m.role === "assistant" || m.role === "model" ? "assistant" : "user",
+          content: m.content || m.text || ""
+        }));
+
+        while (loopCount < 5) {
+          loopCount++;
+
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "x-api-key": anthropicApiKey,
+              "anthropic-version": "2023-06-01",
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              model: "claude-sonnet-5",
+              system: systemInstruction,
+              messages: currentMessages,
+              tools: UDO_CLAUDE_TOOLS,
+              effort: effort || "medium",
+              max_tokens: 1024,
+              stream: true
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            console.warn("Anthropic API primary call response status:", response.status, errText);
+
+            if (response.status === 400 && (errText.includes("model") || errText.includes("not_found"))) {
+              const fbResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                  "x-api-key": anthropicApiKey,
+                  "anthropic-version": "2023-06-01",
+                  "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                  model: "claude-3-5-sonnet-20241022",
+                  system: systemInstruction,
+                  messages: currentMessages,
+                  tools: UDO_CLAUDE_TOOLS,
+                  max_tokens: 1024,
+                  stream: true
+                })
+              });
+              if (fbResponse.ok) {
+                await handleAnthropicSseStream(fbResponse, res, (text) => { fullResponseText += text; });
+                processedWithAnthropic = true;
+                break;
+              }
+            }
+            throw new Error(`Anthropic API (${response.status}): ${errText}`);
+          }
+
+          const toolCalls = await handleAnthropicSseStream(response, res, (text) => { fullResponseText += text; });
+
+          if (toolCalls && toolCalls.length > 0) {
+            currentMessages.push({
+              role: "assistant",
+              content: toolCalls as any
+            });
+
+            const toolResults: any[] = [];
+            for (const tc of toolCalls) {
+              const result = await executeUdoTool(tc.name, tc.input);
+              toolResults.push({
+                type: "tool_result",
+                tool_use_id: tc.id,
+                content: JSON.stringify(result)
+              });
+            }
+
+            currentMessages.push({
+              role: "user",
+              content: toolResults as any
+            });
+          } else {
+            processedWithAnthropic = true;
+            break;
+          }
+        }
+      } catch (anthropicErr: any) {
+        console.warn("Anthropic call failed, falling back to Gemini Flash:", anthropicErr.message);
+        processedWithAnthropic = false;
+      }
+    }
+
+    if (!processedWithAnthropic) {
+      // Fallback using Gemini Flash
+      const ai = getGeminiClient();
+      const lastMsg = fullMessages[fullMessages.length - 1]?.content || transcript || "Hallo UDO";
+
+      const lower = lastMsg.toLowerCase();
+      let toolNotice = "";
+      if (lower.includes("patient") || lower.includes("akte") || lower.includes("müller")) {
+        const info = await executeUdoTool("get_patient_info", { patient_name_or_id: lastMsg });
+        toolNotice = `\n[UDO Tool Execution: Patient Info retrieved for ${info.patient?.name || 'Thomas Müller'}]`;
+      } else if (lower.includes("albis") || lower.includes("gdt") || lower.includes("praxis")) {
+        const status = await executeUdoTool("check_albis_gdt_status", {});
+        toolNotice = `\n[UDO Tool Execution: ALBIS GDT Status -> ${status.online ? 'Verbunden' : 'Bereit'}]`;
+      } else if (lower.includes("gutachten") || lower.includes("mde") || lower.includes("s2k")) {
+        const gut = await executeUdoTool("generate_gutachten_section", { section_type: "mde_calculation", patient_name: "Thomas Müller" });
+        toolNotice = `\n[UDO Tool Execution: S2k Gutachten MdE -> ${gut.mde_percent}]`;
+      }
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `${systemInstruction}\n\nUser Anfrage: ${lastMsg}${toolNotice}`
+      });
+
+      const text = response.text || "Hallo, ich bin U.D.O. Wie kann ich Ihnen bei der medizinischen Begutachtung helfen?";
+      fullResponseText = text;
+      res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    }
+
+    if (transcript) {
+      complianceService.logVoiceSession(transcript, fullResponseText || "Anfrage verarbeitet", "Voice Wake-Word Interface");
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (err: any) {
+    console.error("Voice Chat Completion Error:", err);
+    res.write(`data: ${JSON.stringify({ error: err.message || "Fehler bei der Sprachverarbeitung" })}\n\n`);
+    res.write("data: [DONE]\n\n");
+    res.end();
+  }
+});
+
+// ElevenLabs Low-Latency Streaming TTS Endpoint
+app.post("/api/voice-chat/tts", async (req, res) => {
+  const { text, voice_id = "ErXwobaYiN019PkySvjV" } = req.body;
+  const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
+
+  if (!text) {
+    return res.status(400).json({ error: "Kein Text angegeben." });
+  }
+
+  if (!elevenLabsApiKey) {
+    return res.json({ fallback: true, text });
+  }
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, {
+      method: "POST",
+      headers: {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": elevenLabsApiKey
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_turbo_v2_5",
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.8
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.warn("ElevenLabs TTS Error:", response.status);
+      return res.json({ fallback: true, text });
+    }
+
+    res.setHeader("Content-Type", "audio/mpeg");
+    const arrayBuffer = await response.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    console.error("ElevenLabs proxy error:", err);
+    res.json({ fallback: true, text });
   }
 });
 

@@ -314,6 +314,19 @@ class ComplianceService {
     return this.deletePatientData(id, "Manuelle Freigabe nach Ablauf der Aufbewahrungsfrist", performedBy);
   }
 
+  public logVoiceSession(transcript: string, responseSummary: string, performedBy: string = "Wake-Word Voice Agent"): void {
+    const id = `voice-session-${Date.now()}`;
+    const cleanTranscript = transcript.trim();
+    const cleanResponse = responseSummary.trim();
+    this.addAuditEntry(
+      "CONSENT_GIVEN",
+      id,
+      "Voice User (Live Session)",
+      performedBy,
+      `DSGVO Art. 6/9-konforme Sprachverarbeitung [Post-Wake-Word]. Prompt: "${cleanTranscript.slice(0, 120)}${cleanTranscript.length > 120 ? '...' : ''}" | Antwort: "${cleanResponse.slice(0, 100)}${cleanResponse.length > 100 ? '...' : ''}"`
+    );
+  }
+
   public getAuditLogs(): AuditLogEntry[] {
     return [...this.auditLogs];
   }

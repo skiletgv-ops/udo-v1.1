@@ -13,24 +13,31 @@ import {
   UserCheck,
   ShieldCheck,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Mic,
+  Radio
 } from 'lucide-react';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
 import { ActiveTab } from '../types';
+import { MicState } from '../hooks/useWakeWord';
 
 interface TopSystemBarProps {
   activeModuleName?: string;
   onResetToMain?: () => void;
   onDrBubbleTrigger?: (msg: string) => void;
   onSelectTab?: (tab: ActiveTab) => void;
+  micState?: MicState;
+  onOpenVoicePanel?: () => void;
 }
 
 export const TopSystemBar: React.FC<TopSystemBarProps> = ({
   activeModuleName = 'HAUPTRAUM HUB',
   onResetToMain,
   onDrBubbleTrigger,
-  onSelectTab
+  onSelectTab,
+  micState = 'idle',
+  onOpenVoicePanel
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -125,6 +132,34 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
 
         {/* TOP RIGHT: ICON BUTTONS & ROLE CHIP */}
         <div className="flex items-center gap-2">
+          {/* ALWAYS-VISIBLE VOICE WAKE-WORD MIC STATUS BADGE */}
+          <button
+            onClick={onOpenVoicePanel}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              micState === 'listening'
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse'
+                : micState === 'processing'
+                ? 'bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_12px_rgba(139,92,246,0.4)]'
+                : micState === 'speaking'
+                ? 'bg-[#B87333]/20 border-[#B87333]/50 text-[#E8A87C] shadow-[0_0_12px_rgba(184,115,51,0.4)]'
+                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 shadow-[0_0_8px_rgba(0,212,170,0.2)]'
+            }`}
+            title="U.D.O. Voice Assistant 'Hey UDO' umschalten"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                micState === 'listening' ? 'bg-emerald-400' : micState === 'processing' ? 'bg-violet-400' : micState === 'speaking' ? 'bg-[#B87333]' : 'bg-cyan-400'
+              } opacity-75`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                micState === 'listening' ? 'bg-emerald-500' : micState === 'processing' ? 'bg-violet-500' : micState === 'speaking' ? 'bg-[#B87333]' : 'bg-cyan-500'
+              }`} />
+            </span>
+            <Mic className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline tracking-wider uppercase text-[10px]">
+              {micState === 'listening' ? 'HÖRT ZU' : micState === 'processing' ? 'ANALYSE' : micState === 'speaking' ? 'VOICE' : 'HEY UDO'}
+            </span>
+          </button>
+
           {/* ROLE SWITCHER CHIP */}
           <div className="relative">
             <button

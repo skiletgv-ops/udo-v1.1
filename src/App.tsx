@@ -56,7 +56,7 @@ function MainAppContent() {
       case 'consult':
         return 'VOICE & CONSULT';
       case 'documents':
-        return 'DOKUMENTEN OCR';
+        return '3-STUFEN AUDIT PIPELINE & OCR';
       case 'eeg':
         return 'EEG SIGNAL CORE';
       case 'video':
