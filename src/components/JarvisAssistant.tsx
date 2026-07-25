@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGlobalSystem, ChatMessage } from "./GlobalSystemContext";
+import { GlowingEffect } from "./ui/glowing-effect";
 import {
   Mic,
   Keyboard,
@@ -391,195 +392,16 @@ export default function JarvisAssistant() {
 
   return (
     <>
-      {/* LEFT EXPANDABLE AI DOCK */}
-      <AnimatePresence>
-        {!isScreenOccupied && (
-          <motion.div 
-            drag="y"
-            dragConstraints={{ top: -300, bottom: 300 }}
-            dragElastic={0.15}
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed left-6 top-1/2 -translate-y-1/2 z-50 pointer-events-auto flex items-center gap-2 cursor-grab active:cursor-grabbing"
-            style={{ touchAction: "none" }}
-          >
-            <div className="flex flex-col items-center">
-              {/* Drag Handle Accent */}
-              <div className="w-4 h-1 rounded-full bg-white/10 mb-2 cursor-ns-resize" />
-              
-              <div 
-                className={`flex flex-col items-center gap-3 p-3 rounded-[28px] border bg-slate-950/80 backdrop-blur-3xl shadow-2xl transition-all duration-300 ${
-                  isAiDockExpanded ? "border-teal-500/40" : "border-white/10"
-                }`}
-              >
-                {/* Core AI Icon (Sparkle) */}
-                <button
-                  onClick={() => setIsAiDockExpanded(!isAiDockExpanded)}
-                  className={`w-11 h-11 rounded-[18px] flex items-center justify-center transition-all ${
-                    isAiDockExpanded 
-                      ? "bg-teal-500 text-slate-950 shadow-[0_0_15px_rgba(20,184,166,0.35)]" 
-                      : "bg-white/5 hover:bg-white/10 text-teal-400"
-                  } cursor-pointer`}
-                  title="Toggle AI Dock"
-                >
-                  <Sparkles size={18} className={isAiDockExpanded ? "animate-pulse" : ""} />
-                </button>
-
-                {/* Vertically Expanded AI Items */}
-                <AnimatePresence>
-                  {isAiDockExpanded && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex flex-col items-center gap-3 overflow-hidden"
-                    >
-                      {/* 1. Companion / Dialogue Panel */}
-                      <button
-                        onClick={() => {
-                          setActiveTool("chat");
-                          setIsPanelExpanded(!isPanelExpanded);
-                        }}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                          activeTool === "chat" && isPanelExpanded
-                            ? "bg-teal-500/10 border border-teal-500/35 text-teal-300"
-                            : "bg-white/5 hover:bg-white/10 text-slate-300"
-                        } cursor-pointer`}
-                        title="AI Dialogue Input"
-                      >
-                        <MessageSquare size={15} />
-                      </button>
-
-                      {/* 2. Voice / Listening trigger */}
-                      <button
-                        onClick={() => {
-                          if (globalForceActiveListening) globalForceActiveListening();
-                          setOrbState("listening");
-                        }}
-                        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center cursor-pointer"
-                        title="Start Nova Voice"
-                      >
-                        <Mic size={15} className="text-emerald-400 animate-pulse" />
-                      </button>
-
-                      {/* 3. Consensus chat */}
-                      <button
-                        onClick={() => setActiveView("chat")}
-                        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center cursor-pointer"
-                        title="Full Consensus Chat"
-                      >
-                        <Layers size={15} />
-                      </button>
-
-                      {/* 4. Radio Quick Switch */}
-                      <button
-                        onClick={() => setRadioKolnActive(!radioKolnActive)}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                          radioKolnActive
-                            ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                            : "bg-white/5 hover:bg-white/10 text-slate-300"
-                        } cursor-pointer`}
-                        title="Radio Köln FM"
-                      >
-                        <RadioIcon size={15} />
-                      </button>
-
-                      {/* 5. Radial action simulator */}
-                      <button
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setShowRadialMenu(!showRadialMenu);
-                        }}
-                        onClick={() => setShowRadialMenu(!showRadialMenu)}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                          showRadialMenu
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                            : "bg-white/5 hover:bg-white/10 text-slate-300"
-                        } cursor-pointer`}
-                        title="Quick Actions (Right-Click)"
-                      >
-                        <Compass size={15} />
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* RIGHT UTILITIES DOCK */}
-      <AnimatePresence>
-        {!isScreenOccupied && (
-          <motion.div 
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed right-6 top-1/2 -translate-y-1/2 z-50 pointer-events-auto"
-          >
-            <div className="flex flex-col items-center gap-3 p-3 rounded-[28px] border border-white/10 bg-slate-950/80 backdrop-blur-3xl shadow-2xl">
-              {/* 📄 Documents trigger */}
-              <button
-                onClick={() => {
-                  setActiveRightMenu(activeRightMenu === "documents" ? null : "documents");
-                }}
-                className={`w-11 h-11 rounded-[18px] flex items-center justify-center transition-all ${
-                  activeRightMenu === "documents"
-                    ? "bg-teal-500 text-slate-950 shadow-[0_0_15px_rgba(20,184,166,0.35)]"
-                    : "bg-white/5 hover:bg-white/10 text-slate-300"
-                } cursor-pointer`}
-                title="Documents Board"
-              >
-                <FileText size={18} />
-              </button>
-
-              {/* ⭐ Favorites trigger */}
-              <button
-                onClick={() => {
-                  setActiveRightMenu(activeRightMenu === "favorites" ? null : "favorites");
-                }}
-                className={`w-11 h-11 rounded-[18px] flex items-center justify-center transition-all ${
-                  activeRightMenu === "favorites"
-                    ? "bg-teal-500 text-slate-950 shadow-[0_0_15px_rgba(20,184,166,0.35)]"
-                    : "bg-white/5 hover:bg-white/10 text-slate-300"
-                } cursor-pointer`}
-                title="System Favorites"
-              >
-                <Star size={18} />
-              </button>
-
-              {/* ⚙️ More trigger */}
-              <button
-                onClick={() => {
-                  setActiveRightMenu(activeRightMenu === "more" ? null : "more");
-                }}
-                className={`w-11 h-11 rounded-[18px] flex items-center justify-center transition-all ${
-                  activeRightMenu === "more"
-                    ? "bg-teal-500 text-slate-950 shadow-[0_0_15px_rgba(20,184,166,0.35)]"
-                    : "bg-white/5 hover:bg-white/10 text-slate-300"
-                } cursor-pointer`}
-                title="More Utilities"
-              >
-                <Grid size={18} />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* RECONSTRUCTED CENTRAL CHAT & TOOL EXPERT DRAWER */}
+      {/* CENTRAL CHAT & TOOL EXPERT DRAWER */}
       <AnimatePresence>
         {isPanelExpanded && activeTool && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
-            className="fixed bottom-32 left-6 right-6 md:left-auto md:right-32 md:w-[420px] z-50 bg-slate-950/95 border border-white/15 rounded-[32px] p-6 shadow-2xl backdrop-blur-3xl"
+            className="fixed bottom-32 left-6 right-6 md:left-auto md:right-32 md:w-[420px] z-[100] bg-[#111217]/90 border border-white/15 rounded-3xl p-6 shadow-2xl backdrop-blur-xl pointer-events-auto relative group overflow-hidden"
           >
+            <GlowingEffect spread={40} glow disabled={false} proximity={70} inactiveZone={0.02} borderWidth={2} />
             <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4 shrink-0">
               <span className="text-[11px] font-mono uppercase tracking-widest text-teal-400 font-extrabold flex items-center gap-2">
                 <Brain size={14} className="animate-pulse" />
@@ -898,10 +720,11 @@ export default function JarvisAssistant() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-xl bg-slate-950 border border-white/10 rounded-[32px] p-6 shadow-2xl"
+              className="w-full max-w-xl bg-[#111217]/90 border border-white/15 rounded-3xl p-6 shadow-2xl relative group overflow-hidden"
             >
+              <GlowingEffect spread={40} glow disabled={false} proximity={70} inactiveZone={0.02} borderWidth={2} />
               <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
-                <span className="text-sm font-black uppercase tracking-wider text-teal-400 flex items-center gap-2">
+                <span className="text-sm font-black uppercase tracking-wider text-cyan-400 flex items-center gap-2">
                   <FileText size={16} />
                   Clinical Documents Hub
                 </span>
@@ -916,9 +739,9 @@ export default function JarvisAssistant() {
                     setActiveView("whitepaper");
                     setActiveRightMenu(null);
                   }}
-                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
+                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
                 >
-                  <BookOpen size={18} className="text-teal-400" />
+                  <BookOpen size={18} className="text-cyan-400" />
                   <span className="text-xs font-black uppercase text-slate-200 mt-1">Review Whitepapers</span>
                   <span className="text-[9px] font-mono text-slate-400 uppercase leading-normal">Read guidelines, certifications and schema.</span>
                 </button>
@@ -928,9 +751,9 @@ export default function JarvisAssistant() {
                     setIsUploadOpen(true);
                     setActiveRightMenu(null);
                   }}
-                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
+                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
                 >
-                  <Upload size={18} className="text-teal-400 animate-bounce" />
+                  <Upload size={18} className="text-cyan-400 animate-bounce" />
                   <span className="text-xs font-black uppercase text-slate-200 mt-1">Ingest PDF Cases</span>
                   <span className="text-[9px] font-mono text-slate-400 uppercase leading-normal">Inject fresh medical PDF case file to parser.</span>
                 </button>
@@ -942,7 +765,7 @@ export default function JarvisAssistant() {
                     setIsPanelExpanded(true);
                     setActiveRightMenu(null);
                   }}
-                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
+                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
                 >
                   <BarcodeIcon />
                   <span className="text-xs font-black uppercase text-slate-200 mt-1">OCR Scanning</span>
@@ -955,9 +778,9 @@ export default function JarvisAssistant() {
                     setIsPanelExpanded(true);
                     setActiveRightMenu(null);
                   }}
-                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
+                  className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 text-left transition-all cursor-pointer flex flex-col gap-1"
                 >
-                  <Clipboard size={18} className="text-teal-400" />
+                  <Clipboard size={18} className="text-cyan-400" />
                   <span className="text-xs font-black uppercase text-slate-200 mt-1">Clinical Reader</span>
                   <span className="text-[9px] font-mono text-slate-400 uppercase leading-normal">Speech synthesize textbooks, notes, reports.</span>
                 </button>
@@ -972,11 +795,12 @@ export default function JarvisAssistant() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-slate-950 border border-white/10 rounded-[32px] p-6 shadow-2xl"
+              className="w-full max-w-sm bg-[#111217]/90 border border-white/15 rounded-3xl p-6 shadow-2xl relative group overflow-hidden"
             >
+              <GlowingEffect spread={40} glow disabled={false} proximity={70} inactiveZone={0.02} borderWidth={2} />
               <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
-                <span className="text-sm font-black uppercase tracking-wider text-teal-400 flex items-center gap-2">
-                  <Star size={16} className="fill-teal-400 text-teal-400" />
+                <span className="text-sm font-black uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                  <Star size={16} className="fill-cyan-400 text-cyan-400" />
                   Clinical Favorites
                 </span>
                 <button onClick={() => setActiveRightMenu(null)} className="p-1 rounded bg-white/5 text-slate-400 hover:text-white cursor-pointer">
@@ -994,7 +818,7 @@ export default function JarvisAssistant() {
                       else setActiveView("upgrades");
                       setActiveRightMenu(null);
                     }}
-                    className="w-full p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/20 rounded-xl text-xs font-bold text-slate-200 hover:text-white text-left flex items-center justify-between"
+                    className="w-full p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-cyan-500/20 rounded-xl text-xs font-bold text-slate-200 hover:text-white text-left flex items-center justify-between"
                   >
                     <span>{fav}</span>
                     <ChevronRight size={14} className="text-slate-500" />
@@ -1011,8 +835,9 @@ export default function JarvisAssistant() {
               initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              className="w-full max-w-4xl bg-slate-950/95 border border-white/15 rounded-[36px] p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-4xl bg-[#111217]/90 border border-white/15 rounded-3xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto relative group"
             >
+              <GlowingEffect spread={40} glow disabled={false} proximity={70} inactiveZone={0.02} borderWidth={2} />
               <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
                 <div className="flex items-center gap-2.5">
                   <Grid size={18} className="text-teal-400" />
@@ -1221,7 +1046,7 @@ export default function JarvisAssistant() {
 
       {/* RE-CONSOLIDATED BOTTOM RIGHT AI ORB */}
       <div 
-        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 pointer-events-auto"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[30] pointer-events-auto"
         id="jarvis-assistant-orb"
       >
         <div className="relative">

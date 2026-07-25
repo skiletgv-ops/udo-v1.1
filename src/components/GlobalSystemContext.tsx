@@ -16,7 +16,12 @@ export type RobotState =
   | "THINKING"
   | "POINTING"
   | "SURPRISED"
-  | "HAPPY";
+  | "HAPPY"
+  | "ATTENTION"
+  | "PROCESSING"
+  | "SUCCESS"
+  | "ERROR"
+  | "EXPORT";
 
 export interface ChatMessage {
   id: string;

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { GlowingEffect } from "./ui/glowing-effect";
 import { 
   TrendingUp, 
   Clock, 
@@ -357,8 +358,9 @@ export default function ExecutiveDashboard() {
           {pricingPlans.map((plan) => (
             <div 
               key={plan.name} 
-              className={`p-6 rounded-2xl border flex flex-col justify-between space-y-6 transition-all duration-300 ${plan.glow}`}
+              className={`p-6 rounded-2xl border flex flex-col justify-between space-y-6 transition-all duration-300 relative group overflow-hidden bg-[#111217]/80 backdrop-blur-xl ${plan.glow}`}
             >
+              <GlowingEffect spread={35} glow disabled={false} proximity={60} inactiveZone={0.02} borderWidth={1.5} />
               <div className="space-y-4">
                 <div>
                   <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">{plan.target}</span>

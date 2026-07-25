@@ -5,6 +5,8 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { calendarService } from "./src/services/calendarService";
 import { complianceService } from "./src/services/complianceService";
+import { albisGdtService } from "./src/services/albisGdtService";
+import { parseGdt, writeGdt } from "./src/lib/gdt";
 
 dotenv.config();
 
@@ -203,6 +205,109 @@ app.post("/api/compliance/approve-deletion", (req, res) => {
   const { id, performedBy } = req.body;
   const success = complianceService.approveScheduledDeletion(id, performedBy || "Dr. Bongartz");
   res.json({ success, message: success ? "Löschung nach Vorhaltefrist vollzogen" : "Patient nicht gefunden" });
+});
+
+// -------------------------------------------------------------
+// CGM ALBIS GDT 2.1 File Exchange Integration Routes
+// -------------------------------------------------------------
+
+// Inbound ALBIS GDT (Satzart 6302 - Anforderung Untersuchung)
+app.post("/api/integrations/albis/inbound", (req, res) => {
+  try {
+    const { fileName, parsedRecord, rawText } = req.body;
+    if (!parsedRecord || !parsedRecord.patientId) {
+      return res.status(400).json({ error: "Fehlender oder ungültiger GDT-Datensatz (Patientennummer fehlt)." });
+    }
+
+    const result = albisGdtService.processInboundGdt({
+      fileName: fileName || "ARZT2UDO.GDT",
+      parsedRecord,
+      rawText,
+    });
+
+    res.json({
+      success: true,
+      caseId: result.caseId,
+      patientId: result.patientId,
+      isSynthetic: result.isSynthetic,
+      message: "ALBIS GDT-IN (Satzart 6302) erfolgreich verarbeitet.",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error("ALBIS Inbound Route Error:", err);
+    res.status(500).json({ error: "Fehler beim Verarbeiten des ALBIS Inbound GDT-Signals.", details: err.message });
+  }
+});
+
+// Outbound ALBIS GDT (Satzart 6310 - Ergebnisse einer Untersuchung)
+app.post("/api/integrations/albis/outbound", (req, res) => {
+  try {
+    const { caseId, statusMessage, customPatientId } = req.body;
+    if (!caseId) {
+      return res.status(400).json({ error: "caseId ist erforderlich für den ALBIS GDT-OUT Export." });
+    }
+
+    const result = albisGdtService.processOutboundGdt({
+      caseId,
+      statusMessage,
+      customPatientId,
+    });
+
+    res.json({
+      success: true,
+      fileName: result.fileName,
+      filePath: result.filePath,
+      rawText: result.rawText,
+      isSynthetic: result.isSynthetic,
+      message: "ALBIS GDT-OUT (Satzart 6310) erfolgreich exportiert.",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error("ALBIS Outbound Route Error:", err);
+    res.status(500).json({ error: "Fehler beim Erstellen des ALBIS Outbound GDT-Signals.", details: err.message });
+  }
+});
+
+// Bridge Status & Sync Logs
+app.get("/api/integrations/albis/status", (req, res) => {
+  res.json(albisGdtService.getBridgeStatus());
+});
+
+// Configure Exchange Path
+app.post("/api/integrations/albis/config", (req, res) => {
+  const { path: newPath } = req.body;
+  if (newPath) {
+    const updated = albisGdtService.setExchangePath(newPath);
+    return res.json({ success: true, exchangeFolderPath: updated });
+  }
+  res.status(400).json({ error: "Pfad erforderlich." });
+});
+
+// Synthetic Test Trigger
+app.post("/api/integrations/albis/test-trigger", (req, res) => {
+  try {
+    const testResult = albisGdtService.triggerSyntheticTest();
+    res.json({
+      success: true,
+      message: "Synthetischer ALBIS GDT 2.1 Testlauf (isSynthetic: true) erfolgreich abgeschlossen.",
+      inbound: testResult.inboundResult,
+      outbound: testResult.outboundResult,
+      sampleGdtIn: testResult.sampleInGdtText,
+    });
+  } catch (err: any) {
+    console.error("ALBIS Test Trigger Error:", err);
+    res.status(500).json({ error: "Fehler beim Ausführen des synthetischen GDT-Tests.", details: err.message });
+  }
+});
+
+// Live GDT Parser Preview endpoint (for Admin Inspector)
+app.post("/api/integrations/albis/parse-preview", (req, res) => {
+  const { rawGdtText } = req.body;
+  if (!rawGdtText) {
+    return res.status(400).json({ error: "Kein GDT-Text übergeben." });
+  }
+  const result = parseGdt(rawGdtText);
+  res.json(result);
 });
 
 // UDO Welcome Consultant Triage Endpoint
@@ -717,6 +822,63 @@ Generate:
 });
 
 // -------------------------------------------------------------
+// -------------------------------------------------------------
+// Admin API Key Status & ElevenLabs TTS Endpoints
+// -------------------------------------------------------------
+app.get("/api/admin/keys", (req, res) => {
+  res.json({
+    gemini: Boolean(process.env.GEMINI_API_KEY),
+    claude: Boolean(process.env.CLAUDE_API_KEY),
+    elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
+    openai: Boolean(process.env.OPENAI_API_KEY),
+    deepseek: Boolean(process.env.DEEPSEEK_API_KEY),
+    live: Boolean(process.env.GEMINI_API_KEY || process.env.CLAUDE_API_KEY)
+  });
+});
+
+app.post("/api/tts", async (req, res) => {
+  const { text, voiceId } = req.body;
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+
+  if (!apiKey) {
+    return res.json({ fallback: true, message: "ElevenLabs API Key is not configured." });
+  }
+
+  try {
+    const selectedVoiceId = voiceId || "21m00Tcm4TlvDq8ikWAM"; // Default Rachel/multilingual
+    const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+      method: "POST",
+      headers: {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": apiKey
+      },
+      body: JSON.stringify({
+        text: text || "Willkommen bei UDO.",
+        model_id: "eleven_multilingual_v2",
+        voice_settings: {
+          stability: 0.75,
+          similarity_boost: 0.85,
+          style: 0.15,
+          use_speaker_boost: true
+        }
+      })
+    });
+
+    if (!elevenRes.ok) {
+      const errJson = await elevenRes.json().catch(() => ({}));
+      return res.status(elevenRes.status).json({ fallback: true, error: errJson });
+    }
+
+    const arrayBuffer = await elevenRes.arrayBuffer();
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    console.error("ElevenLabs TTS Error:", err);
+    res.json({ fallback: true, error: err.message });
+  }
+});
+
 // Admin API Key Management Endpoints
 // -------------------------------------------------------------
 app.post("/api/admin/test-key", async (req, res) => {
@@ -727,6 +889,26 @@ app.post("/api/admin/test-key", async (req, res) => {
   }
 
   try {
+    if (serviceId === "elevenlabs") {
+      const keyToUse = apiKey || process.env.ELEVENLABS_API_KEY;
+      if (!keyToUse) {
+        return res.json({ success: false, message: "Kein ElevenLabs API-Schlüssel eingegeben." });
+      }
+      const testRes = await fetch("https://api.elevenlabs.io/v1/user", {
+        headers: { "xi-api-key": keyToUse }
+      });
+      if (testRes.ok) {
+        const userData = await testRes.json();
+        return res.json({
+          success: true,
+          message: `ElevenLabs Neural TTS Studio Key verifiziert! (Tier: ${userData?.subscription?.tier || "Standard"})`,
+          model: "eleven_multilingual_v2"
+        });
+      } else {
+        return res.json({ success: false, message: "Ungültiger ElevenLabs API-Schlüssel." });
+      }
+    }
+
     if (serviceId === "gemini") {
       const keyToUse = apiKey || process.env.GEMINI_API_KEY;
       if (!keyToUse) {
@@ -807,6 +989,7 @@ app.post("/api/admin/save-keys", (req, res) => {
     if (keys.claudeKey) process.env.CLAUDE_API_KEY = keys.claudeKey;
     if (keys.deepseekKey) process.env.DEEPSEEK_API_KEY = keys.deepseekKey;
     if (keys.openaiKey) process.env.OPENAI_API_KEY = keys.openaiKey;
+    if (keys.elevenlabsKey) process.env.ELEVENLABS_API_KEY = keys.elevenlabsKey;
   }
 
   res.json({

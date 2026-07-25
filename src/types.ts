@@ -1,12 +1,4 @@
-export interface Demographics {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  insuranceNumber: string;
-  caseId: string;
-  insuranceProvider: string;
-  commissioningEntity: string;
-}
+export * from './types/index';
 
 export interface MedicalHistory {
   anamnesis: string;
@@ -27,7 +19,7 @@ export interface TimelineEvent {
 }
 
 export interface ExtractedData {
-  demographics: Demographics;
+  demographics: any;
   history: MedicalHistory;
   clinicalFindings: string[];
   imagingFindings: string[];
@@ -86,10 +78,6 @@ export interface Patient {
   egvpStatus?: 'Pending' | 'Success' | 'Failed';
 }
 
-// -------------------------------------------------------------
-// Upgrade Types (Kleine Praxis Edition)
-// -------------------------------------------------------------
-
 export interface Appointment {
   id: string;
   patientName: string;
@@ -126,14 +114,19 @@ export interface Invoice {
 
 export interface Prescription {
   id: string;
+  patientId: string;
   patientName: string;
-  medicationName: string;
+  medication: string;
   dosage: string;
   frequency: string;
-  substanceClass: string;
-  interactionsChecked: boolean;
-  conflicts: string[];
-  status: 'Anforderung' | 'Genehmigt' | 'Gedruckt';
+  duration: string;
+  prescribedBy: 'main' | 'admin';
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  notes?: string;
+  rejectionReason?: string;
 }
 
 export interface InventoryItem {
@@ -161,3 +154,6 @@ export interface Message {
   content: string;
   timestamp: string;
 }
+
+export type ActiveTab = 'upload' | 'scan' | 'review' | 'gutachten' | 'dashboard' | 'consult' | 'documents' | 'eeg' | 'video' | 'calendar' | 'admin' | 'approvals';
+

@@ -40,13 +40,20 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
   const getGlowColor = () => {
     switch (state) {
       case "THINKING":
+      case "PROCESSING":
         return "shadow-purple-500/50 text-purple-400";
       case "SPEAKING":
         return "shadow-teal-400/50 text-teal-400 animate-pulse";
       case "SURPRISED":
+      case "ERROR":
         return "shadow-red-500/60 text-red-400 animate-bounce";
       case "HAPPY":
-        return "shadow-amber-400/70 text-amber-300";
+      case "SUCCESS":
+        return "shadow-teal-400/80 text-teal-300";
+      case "ATTENTION":
+        return "shadow-cyan-400/60 text-cyan-300";
+      case "EXPORT":
+        return "shadow-emerald-400/60 text-emerald-300";
       default:
         return "shadow-teal-500/30 text-teal-300";
     }
@@ -83,36 +90,43 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
         style={{
           transform: `
             translateY(${state === "IDLE" ? Math.sin(Date.now() / 600) * 4 : 0}px)
-            scale(${state === "SURPRISED" ? 1.15 : state === "THINKING" ? 0.95 : 1})
+            scale(${state === "SURPRISED" || state === "ERROR" ? 1.15 : state === "THINKING" || state === "PROCESSING" ? 0.95 : 1})
+            rotate(${state === "ATTENTION" ? "-8deg" : state === "ERROR" ? "10deg" : "0deg"})
           `,
         }}
       >
         {/* Glowing floating platform base */}
-        <div className="absolute -bottom-2 w-16 h-3 bg-teal-500/20 rounded-full blur-sm animate-pulse" />
+        <div className={`absolute -bottom-2 w-16 h-3 rounded-full blur-sm animate-pulse ${
+          state === "ERROR" ? "bg-red-500/30" : state === "SUCCESS" ? "bg-teal-400/40" : "bg-teal-500/20"
+        }`} />
         
         {/* Antennas */}
         <div className="absolute top-1 flex justify-between w-6 h-4">
           <div 
             className={`w-[1px] h-4 bg-teal-500/60 origin-bottom transition-all ${
-              state === "THINKING" ? "animate-pulse h-6 bg-purple-400" : ""
+              state === "THINKING" || state === "PROCESSING" ? "animate-pulse h-6 bg-purple-400" : state === "ATTENTION" ? "h-6 bg-cyan-400" : ""
             }`}
           >
-            <div className={`w-1.5 h-1.5 rounded-full -ml-[2px] -mt-[1px] ${state === "THINKING" ? "bg-purple-400 animate-ping" : "bg-teal-400"}`} />
+            <div className={`w-1.5 h-1.5 rounded-full -ml-[2px] -mt-[1px] ${
+              state === "THINKING" || state === "PROCESSING" ? "bg-purple-400 animate-ping" : state === "ATTENTION" ? "bg-cyan-300 animate-pulse" : "bg-teal-400"
+            }`} />
           </div>
           <div className="w-[1px] h-4 bg-teal-500/60 origin-bottom">
-            <div className="w-1.5 h-1.5 bg-teal-400 rounded-full -ml-[2px] -mt-[1px]" />
+            <div className={`w-1.5 h-1.5 rounded-full -ml-[2px] -mt-[1px] ${state === "ATTENTION" ? "bg-cyan-300" : "bg-teal-400"}`} />
           </div>
         </div>
 
         {/* Head */}
         <div
           className={`relative w-16 h-14 bg-slate-900 border-2 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg ${
-            state === "THINKING"
+            state === "THINKING" || state === "PROCESSING"
               ? "border-purple-500/70 shadow-purple-500/30"
-              : state === "SURPRISED"
+              : state === "SURPRISED" || state === "ERROR"
               ? "border-red-500/70 shadow-red-500/30"
-              : state === "HAPPY"
-              ? "border-amber-400/80 shadow-amber-400/30"
+              : state === "HAPPY" || state === "SUCCESS"
+              ? "border-teal-400/80 shadow-teal-400/40"
+              : state === "ATTENTION"
+              ? "border-cyan-400/80 shadow-cyan-400/40"
               : "border-teal-500/60 shadow-teal-500/30"
           }`}
           style={{
@@ -129,23 +143,23 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,6px_100%] pointer-events-none" />
 
             {/* Simulated Digital Eyes */}
-            {state === "SURPRISED" ? (
+            {state === "SURPRISED" || state === "ERROR" ? (
               <>
-                {/* Huge wide surprised circles */}
+                {/* Huge wide surprised/error eyes */}
                 <div className="w-3.5 h-3.5 rounded-full border border-red-500 bg-red-400 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
                 <div className="w-3.5 h-3.5 rounded-full border border-red-500 bg-red-400 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
               </>
-            ) : state === "THINKING" ? (
+            ) : state === "THINKING" || state === "PROCESSING" ? (
               <>
                 {/* Horizontal scanning light bars */}
                 <div className="w-4 h-1 bg-purple-400 rounded shadow-[0_0_6px_rgba(192,132,252,0.8)] animate-pulse" />
                 <div className="w-4 h-1 bg-purple-400 rounded shadow-[0_0_6px_rgba(192,132,252,0.8)] animate-pulse" />
               </>
-            ) : state === "HAPPY" ? (
+            ) : state === "HAPPY" || state === "SUCCESS" ? (
               <>
                 {/* Happy curved eyes */}
-                <div className="text-amber-300 font-mono text-sm leading-none animate-bounce select-none">^</div>
-                <div className="text-amber-300 font-mono text-sm leading-none animate-bounce select-none">^</div>
+                <div className="text-teal-300 font-mono text-sm leading-none animate-bounce select-none">^</div>
+                <div className="text-teal-300 font-mono text-sm leading-none animate-bounce select-none">^</div>
               </>
             ) : state === "SPEAKING" ? (
               <>
@@ -184,17 +198,17 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
           {/* Cyber Chest Core Light */}
           <div 
             className={`w-6 h-6 rounded-full border border-teal-500/40 flex items-center justify-center transition-all duration-300 ${
-              state === "THINKING" ? "bg-purple-500/10 border-purple-500" :
-              state === "SURPRISED" ? "bg-red-500/10 border-red-500" :
-              state === "HAPPY" ? "bg-amber-400/10 border-amber-400" :
+              state === "THINKING" || state === "PROCESSING" ? "bg-purple-500/10 border-purple-500" :
+              state === "SURPRISED" || state === "ERROR" ? "bg-red-500/10 border-red-500" :
+              state === "HAPPY" || state === "SUCCESS" ? "bg-teal-400/20 border-teal-400" :
               "bg-teal-500/10 border-teal-500"
             }`}
           >
             <div 
               className={`w-3.5 h-3.5 rounded-full shadow-inner animate-pulse ${
-                state === "THINKING" ? "bg-purple-400" :
-                state === "SURPRISED" ? "bg-red-400 animate-ping" :
-                state === "HAPPY" ? "bg-amber-400" :
+                state === "THINKING" || state === "PROCESSING" ? "bg-purple-400 animate-ping" :
+                state === "SURPRISED" || state === "ERROR" ? "bg-red-400 animate-ping" :
+                state === "HAPPY" || state === "SUCCESS" ? "bg-teal-300" :
                 "bg-teal-400"
               }`} 
             />
@@ -212,7 +226,7 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
           className="absolute left-4 top-[62px] w-3 h-10 origin-top bg-slate-800 border-l border-teal-500/30 rounded-full transition-all duration-500"
           style={{
             transform: `
-              rotate(${state === "HAPPY" ? "-150deg" : state === "WAVING" ? "-140deg" : "-15deg"} )
+              rotate(${state === "HAPPY" || state === "SUCCESS" ? "-150deg" : state === "WAVING" ? "-140deg" : state === "PROCESSING" ? "-60deg" : "-15deg"} )
             `,
           }}
         >
@@ -227,7 +241,7 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
           className="absolute right-4 top-[62px] w-3 h-10 origin-top bg-slate-800 border-r border-teal-500/30 rounded-full transition-all duration-500"
           style={{
             transform: `
-              rotate(${state === "HAPPY" ? "150deg" : state === "POINTING" ? "105deg" : "15deg"} )
+              rotate(${state === "HAPPY" || state === "SUCCESS" ? "150deg" : state === "POINTING" || state === "EXPORT" ? "110deg" : state === "PROCESSING" ? "60deg" : "15deg"} )
             `,
           }}
         >
@@ -241,10 +255,10 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
       {/* State Badge for Diagnostic Feedback (Interactive element) */}
       <div className="mt-3 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 border border-white/5 backdrop-blur-sm shadow text-[9px] uppercase tracking-wider font-mono text-slate-400">
         <span className={`w-1.5 h-1.5 rounded-full ${
-          state === "THINKING" ? "bg-purple-400 animate-ping" :
+          state === "THINKING" || state === "PROCESSING" ? "bg-purple-400 animate-ping" :
           state === "SPEAKING" ? "bg-teal-400 animate-pulse" :
-          state === "SURPRISED" ? "bg-red-400 animate-bounce" :
-          state === "HAPPY" ? "bg-amber-400 animate-pulse" :
+          state === "SURPRISED" || state === "ERROR" ? "bg-red-400 animate-bounce" :
+          state === "HAPPY" || state === "SUCCESS" ? "bg-teal-300 animate-pulse" :
           "bg-teal-500"
         }`} />
         U.D.O. Modus: <strong className="text-teal-300 font-semibold">{state}</strong>

@@ -5,6 +5,14 @@
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-cyan-glow: #00D4AA;
+}
+
+:root {
+  --glow-cyan: #00D4AA;
+  --glow-violet: #8b5cf6;
+  --glass: rgba(17, 18, 23, 0.9);
+  --glass-bg: rgba(17, 18, 23, 0.9);
 }
 
 /* Custom Scrollbar */
@@ -24,9 +32,97 @@
 }
 
 body {
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: #0a0a0f;
+  color: #e2e8f0;
   font-family: var(--font-sans);
+}
+
+/* Keyframe animations for glow effects */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px #00D4AA, inset 0 0 5px rgba(0, 212, 170, 0.2);
+    border-color: rgba(0, 212, 170, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px #00D4AA, 0 0 40px rgba(0, 212, 170, 0.4), inset 0 0 10px rgba(0, 212, 170, 0.3);
+    border-color: rgba(0, 212, 170, 1);
+  }
+}
+
+@keyframes violet-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px #8b5cf6, inset 0 0 5px rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px #8b5cf6, 0 0 35px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 1);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s infinite ease-in-out;
+}
+
+.animate-violet-pulse {
+  animation: violet-pulse 2s infinite ease-in-out;
+}
+
+/* Glass surface utility */
+.glass-surface {
+  background-color: rgba(17, 18, 23, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-border {
+  border: 1px solid rgba(0, 212, 170, 0.4);
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.25);
+}
+
+.glow-violet-border {
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+/* Base input and textarea glowing focus states */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #00D4AA !important;
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.4), inset 0 0 8px rgba(0, 212, 170, 0.15) !important;
+}
+
+/* Green valid and Red invalid glowing states */
+.input-valid,
+input:valid:not(:placeholder-shown):not([data-no-validate]) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35) !important;
+}
+
+.input-invalid,
+input.is-invalid,
+textarea.is-invalid {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 18px rgba(244, 63, 94, 0.45) !important;
 }
 
 /* Custom glowing animations for Radio Köln and Radio 10 */
@@ -62,17 +158,11 @@ body {
   animation: pulse-radio10 1.6s infinite ease-in-out;
 }
 
-/* Custom glow hover style for rail icons */
-.group:hover .light-up-icon {
-  stroke: url(#enter-gradient) !important;
-  filter: drop-shadow(0 0 8px rgb(4, 93, 177));
+.animate-fade-in {
+  animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

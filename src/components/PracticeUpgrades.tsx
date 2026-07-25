@@ -63,8 +63,30 @@ const INITIAL_TASKS: KanbanTask[] = [
 ];
 
 const INITIAL_PRESCRIPTIONS: Prescription[] = [
-  { id: "rx-1", patientName: "Thomas Müller", medicationName: "Ibuprofen 600mg", dosage: "1-0-1", frequency: "Zweimal täglich nach dem Essen", substanceClass: "NSAID", interactionsChecked: true, conflicts: [], status: "Anforderung" },
-  { id: "rx-2", patientName: "Sabine Becker", medicationName: "Aspirin 100mg", dosage: "1-0-0", frequency: "Einmal täglich morgens", substanceClass: "Salicylate", interactionsChecked: true, conflicts: [], status: "Genehmigt" }
+  {
+    id: "rx-1",
+    patientId: "SYN-90412",
+    patientName: "Thomas Müller",
+    medication: "Ibuprofen 600mg",
+    dosage: "1-0-1",
+    frequency: "Zweimal täglich nach dem Essen",
+    duration: "7 Tage",
+    prescribedBy: "main",
+    status: "pending",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "rx-2",
+    patientId: "SYN-88321",
+    patientName: "Sabine Becker",
+    medication: "Aspirin 100mg",
+    dosage: "1-0-0",
+    frequency: "Einmal täglich morgens",
+    duration: "Dauertherapie",
+    prescribedBy: "admin",
+    status: "approved",
+    createdAt: new Date().toISOString()
+  }
 ];
 
 const INITIAL_INVENTORY: InventoryItem[] = [
@@ -172,7 +194,7 @@ export default function PracticeUpgrades() {
 
     // Simulate drug interaction conflict checks
     let conflicts: string[] = [];
-    if (newRxMed.toLowerCase().includes("ibuprofen") && prescriptions.some(p => p.patientName === newRxName && p.medicationName.toLowerCase().includes("aspirin"))) {
+    if (newRxMed.toLowerCase().includes("ibuprofen") && prescriptions.some(p => p.patientName === newRxName && p.medication.toLowerCase().includes("aspirin"))) {
       conflicts.push("Wechselwirkung: Ibuprofen schränkt die kardioprotektive Wirkung von Aspirin ein.");
       setRxConflictWarning("Konflikt erkannt! Ibuprofen interferiert mit der Aspirin-Therapie des Patienten.");
     } else {
@@ -181,14 +203,15 @@ export default function PracticeUpgrades() {
 
     const newRx: Prescription = {
       id: `rx-${Date.now()}`,
+      patientId: `SYN-${Math.floor(10000 + Math.random() * 90000)}`,
       patientName: newRxName,
-      medicationName: newRxMed,
+      medication: newRxMed,
       dosage: "1-0-1",
       frequency: "Zweimal täglich",
-      substanceClass: newRxMed.toLowerCase().includes("ibu") ? "NSAID" : "Generisch",
-      interactionsChecked: true,
-      conflicts,
-      status: "Anforderung"
+      duration: "14 Tage",
+      prescribedBy: "main",
+      status: "pending",
+      createdAt: new Date().toISOString()
     };
 
     setPrescriptions([...prescriptions, newRx]);
@@ -196,7 +219,7 @@ export default function PracticeUpgrades() {
   };
 
   const handleApprovePrescription = (id: string) => {
-    setPrescriptions(prescriptions.map(p => p.id === id ? { ...p, status: "Genehmigt" } : p));
+    setPrescriptions(prescriptions.map(p => p.id === id ? { ...p, status: "approved" } : p));
   };
 
   // Inventory restocking
@@ -552,20 +575,14 @@ export default function PracticeUpgrades() {
                     <div className="flex justify-between items-center font-sans">
                       <strong className="text-white">{p.patientName}</strong>
                       <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono uppercase ${
-                        p.status === "Genehmigt" ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"
+                        p.status === "approved" ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"
                       }`}>{p.status}</span>
                     </div>
-                    <p className="text-slate-300 font-semibold">{p.medicationName} ({p.dosage})</p>
-                    {p.conflicts.length > 0 ? (
-                      <div className="text-[9px] text-red-400 leading-normal italic font-mono">
-                        {p.conflicts.join(", ")}
-                      </div>
-                    ) : (
-                      <span className="text-[9px] text-green-400 flex items-center gap-0.5 font-semibold">
-                        <ShieldCheck size={10} /> Keine Wechselwirkungen
-                      </span>
-                    )}
-                    {p.status === "Anforderung" && (
+                    <p className="text-slate-300 font-semibold">{p.medication} ({p.dosage})</p>
+                    <span className="text-[9px] text-green-400 flex items-center gap-0.5 font-semibold">
+                      <ShieldCheck size={10} /> S2k Leitlinienkonform
+                    </span>
+                    {p.status === "pending" && (
                       <button
                         onClick={() => handleApprovePrescription(p.id)}
                         className="py-1 px-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[9px] uppercase rounded transition-all"

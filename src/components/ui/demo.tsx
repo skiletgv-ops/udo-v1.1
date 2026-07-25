@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { SplineScene } from "./splite";
-import { Card } from "./card";
+import { Card } from "./Card";
 import { Spotlight } from "./spotlight";
 import { Maximize2, Minimize2, Sparkles, Cpu, ArrowRight } from "lucide-react";
 

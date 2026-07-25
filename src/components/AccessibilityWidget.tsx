@@ -365,7 +365,7 @@ export default function AccessibilityWidget({ showPortalMenu, setShowPortalMenu 
       </svg>
 
       {/* FLOATING ACCESSIBILITY & MEDIA CONTROL GROUP (TASK 1) */}
-      <div className="fixed bottom-8 left-8 z-50 pointer-events-auto flex items-center gap-3">
+      <div className="fixed bottom-8 left-8 z-[30] pointer-events-auto flex items-center gap-3">
         {/* Glasses (System Optimizer) Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -400,7 +400,7 @@ export default function AccessibilityWidget({ showPortalMenu, setShowPortalMenu 
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", damping: 20, stiffness: 200 }}
-              className="absolute bottom-16 left-0 w-80 sm:w-96 bg-slate-950/95 border border-white/15 rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-50 backdrop-blur-3xl text-white"
+              className="absolute bottom-16 left-0 w-80 sm:w-96 bg-slate-950/95 border border-white/15 rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-[100] backdrop-blur-3xl text-white pointer-events-auto"
             >
               {/* Header */}
               <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">

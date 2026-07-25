@@ -301,7 +301,7 @@ function CardModal({ setActiveView }: CardModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-md" onClick={handleBackdropClick}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md pointer-events-auto" onClick={handleBackdropClick}>
       <div className="relative max-w-md w-full mx-4">
         <button onClick={handleClose} className="absolute -top-12 right-0 text-slate-800 hover:text-slate-950 bg-white/90 hover:scale-105 p-2 rounded-full shadow-lg transition-all z-10">
           <X className="w-5 h-5" />
@@ -481,7 +481,7 @@ export default function ParticleSphereBackground({
 
   return (
     <CardProvider activeView={activeView} setActiveView={setActiveView} setActiveFunctionId={setActiveFunctionId}>
-      <div className="fixed inset-0 z-0 bg-[#030712] overflow-hidden pointer-events-auto flex items-center justify-center select-none">
+      <div className="fixed inset-0 z-[1] bg-[#030712] overflow-hidden pointer-events-none flex items-center justify-center select-none">
         
         {/* Atmospheric Background Ambient Glow behind the sphere */}
         <div 
@@ -493,19 +493,16 @@ export default function ParticleSphereBackground({
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-96 h-6 bg-teal-950/40 rounded-full blur-xl pointer-events-none border-t border-teal-500/10" />
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-64 h-3 bg-teal-900/30 rounded-full blur-md pointer-events-none" />
 
-        {/* 3D Spline Interactive Canvas Background */}
+        {/* 3D Particle Starfield Interactive Canvas Background */}
         <div 
-          className="w-full h-full relative z-10 transition-transform duration-700 ease-out"
+          className="w-full h-full relative z-[1] transition-transform duration-700 ease-out pointer-events-auto"
           style={{ transform: `scale(${currentScale})` }}
         >
-          <SplineScene 
-            scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-            className="w-full h-full"
-          />
+          <StarfieldBackground />
         </div>
 
         {/* Subtle depth vignette overlay (Pristine visual finish) */}
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_120px_rgba(0,0,0,0.95)] z-20" />
+        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_120px_rgba(0,0,0,0.95)] z-[2]" />
 
         {/* Modal display when card is clicked */}
         <CardModal setActiveView={setActiveView} />

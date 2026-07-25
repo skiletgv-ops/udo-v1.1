@@ -1,0 +1,13 @@
+{
+  "name": "albis-gdt-watcher",
+  "version": "1.0.0",
+  "description": "Standalone ALBIS GDT 2.1 File Exchange Watcher for UDO Gutachten Platform",
+  "main": "watcher.ts",
+  "scripts": {
+    "start": "tsx watcher.ts",
+    "test": "node --loader tsx ../scripts/test-gdt.ts"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3"
+  }
+}

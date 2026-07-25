@@ -1433,8 +1433,321 @@ export default function SystemWhitepaper() {
         )}
 
         {activeTab === "manual" && (
-          <div className="space-y-6 animate-fade-in" id="udo-manual-tab">
-            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="space-y-8 animate-fade-in" id="udo-manual-tab">
+            
+            {/* MANUAL HEADER */}
+            <div className="bg-slate-950/60 border border-teal-500/30 rounded-3xl p-6 md:p-8 space-y-4 shadow-2xl backdrop-blur-2xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[10px] font-mono uppercase tracking-widest font-black px-3 py-1 rounded-full mb-2">
+                    <BookOpen size={12} className="animate-pulse" />
+                    OFFIZIELLES BENUTZERHANDBUCH & BETRIEBSANLEITUNG
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "⚙️ U.D.O. System-Anleitung & Funktions-Guide" : "⚙️ U.D.O. System Manual & Operational Guide"}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1 max-w-3xl">
+                    {language === "de"
+                      ? "Schritt-für-Schritt-Anleitung für das gesamte U.D.O. Betriebssystem: Von der KI-Konsultation über die EEG-Biosignalanalyse bis hin zur rechtssicheren S2k-Gutachtenerstellung."
+                      : "Step-by-step operational guide for the entire U.D.O. Operating System: From AI Consultation and EEG Biosignal Analysis to AWMF S2k forensic report generation."}
+                  </p>
+                </div>
+
+                <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl text-right font-mono text-[10px] shrink-0">
+                  <span className="text-slate-500 block">SYSTEM VERSION:</span>
+                  <strong className="text-teal-400 font-extrabold text-xs">U.D.O. v3.8 CORTICAL</strong>
+                </div>
+              </div>
+
+              {/* QUICK SECTION NAV BUTTONS */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[
+                  { id: "sec-nav", label: "1. Navigation & Dock" },
+                  { id: "sec-voice", label: "2. Voice & Chat AI" },
+                  { id: "sec-gutachten", label: "3. S2k Gutachten & QES" },
+                  { id: "sec-eeg", label: "4. EEG Neural Workspace" },
+                  { id: "sec-video", label: "5. Video & Gait Analyse" },
+                  { id: "sec-triage", label: "6. Telefon-Triage & Praxis" },
+                  { id: "sec-admin", label: "7. Admin Keys & Telemetry" },
+                  { id: "sec-55y", label: "8. 55j-Langzeit-Projektion" },
+                ].map((s) => (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-teal-500/20 border border-white/10 hover:border-teal-400 text-slate-300 hover:text-white text-[10px] font-mono font-bold uppercase transition-all"
+                  >
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 1: NAVIGATION & UNIFIED COMMAND DOCK */}
+            <div id="sec-nav" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-mono font-black">
+                  01
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "Bedienungsarchitektur & Bottom Command Dock" : "Navigation Architecture & Bottom Command Dock"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Einheitliche Steuerung ohne störende schwimmende Elemente
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                  <strong className="text-teal-300 font-mono block uppercase">● Bottom Command Dock</strong>
+                  <p className="text-slate-300 leading-relaxed">
+                    Alle primären Arbeitsbereiche (Hauptraum, Dashboard, Voice & Chat, Dokumente, Gutachten, EEG, Video Analyse, Kalender, Admin) befinden sich direkt erreichbar in der unteren Navigationsleiste.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                  <strong className="text-teal-300 font-mono block uppercase">● System Control Popover</strong>
+                  <p className="text-slate-300 leading-relaxed">
+                    Klicken Sie auf den Button <strong className="text-white">"System"</strong> im unteren Dock, um das Popover für AI-Status (Gemini 2.5), Hardware-Latenz (60 FPS / 11ms) sowie 3D-Maskottchen-Steuerung (Augenkontakt & Cursor-Sync) zu öffnen.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                  <strong className="text-teal-300 font-mono block uppercase">● Schnellsuche (⌘K / Ctrl+K)</strong>
+                  <p className="text-slate-300 leading-relaxed">
+                    Drücken Sie <strong className="text-white">⌘K</strong> oder <strong className="text-white">Ctrl+K</strong>, um die universelle Befehlspalette zu öffnen. Sie ermöglicht blitzschnelles Wechseln zwischen Modulen und das Ausführen von Schnellaktionen.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 2: VOICE & CHAT AI CONSULTATION */}
+            <div id="sec-voice" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-mono font-black">
+                  02
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "AI-Konsultation & Sprachassistent (Voice & Chat)" : "AI Consultation & Voice Assistant (Voice & Chat)"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Hands-Free Sprachassistent, Med-Gemini Diktat & Multi-Agenten Konsil
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <p>
+                  Das Modul <strong className="text-cyan-300">Voice & Chat</strong> ermöglicht natürliche medizinische Gespräche und Freihand-Diktate im klinischen Alltag.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                    <strong className="text-white font-mono uppercase block text-xs">Schritt 1: Aktivierung & Diktat</strong>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-400">
+                      <li>Klicken Sie auf den Button <strong className="text-teal-300">"Voice & Chat"</strong> in der unteren Leiste.</li>
+                      <li>Sprechen Sie Ihren Befund direkt ein (z. B. <em>"Patient zeigt Radikulopathie L5 links mit Hypästhesie..."</em>).</li>
+                      <li>Das System wandelt Sprache in Echtzeit in strukturierten klinischen Text (SOAP-Format) um.</li>
+                    </ol>
+                  </div>
+
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                    <strong className="text-white font-mono uppercase block text-xs">Schritt 2: Multi-Agenten Konsil</strong>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-400">
+                      <li>Nutzen Sie das integrierte Konsil, um Zweitmeinungen von <strong>Dr. Clara (Med-Gemini)</strong>, <strong>Dr. Eric (Claude 3.5)</strong>, <strong>Dr. Marcus (GPT-4o)</strong> und <strong>Dr. Gratsiano (DeepSeek R1)</strong> einzuholen.</li>
+                      <li>Das System berechnet gewichtete Kausalitäts-Mehrheiten für komplexe Streitfälle.</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: S2K GUTACHTEN & QUALIFIED ELECTRONIC SIGNATURE */}
+            <div id="sec-gutachten" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-mono font-black">
+                  03
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "AWMF S2k-Gutachten Generator & QES-Signatur" : "AWMF S2k Forensic Report Generator & QES Signature"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    S2k & BG-konforme Gutachtenerstellung mit eHealth SMC-B Versiegelung
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                  <span className="text-emerald-400 font-bold block">1. Patientendaten</span>
+                  <p className="text-slate-400 text-[11px] font-sans">
+                    Eingabe der Stammdaten, Unfallhergang und BG-Aktenzeichen.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                  <span className="text-emerald-400 font-bold block">2. Dermatome & Mde</span>
+                  <p className="text-slate-400 text-[11px] font-sans">
+                    Auswahl betroffener Wurzeln (C6, C7, L4, L5, S1) und MdE-Grad.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                  <span className="text-emerald-400 font-bold block">3. Kausalitätsprüfer</span>
+                  <p className="text-slate-400 text-[11px] font-sans">
+                    AWMF S2k Prüfung auf primäre vs. degenerativ überlagerte Schäden.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                  <span className="text-emerald-400 font-bold block">4. QES SHA-256</span>
+                  <p className="text-slate-400 text-[11px] font-sans">
+                    Rechtssichere eIDAS-Signatur mit eHealth SMC-B Kartensimulation.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 4: EEG NEURAL WORKSPACE */}
+            <div id="sec-eeg" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-mono font-black">
+                  04
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "EEG Neural Workspace & Biosignalanalyse" : "EEG Neural Workspace & Biosignal Analysis"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    EDF+ Datenimport, Frequenz-Spektrum (PSD) & Spike-and-Wave Detektion
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <p>
+                  Das Modul <strong className="text-violet-300">EEG Neural Workspace</strong> analysiert mehrkanalige neurologische Biosignale gemäß den Richtlinien der Deutschen Gesellschaft für Klinische Neurophysiologie (DGKN).
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                    <strong className="text-violet-300 font-mono block text-xs">A. EDF+ Ingestion</strong>
+                    <p className="text-slate-400 text-[11px]">
+                      Laden Sie echte `.edf` Biosignaldateien hoch oder aktivieren Sie den interaktiven klinischen Simulator.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                    <strong className="text-violet-300 font-mono block text-xs">B. Frequenzbänder (PSD)</strong>
+                    <p className="text-slate-400 text-[11px]">
+                      Echtzeit-Berechnung der Spektraldichte für Delta (0.5-4Hz), Theta (4-8Hz), Alpha (8-13Hz), Beta (13-30Hz) und Gamma (&gt;30Hz).
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                    <strong className="text-violet-300 font-mono block text-xs">C. Epileptiforme Spikes</strong>
+                    <p className="text-slate-400 text-[11px]">
+                      Automatische Detektion von Spike-Wave-Komplexen mit Konfidenz-Scoring und Empfehlungen für S2k-Follow-Up.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 5: VIDEO DIAGNOSTIC & GAIT SUITE */}
+            <div id="sec-video" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-mono font-black">
+                  05
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "AI Video Diagnose & Gangbild-Analyse" : "AI Video Diagnostics & Gait Analysis Suite"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Computer Vision Pose Tracking, Gelenkwinkel & Fazialisparase-Erkennung
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-xs text-slate-300 leading-relaxed space-y-2">
+                <p>
+                  Das Videodiagnostik-Modul verarbeitet Videosequenzen zur Quantifizierung motorischer Defizite:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-slate-400 font-mono text-[11px]">
+                  <li><strong className="text-white">Gangbild-Analyse:</strong> Erkennung von Hinken, Zirkumduktion und Gangunsicherheiten.</li>
+                  <li><strong className="text-white">Gelenkwinkel-Biomechanik:</strong> Echtzeit-Winkelmessung an Knie, Hüfte und Sprunggelenk.</li>
+                  <li><strong className="text-white">Tremor-Frequenzanalyse:</strong> Fast Fourier Transformation (FFT) zur Differenzierung zwischen Parkinson- und essenziellem Tremor.</li>
+                  <li><strong className="text-white">Fazialisparase-Score:</strong> Gesichtsfeld-Symmetrieprüfung nach House-Brackmann.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* SECTION 6: TELEPHONE TRIAGE & PRACTICE MANAGEMENT */}
+            <div id="sec-triage" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 font-mono font-black">
+                  06
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "Kölner Telefon-Triage & Praxis-Management" : "Cologne Phone Triage & Practice Management"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Notfall-Hotline (0221 / Köln), Manchester Triage Code & KI-Terminkalender
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                  <strong className="text-orange-400 font-mono uppercase block">● Telefon-Triage Hotline</strong>
+                  <p className="text-slate-300 leading-relaxed">
+                    Der automatisierte Telefonassistent nimmt Anrufe entgegen, kategorisiert den Patientenzustand nach dem Manchester-Triage-System (Rot / Gelb / Grün) und leitet Notfälle direkt an die Notaufnahme oder Praxis weiter.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                  <strong className="text-orange-400 font-mono uppercase block">● KI-Terminkalender & Slot-Puffer</strong>
+                  <p className="text-slate-300 leading-relaxed">
+                    Verwalten Sie Termine mit automatischer Notfallpuffer-Reservierung, automatischer SMS-Erinnerung und direkter Integration in Ihre Praxis-Infrastruktur.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 7: ADMIN KEY VAULT & SYSTEM TELEMETRY */}
+            <div id="sec-admin" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 font-mono font-black">
+                  07
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    {language === "de" ? "Admin API-Schlüssel-Vault & Telemetrie" : "Admin API Key Vault & System Telemetry"}
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Passcode-geschützte Schlüsselverwaltung & Verbindungsdiagnostik
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-xs space-y-3 font-mono">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">ADMIN PASSCODE:</span>
+                  <strong className="text-amber-400 font-mono text-sm">ADMIN</strong>
+                </div>
+                <p className="text-slate-300 font-sans leading-relaxed">
+                  Öffnen Sie das Modul <strong className="text-rose-300">Admin & API Keys</strong>, geben Sie den Passcode <strong className="text-amber-400 font-mono">ADMIN</strong> ein, um Ihre eigenen API-Schlüssel für Gemini, Claude, DeepSeek und OpenAI einzutragen. Jedes Modell bietet einen integrierten Live-Verbindungstest.
+                </p>
+              </div>
+            </div>
+
+            {/* SECTION 8: 55-YEAR AMORTIZATION PROJECTION */}
+            <div id="sec-55y" className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-6">
               
               <div className="border-b border-white/5 pb-4 text-center">
                 <span className="inline-flex gap-1 bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[10px] font-mono uppercase tracking-widest font-black px-3 py-1 rounded-full mb-3">
@@ -1541,6 +1854,7 @@ export default function SystemWhitepaper() {
               </div>
 
             </div>
+
           </div>
         )}
 
