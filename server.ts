@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import Replicate from "replicate";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { calendarService } from "./src/services/calendarService";
@@ -823,12 +824,81 @@ Generate:
 });
 
 // -------------------------------------------------------------
+// Kimi-Audio (Moonshot AI via Replicate) Endpoint (ASR + TTS)
+// -------------------------------------------------------------
+app.post("/api/kimi-audio", async (req, res) => {
+  const { task, audioBase64, prompt, language = "de" } = req.body;
+  const token =
+    process.env.REACT_APP_REPLICATE_API_TOKEN ||
+    process.env.VITE_REPLICATE_API_TOKEN ||
+    process.env.REPLICATE_API_TOKEN;
+
+  if (!token) {
+    return res.status(400).json({
+      error: "Replicate API token is not configured in server environment (REPLICATE_API_TOKEN)."
+    });
+  }
+
+  try {
+    const replicate = new Replicate({ auth: token });
+
+    if (task === "asr") {
+      if (!audioBase64) {
+        return res.status(400).json({ error: "Missing audioBase64 for ASR task." });
+      }
+
+      const output: any = await replicate.run("zsxkib/kimi-audio-7b-instruct", {
+        input: {
+          audio: `data:audio/webm;base64,${audioBase64}`,
+          prompt: "Transcribe the following audio accurately. Preserve punctuation.",
+          task: "asr",
+          language: language || "de"
+        }
+      });
+
+      const transcript =
+        output?.transcription ||
+        output?.text ||
+        (typeof output === "string" ? output : JSON.stringify(output));
+
+      return res.json({ transcript: (transcript || "").trim() });
+    } else if (task === "tts") {
+      if (!prompt) {
+        return res.status(400).json({ error: "Missing prompt for TTS task." });
+      }
+
+      const output: any = await replicate.run("zsxkib/kimi-audio-7b-instruct", {
+        input: {
+          prompt,
+          task: "tts",
+          voice: "default",
+          speed: 1.0
+        }
+      });
+
+      const audioUrl = output?.audio || (typeof output === "string" ? output : null);
+      return res.json({ audioUrl });
+    } else {
+      return res.status(400).json({ error: "Unsupported task. Use 'asr' or 'tts'." });
+    }
+  } catch (err: any) {
+    console.error("Kimi-Audio Replicate Error:", err);
+    res.status(500).json({ error: err.message || "Failed to process Kimi-Audio request." });
+  }
+});
+
+// -------------------------------------------------------------
 // -------------------------------------------------------------
 // Admin API Key Status & ElevenLabs TTS Endpoints
 // -------------------------------------------------------------
 app.get("/api/admin/keys", (req, res) => {
   res.json({
     gemini: Boolean(process.env.GEMINI_API_KEY),
+    replicate: Boolean(
+      process.env.REACT_APP_REPLICATE_API_TOKEN ||
+        process.env.VITE_REPLICATE_API_TOKEN ||
+        process.env.REPLICATE_API_TOKEN
+    ),
     claude: Boolean(process.env.CLAUDE_API_KEY),
     elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
     openai: Boolean(process.env.OPENAI_API_KEY),

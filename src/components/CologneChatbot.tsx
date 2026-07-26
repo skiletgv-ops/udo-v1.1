@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, MessageSquare, ShieldCheck, HelpCircle, Bot, Mic, MicOff, Volume2, VolumeX, Check, AlertCircle, Sliders, RotateCcw, Play, Brain, Minus, PhoneCall } from "lucide-react";
 import { useGlobalSystem } from "./GlobalSystemContext";
 import ColognePhoneTriage from "./ColognePhoneTriage";
+import VoiceChatButton from "./voice/VoiceChatButton";
 
 interface Message {
   id: string;
@@ -26,6 +27,7 @@ const PRESET_CHIPS = [
 export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, onMinimize }: CologneChatbotProps) {
   const { 
     chatMessages: messages, 
+    setChatMessages,
     language,
     isVoiceMuted,
     setIsVoiceMuted,
@@ -659,6 +661,24 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
             </button>
           </div>
         </div>
+        <VoiceChatButton
+          language={language}
+          disabled={isLoading}
+          onNewMessage={(msg) => {
+            setChatMessages((prev) => [
+              ...prev,
+              {
+                id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+                sender: (msg.sender || (msg.role === 'user' ? 'user' : 'doctor')) as 'user' | 'doctor',
+                text: msg.text,
+                timestamp: msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              }
+            ]);
+            if (msg.role === 'model' || msg.sender === 'doctor') {
+              onRobotStateChange("SPEAKING");
+            }
+          }}
+        />
         <button
           type="submit"
           disabled={isLoading || !inputMessage.trim()}

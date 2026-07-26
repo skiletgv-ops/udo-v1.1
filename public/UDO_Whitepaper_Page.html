@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDO Whitepaper — Technische & Klinische Dokumentation</title>
+<style>
+  :root {
+    --bg: #020813;
+    --bg-elevated: #0a0f1a;
+    --bg-card: #0d1420;
+    --border: rgba(102, 252, 241, 0.12);
+    --text: #e8e8ec;
+    --text-secondary: #8b8fa3;
+    --text-muted: #4a4f66;
+    --cyan: #66fcf1;
+    --cyan-dim: #45a29e;
+    --violet: #b829dd;
+    --violet-bright: #d946ef;
+    --green: #06d6a0;
+    --orange: #ffd166;
+    --red: #ef476f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Glowing background accents */
+  .glow-top {
+    position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 400px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(102,252,241,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .glow-violet {
+    position: fixed; bottom: -100px; right: -100px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,41,221,0.08) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Navigation */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(2, 8, 19, 0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px;
+  }
+  .nav-logo { font-size: 20px; font-weight: 700; color: var(--cyan); letter-spacing: 2px; }
+  .nav-logo span { color: var(--text-muted); font-weight: 400; font-size: 12px; margin-left: 8px; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a {
+    color: var(--text-secondary); text-decoration: none; font-size: 13px;
+    letter-spacing: 0.5px; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--text-muted); text-decoration: none; font-size: 12px;
+    letter-spacing: 1px; transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--cyan); }
+
+  /* Hero */
+  .hero {
+    position: relative; z-index: 1;
+    text-align: center; padding: 80px 24px 60px;
+    max-width: 900px; margin: 0 auto;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 20px;
+    border: 1px solid rgba(184,41,221,0.3);
+    background: rgba(184,41,221,0.08);
+    color: var(--violet-bright); font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .hero h1 { font-size: 42px; font-weight: 700; line-height: 1.1; margin-bottom: 16px; }
+  .hero h1 em { color: var(--cyan); font-style: normal; }
+  .hero p { font-size: 17px; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+  /* Sections */
+  section { position: relative; z-index: 1; padding: 60px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-title {
+    font-size: 13px; color: var(--cyan-dim); letter-spacing: 3px;
+    text-transform: uppercase; font-weight: 600; margin-bottom: 8px;
+  }
+  .section-heading { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
+
+  /* Capability Cards */
+  .cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .cap-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    transition: all 0.3s ease; position: relative; overflow: hidden;
+  }
+  .cap-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet)); opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .cap-card:hover::before { opacity: 1; }
+  .cap-card:hover { border-color: rgba(102,252,241,0.2); transform: translateY(-2px); }
+  .cap-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .cap-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .cap-card .meta { display: flex; gap: 12px; margin-top: 14px; }
+  .cap-card .meta span { font-size: 11px; padding: 3px 10px; border-radius: 4px; font-weight: 500; }
+  .tag-time { background: rgba(102,252,241,0.1); color: var(--cyan); }
+  .tag-risk { background: rgba(6,214,160,0.1); color: var(--green); }
+  .tag-cert { background: rgba(239,71,111,0.1); color: var(--red); }
+
+  /* Comparison Table */
+  .compare-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .compare-table th {
+    text-align: left; padding: 12px 16px; font-size: 12px;
+    color: var(--text-muted); font-weight: 500;
+    border-bottom: 1px solid var(--border); text-transform: none;
+  }
+  .compare-table td {
+    padding: 14px 16px; font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: top;
+  }
+  .compare-table td:first-child { font-weight: 500; }
+  .compare-table td:nth-child(2) { color: var(--text-secondary); }
+  .compare-table .before { color: var(--red); }
+  .compare-table .after { color: var(--green); font-weight: 500; }
+
+  /* Architecture Diagram */
+  .arch-flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; margin: 32px 0; }
+  .arch-step {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; text-align: center;
+    min-width: 130px; position: relative;
+  }
+  .arch-step .num { font-size: 20px; font-weight: 700; color: var(--cyan); }
+  .arch-step .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .arch-arrow { color: var(--text-muted); font-size: 20px; padding: 0 8px; }
+
+  /* Security Grid */
+  .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .sec-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .sec-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .sec-item h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .sec-item p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Roadmap */
+  .roadmap { position: relative; padding-left: 32px; }
+  .roadmap::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: linear-gradient(180deg, var(--cyan), var(--violet));
+  }
+  .rm-item { position: relative; margin-bottom: 28px; }
+  .rm-item::before {
+    content: ''; position: absolute; left: -28px; top: 4px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--cyan);
+  }
+  .rm-q { font-size: 12px; color: var(--cyan); font-weight: 600; letter-spacing: 1px; margin-bottom: 4px; }
+  .rm-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .rm-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center; padding: 80px 24px;
+    background: linear-gradient(180deg, transparent, rgba(102,252,241,0.03), transparent);
+  }
+  .cta-section h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+  .cta-section p { font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), var(--green));
+    color: #000; font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    text-decoration: none; border: none; cursor: pointer;
+    box-shadow: 0 8px 32px rgba(102,252,241,0.25);
+    transition: all 0.3s ease;
+  }
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(102,252,241,0.35); }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px 24px;
+    text-align: center; color: var(--text-muted); font-size: 12px;
+  }
+  footer a { color: var(--cyan-dim); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    .cap-grid { grid-template-columns: 1fr; }
+    .arch-flow { flex-direction: column; gap: 8px; }
+    .arch-arrow { transform: rotate(90deg); }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-top"></div>
+<div class="glow-violet"></div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">UDO<span>Whitepaper v1.1</span></div>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <div class="nav-links">
+        <a href="#capabilities">Funktionen</a>
+        <a href="#architecture">Architektur</a>
+        <a href="#security">Sicherheit</a>
+        <a href="#roadmap">Roadmap</a>
+      </div>
+      <a href="/" class="nav-back">&#8592; Zurück zum Portal</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">&#10003; Technische Dokumentation</div>
+  <h1>UDO <em>Whitepaper</em></h1>
+  <p>Vollständige technische und klinische Dokumentation der UDO-Plattform für die neurologisch-psychiatrische Praxis von Dr. med. Ulrike Bongartz.</p>
+</div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-title">Funktionen</div>
+  <h2 class="section-heading">Was UDO für Ihre Praxis leistet</h2>
+  <div class="cap-grid">
+    <div class="cap-card">
+      <h3>&#128194; Dokumenten-Einlesung</h3>
+      <p>Scans, Fotos, PDFs und Fax-Dokumente werden automatisch erkannt und strukturiert. Kein manuelles Abtippen mehr.</p>
+      <div class="meta"><span class="tag-time">15m &rarr; 45s</span><span class="tag-risk">Fehler &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#129302; KI-Extraktion</h3>
+      <p>Künstliche Intelligenz extrahiert Patientendaten, ICD-10-Diagnosen, Medikamente und Abrechnungscodes aus unstrukturiertem Text.</p>
+      <div class="meta"><span class="tag-time">Automatisch</span><span class="tag-risk">Codes &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#9989; Doppel-Audit</h3>
+      <p>Jedes KI-Ergebnis wird von Ihrem Team an zwei Kontrollpunkten geprüft, bevor Sie es sehen. Nichts Ungeprüftes landet auf Ihrem Schreibtisch.</p>
+      <div class="meta"><span class="tag-time">2m Review</span><span class="tag-risk">Haftung &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128100; Arzt-Freigabe</h3>
+      <p>Sie sehen nur bereinigte, verifizierte Datensätze. Ein Klick zur Freigabe und Abrechnung.</p>
+      <div class="meta"><span class="tag-time">3m &rarr; 1 Klick</span><span class="tag-risk">Fehler &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128200; Geräte-Daten-Inbox</h3>
+      <p>EEG-, EKG- und neuropsychologische Testberichte werden patientenbezogen organisiert. Kein Suchen in E-Mail-Anhängen mehr.</p>
+      <div class="meta"><span class="tag-time">5m &rarr; 30s</span><span class="tag-cert">MDR/CE</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128221; Digitale Anmeldung</h3>
+      <p>Patienten füllen Vorgeschichte, Medikamente und Versicherungsdaten online vor dem Termin aus. Daten fließen direkt in die Akte.</p>
+      <div class="meta"><span class="tag-time">10m gespart</span><span class="tag-risk">Lücken &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128242; Automatische Erinnerungen</h3>
+      <p>SMS/WhatsApp-Erinnerungen 48h und 2h vor dem Termin. Absagen werden automatisch aus der Warteliste aufgefüllt.</p>
+      <div class="meta"><span class="tag-time">Automatisch</span><span class="tag-risk">Ausfälle &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#9888; KI-Triage</h3>
+      <p>Telefonische und Online-Triage bewertet die Dringlichkeit automatisch. Notfälle werden sofort markiert.</p>
+      <div class="meta"><span class="tag-time">Automatisch</span><span class="tag-cert">MDR/CE</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#127908; Sprachdiktat für Gutachten</h3>
+      <p>Diktieren Sie Ihr Gutachten. UDO transkribiert und strukturiert es in die korrekten rechtlichen Abschnitte. Sie prüfen und genehmigen.</p>
+      <div class="meta"><span class="tag-time">2h &rarr; 30m</span><span class="tag-cert">MDR/CE</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128176; Abrechnungsvorschläge</h3>
+      <p>UDO schlägt GOÄ/EBM-Codes basierend auf Ihrer Dokumentation vor. Sie bestätigen — nie automatisch eingereicht.</p>
+      <div class="meta"><span class="tag-time">5m &rarr; 1m</span><span class="tag-risk">Fehler &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128196; Rechnungsgenerator</h3>
+      <p>Privatliquidation-Rechnungen aus bestätigten Codes. PDF versandfertig.</p>
+      <div class="meta"><span class="tag-time">10m &rarr; 2m</span><span class="tag-risk">Verzögerung &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128202; Praxis-Analytics</h3>
+      <p>Patientenvolumen, Ausfallquote, durchschnittliche Gutachten-Bearbeitungszeit — alles auf einen Blick.</p>
+      <div class="meta"><span class="tag-time">Immer sichtbar</span><span class="tag-risk">Blind spots &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#127760; Patienten-Portal</h3>
+      <p>Patienten sehen Termine, laden Berichte herunter, laden Dokumente hoch. Weniger Telefonate für Ihr Team.</p>
+      <div class="meta"><span class="tag-time">5m gespart</span><span class="tag-risk">Datenchaos &darr;</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128203; Digitale Screening</h3>
+      <p>PHQ-9, GAD-7 und weitere Skalen vor dem Besuch. Scores landen zur ärztlichen Prüfung in der Akte.</p>
+      <div class="meta"><span class="tag-time">10m &rarr; 0m</span><span class="tag-cert">MDR/CE</span></div>
+    </div>
+    <div class="cap-card">
+      <h3>&#128272; DSGVO-Compliance</h3>
+      <p>10-Jahres-Aufbewahrungs-Alerts, Lösch-Workflows, vollständiger Audit-Trail-Export. Gebaut für deutsches Medizinrecht.</p>
+      <div class="meta"><span class="tag-time">Automatisch</span><span class="tag-risk">Bußgelder &darr;</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE/AFTER -->
+<section>
+  <div class="section-title">Vergleich</div>
+  <h2 class="section-heading">Vor UDO &mdash; Mit UDO</h2>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Prozess</th><th>Vor UDO</th><th>Mit UDO</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pro Patientenakte</td><td class="before">15 Minuten manuelle Eingabe</td><td class="after">45 Sekunden KI + 2 Minuten Review</td></tr>
+      <tr><td>Abrechnungsfehler</td><td class="before">3&ndash;5% Fehlerrate</td><td class="after">&lt;0,3% nach Doppel-Audit</td></tr>
+      <tr><td>Gutachten</td><td class="before">2 Stunden Schreibarbeit</td><td class="after">30 Minuten mit Sprachdiktat</td></tr>
+      <tr><td>Terminausfälle</td><td class="before">15% No-Show-Rate</td><td class="after">5% mit automatischen Erinnerungen</td></tr>
+      <tr><td>Personal</td><td class="before">Überlastet mit Papierkram</td><td class="after">Fokus auf Patientenversorgung</td></tr>
+      <tr><td>Ihre Rolle</td><td class="before">Sie tippen Daten ein</td><td class="after">Sie prüfen und unterschreiben</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="section-title">Systemarchitektur</div>
+  <h2 class="section-heading">Vom Scan bis zur ALBIS-Freigabe</h2>
+  <div class="arch-flow">
+    <div class="arch-step"><div class="num">1</div><div class="label">Dokument</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">2</div><div class="label">OCR + KI</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">3</div><div class="label">Strukturierung</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">4</div><div class="label">WORK Review</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">5</div><div class="label">ADMIN Freigabe</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">6</div><div class="label">Arzt Sign-Off</div></div>
+    <div class="arch-arrow">&#8594;</div>
+    <div class="arch-step"><div class="num">7</div><div class="label">ALBIS Export</div></div>
+  </div>
+  <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-top:16px;">
+    Jeder Schritt ist protokolliert. Der Audit-Trail ist unveränderlich und exportierbar.
+  </p>
+</section>
+
+<!-- SECURITY -->
+<section id="security">
+  <div class="section-title">Sicherheit & Compliance</div>
+  <h2 class="section-heading">Gebaut für deutsche Medizinstandards</h2>
+  <div class="sec-grid">
+    <div class="sec-item">
+      <div class="sec-icon">&#127760;</div>
+      <div>
+        <h4>Deutsche Datenresidenz</h4>
+        <p>Gehostet in der German Cloud Run Registry. Patientendaten verlassen Deutschland nicht.</p>
+      </div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon">&#128272;</div>
+      <div>
+        <h4>DSGVO-konform</h4>
+        <p>10-Jahres-Aufbewahrung, Lösch-Workflows, vollständiger Audit-Trail. Rechtssicher dokumentiert.</p>
+      </div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon">&#9997;</div>
+      <div>
+        <h4>eIDAS-QES-Signaturen</h4>
+        <p>Qualifizierte elektronische Signaturen für Gutachten und Arbeitsunfähigkeitsbescheinigungen.</p>
+      </div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon">&#128101;</div>
+      <div>
+        <h4>Rollenbasierte Zugriffskontrolle</h4>
+        <p>WORK (Prüfung) &rarr; ADMIN (Freigabe) &rarr; ARZT (Unterschrift). Klare Trennung der Verantwortlichkeiten.</p>
+      </div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon">&#128203;</div>
+      <div>
+        <h4>Unveränderlicher Audit-Trail</h4>
+        <p>Jede Aktion protokolliert: Benutzer, Zeitstempel, Vorher/Nachher-Diff. CSV-Export für Prüfungen.</p>
+      </div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon">&#9889;</div>
+      <div>
+        <h4>Synthetische Testdaten</h4>
+        <p>Alle Demodaten sind gekennzeichnet und blockiert den echten Export. Keine Verwechslungsgefahr.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-title">Roadmap</div>
+  <h2 class="section-heading">Kommende Updates</h2>
+  <div class="roadmap">
+    <div class="rm-item">
+      <div class="rm-q">Q4 2026</div>
+      <div class="rm-title">Scanner- & Fax-Integration</div>
+      <div class="rm-desc">Direktes Einlesen vom Büroscanner und automatische Fax-Verarbeitung.</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-q">Q1 2027</div>
+      <div class="rm-title">eGK & TI-Anbindung</div>
+      <div class="rm-desc">Elektronische Gesundheitskarte auslesen und Datenaustausch mit der Telematikinfrastruktur.</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-q">Q1 2027</div>
+      <div class="rm-title">On-Premise Deployment</div>
+      <div class="rm-desc">UDO vollständig auf eigenen Servern betreiben für maximale Datensouveränität.</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-q">Q2 2027</div>
+      <div class="rm-title">Predictive Billing & Multi-Praxis</div>
+      <div class="rm-desc">KI-optimierte Abrechnungskombinationen und Dashboard für mehrere Standorte.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Bereit, Ihre Praxis zu automatisieren?</h2>
+  <p>UDO reduziert den Verwaltungsaufwand um 80% und schützt vor Abrechnungsfehlern und Haftungsrisiken.</p>
+  <a href="/portal" class="cta-btn">Portal betreten &#8594;</a>
+</div>
+
+<footer>
+  <p>UDO v1.1 &mdash; Dr. med. Ulrike Bongartz &mdash; Neurologie &amp; Psychiatrie &mdash; Köln, Deutschland</p>
+  <p style="margin-top:8px;"><a href="https://github.com/skiletgv-ops/udo-v1.1">GitHub</a> &mdash; <a href="/">Zurück zum Portal</a></p>
+</footer>
+
+</body>
+</html>

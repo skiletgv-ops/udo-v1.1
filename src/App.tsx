@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RoleProvider, useRoleContext } from './context/RoleContext';
 import { PrescriptionProvider } from './context/PrescriptionContext';
 import { ToastContainer } from './components/ToastContainer';
 import { WelcomePage } from './app/welcome/page';
+import IntroPresentation from './components/IntroPresentation';
 import { ApprovalsPage } from './pages/ApprovalsPage';
 import { NavigationShell } from './components/NavigationShell';
 import { HauptraumCanvas } from './components/views/HauptraumCanvas';
@@ -17,6 +18,16 @@ import { EegView } from './components/views/EegView';
 import { VideoView } from './components/views/VideoView';
 import { CalendarView } from './components/views/CalendarView';
 import { AdminView } from './components/views/AdminView';
+import DevicesQueueView from './components/devices/DevicesQueueView';
+import DictatePage from './components/gutachten/DictatePage';
+import InsurancePage from './components/insurance/InsurancePage';
+import AnalyticsPage from './components/analytics/AnalyticsPage';
+import RetentionPage from './components/compliance/RetentionPage';
+import AuditViewPage from './components/compliance/AuditViewPage';
+import PortalPage from './components/portal/PortalPage';
+import IntakePage from './components/intake/IntakePage';
+import SystemWhitepaper from './components/SystemWhitepaper';
+import PresentationSlideDeck from './components/PresentationSlideDeck';
 
 import { ActiveTab, Demographics, DocumentItem, Finding, AIAgent } from './types';
 import { DEFAULT_DEMOGRAPHICS, DEMO_DOCUMENTS, DEMO_FINDINGS, INITIAL_AGENTS } from './lib/agents';
@@ -65,6 +76,24 @@ function MainAppContent() {
         return 'TERMINKALENDER';
       case 'admin':
         return 'ADMIN & SECURITY';
+      case 'devices':
+        return 'GERÄTE-INTEGRATION & QUEUE';
+      case 'dictate':
+        return 'SPRACH-DIKTAT & AI-DRAFTING';
+      case 'insurance':
+        return 'VERSICHERUNG & KOSTENÜBERNAHME';
+      case 'analytics':
+        return 'PRAXIS ANALYTICS & KPIS';
+      case 'retention':
+        return 'DSGVO RETENTION MONITOR (10 JAHRE)';
+      case 'audit':
+        return 'REVISIONS-AUDIT TRAIL';
+      case 'portal':
+        return 'GESCHÜTZTES PATIENTEN-PORTAL';
+      case 'intake':
+        return 'PATIENTEN-AUFNAHMEBOGEN';
+      case 'whitepaper':
+        return 'SYSTEM WHITEPAPER & KLINISCHE SPEZIFIKATIONEN';
       default:
         return 'HAUPTRAUM HUB';
     }
@@ -131,16 +160,79 @@ function MainAppContent() {
       {activeTab === 'video' && <VideoView />}
       {activeTab === 'calendar' && <CalendarView />}
       {activeTab === 'admin' && <AdminView />}
+      {activeTab === 'devices' && <DevicesQueueView />}
+      {activeTab === 'dictate' && <DictatePage />}
+      {activeTab === 'insurance' && <InsurancePage />}
+      {activeTab === 'analytics' && <AnalyticsPage />}
+      {activeTab === 'retention' && <RetentionPage />}
+      {activeTab === 'audit' && <AuditViewPage />}
+      {activeTab === 'portal' && <PortalPage />}
+      {activeTab === 'intake' && <IntakePage />}
+      {activeTab === 'whitepaper' && <SystemWhitepaper />}
     </NavigationShell>
   );
 }
 
+function getInitialRoute(): string {
+  if (typeof window === 'undefined') return '/';
+  const path = window.location.pathname;
+  if (path === '/presentation' || path.startsWith('/presentation')) {
+    return '/presentation';
+  }
+  if (path === '/whitepaper' || path.startsWith('/whitepaper')) {
+    return '/whitepaper';
+  }
+  if (path === '/portal' || path === '/app' || path.startsWith('/portal') || path.startsWith('/app')) {
+    return '/portal';
+  }
+  return '/';
+}
+
 export function App() {
+  const [route, setRoute] = useState<string>(getInitialRoute);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(getInitialRoute());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (newRoute: string) => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== newRoute) {
+        window.history.pushState({}, '', newRoute);
+      }
+    }
+    setRoute(newRoute);
+  };
+
   return (
     <RoleProvider>
       <PrescriptionProvider>
         <ToastContainer />
-        <MainAppContent />
+        {route === '/presentation' ? (
+          <PresentationSlideDeck />
+        ) : route === '/whitepaper' ? (
+          <div className="min-h-screen bg-[#020813] text-slate-100 font-sans">
+            <header className="sticky top-0 z-50 border-b border-violet-500/20 bg-[#020813] px-4 py-3 sm:px-8 flex items-center justify-between">
+              <a href="/" className="text-xs font-mono tracking-widest text-teal-400 uppercase hover:text-teal-300 hover:scale-105 active:scale-95 transition-all inline-block">
+                &larr; Zurück zur Übersicht
+              </a>
+              <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">
+                UDO System Whitepaper
+              </span>
+            </header>
+            <div className="max-w-6xl mx-auto p-6 md:p-12">
+              <SystemWhitepaper />
+            </div>
+          </div>
+        ) : route === '/' ? (
+          <IntroPresentation onComplete={() => navigateTo('/portal')} />
+        ) : (
+          <MainAppContent />
+        )}
       </PrescriptionProvider>
     </RoleProvider>
   );

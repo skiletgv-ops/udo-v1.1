@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDO — Dr. med. Ulrike Bongartz | Neurologie & Psychiatrie</title>
+<style>
+  :root {
+    --bg: #050508;
+    --bg-elevated: rgba(15, 18, 28, 0.72);
+    --border: rgba(102, 252, 241, 0.12);
+    --text: #E8E8EC;
+    --text-secondary: #8B8FA3;
+    --text-muted: #4A4F66;
+    --cyan: #66FCF1;
+    --cyan-dim: #45A29E;
+    --violet: #B829DD;
+    --violet-bright: #D946EF;
+    --violet-glow: rgba(184, 41, 221, 0.35);
+    --green: #06D6A0;
+    --green-dim: #059669;
+    --orange: #FFD166;
+    --glass: rgba(15, 18, 28, 0.55);
+    --glass-border: rgba(102, 252, 241, 0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Mouse-following gradient background */
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(102,252,241,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at var(--mx,50%) var(--my,50%), rgba(184,41,221,0.06) 0%, transparent 50%);
+    transition: background 0.3s ease;
+  }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.25;
+    background-image:
+      linear-gradient(rgba(102,252,241,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(102,252,241,0.04) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 70%);
+  }
+
+  /* Layout: ALL content pushed to edges. Center is sacrosanct for 3D animation. */
+  .layout {
+    position: fixed; inset: 0; z-index: 10; pointer-events: none;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 420px 1fr 420px;
+    grid-template-areas:
+      "header header header"
+      "left   .      right"
+      "footer footer footer";
+    padding: 28px 36px;
+    gap: 24px;
+  }
+  .layout > * { pointer-events: auto; }
+
+  /* Header */
+  .header { grid-area: header; display: flex; justify-content: space-between; align-items: center; }
+  .sys-status {
+    display: flex; align-items: center; gap: 10px; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--green);
+    font-weight: 600;
+  }
+  .sys-status::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .portal-ver { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; }
+  .lang-toggle {
+    display: flex; border: 1px solid var(--glass-border); border-radius: 8px; overflow: hidden;
+    background: var(--glass); backdrop-filter: blur(12px);
+  }
+  .lang-toggle button {
+    border: none; background: transparent; color: var(--text-muted); padding: 5px 12px;
+    font-size: 11px; cursor: pointer; letter-spacing: 1px; font-weight: 500;
+  }
+  .lang-toggle button.active { color: var(--cyan); background: rgba(102,252,241,0.08); }
+
+  /* LEFT COLUMN — Dr. Bongartz card */
+  .left-col { grid-area: left; display: flex; flex-direction: column; gap: 20px; align-self: center; }
+  .partner-card {
+    background: var(--glass); backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--glass-border); border-radius: 20px;
+    padding: 28px; position: relative; overflow: hidden;
+  }
+  .partner-card::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(102,252,241,0.06), transparent 50%);
+    pointer-events: none;
+  }
+  .verified-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(6,214,160,0.3);
+    background: rgba(6,214,160,0.08); color: var(--green); font-size: 10px;
+    letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 18px;
+  }
+  .partner-logo {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(102,252,241,0.1), rgba(184,41,221,0.1));
+    border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 16px;
+  }
+  .partner-card h2 { font-size: 28px; font-weight: 700; line-height: 1.1; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .partner-card .subtitle { font-size: 12px; color: var(--text-secondary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .partner-card .role { font-size: 13px; color: var(--cyan-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+  .partner-card .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); margin: 14px 0; }
+  .partner-card .footer-line { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; }
+
+  /* Info pills */
+  .info-pills { display: flex; flex-direction: column; gap: 12px; }
+  .pill {
+    background: var(--glass); backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .pill-label { font-size: 9px; color: var(--cyan-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .pill-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .pill-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+  /* RIGHT COLUMN — Whitepaper + Presentation + Portal */
+  .right-col { grid-area: right; display: flex; flex-direction: column; gap: 20px; align-self: center; align-items: flex-end; }
+
+  /* Whitepaper — Apple-style purple neon */
+  .whitepaper-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .whitepaper-btn {
+    position: relative; width: 130px; height: 130px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: radial-gradient(circle at 30% 30%, rgba(217,70,239,0.15), rgba(184,41,221,0.05));
+    border: 1px solid rgba(184,41,221,0.25);
+    cursor: pointer; text-decoration: none; transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+    backdrop-filter: blur(8px);
+  }
+  .whitepaper-btn::before {
+    content: ''; position: absolute; inset: -2px; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, var(--violet-bright), transparent, var(--violet), transparent);
+    opacity: 0.4; animation: spin 4s linear infinite; z-index: -1;
+  }
+  .whitepaper-btn::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    box-shadow: 0 0 40px var(--violet-glow), inset 0 0 30px rgba(184,41,221,0.08);
+    transition: box-shadow 0.4s ease;
+  }
+  .whitepaper-btn:hover::after {
+    box-shadow: 0 0 60px var(--violet-glow), 0 0 100px rgba(184,41,221,0.15), inset 0 0 40px rgba(184,41,221,0.12);
+  }
+  .whitepaper-btn:hover { transform: scale(1.06); border-color: rgba(184,41,221,0.5); }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .wp-icon { font-size: 28px; filter: drop-shadow(0 0 8px var(--violet-glow)); }
+  .wp-label { font-size: 10px; color: var(--text); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .wp-sublabel { font-size: 9px; color: var(--orange); letter-spacing: 1px; }
+  .wp-hint { font-size: 10px; color: var(--text-muted); text-align: center; max-width: 160px; line-height: 1.4; }
+
+  /* Presentation button — NEW */
+  .presentation-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .presentation-btn {
+    position: relative; width: 110px; height: 110px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: radial-gradient(circle at 30% 30%, rgba(255,209,102,0.12), rgba(255,209,102,0.03));
+    border: 1px solid rgba(255,209,102,0.25);
+    cursor: pointer; text-decoration: none; transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+    backdrop-filter: blur(8px);
+  }
+  .presentation-btn::before {
+    content: ''; position: absolute; inset: -2px; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, var(--orange), transparent, rgba(255,209,102,0.5), transparent);
+    opacity: 0.3; animation: spin 5s linear infinite reverse; z-index: -1;
+  }
+  .presentation-btn::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    box-shadow: 0 0 30px rgba(255,209,102,0.15), inset 0 0 20px rgba(255,209,102,0.05);
+    transition: box-shadow 0.4s ease;
+  }
+  .presentation-btn:hover::after {
+    box-shadow: 0 0 50px rgba(255,209,102,0.25), 0 0 80px rgba(255,209,102,0.1), inset 0 0 30px rgba(255,209,102,0.1);
+  }
+  .presentation-btn:hover { transform: scale(1.06); border-color: rgba(255,209,102,0.5); }
+  .pres-icon { font-size: 24px; filter: drop-shadow(0 0 6px rgba(255,209,102,0.3)); }
+  .pres-label { font-size: 9px; color: var(--orange); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .pres-sublabel { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; }
+
+  /* Enter Portal button */
+  .portal-cta-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    margin-top: 8px;
+  }
+  .portal-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 16px 40px; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, var(--cyan), var(--green));
+    color: #000; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 8px 32px rgba(102,252,241,0.25), 0 0 0 1px rgba(102,252,241,0.3);
+    transition: all 0.3s cubic-bezier(0.16,1,0.3,1); position: relative; overflow: hidden;
+  }
+  .portal-cta::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%); transition: transform 0.5s ease;
+  }
+  .portal-cta:hover::before { transform: translateX(100%); }
+  .portal-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(102,252,241,0.35), 0 0 0 1px rgba(102,252,241,0.4);
+  }
+  .portal-cta .arrow { font-size: 16px; transition: transform 0.3s ease; }
+  .portal-cta:hover .arrow { transform: translateX(4px); }
+  .portal-cta-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* Footer */
+  .footer { grid-area: footer; display: flex; flex-direction: column; gap: 20px; }
+  .partners-label {
+    font-size: 10px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase;
+    text-align: center; margin-bottom: 4px;
+  }
+  .partners {
+    display: flex; justify-content: center; gap: 16px;
+  }
+  .partner-tag {
+    padding: 10px 24px; border-radius: 10px;
+    background: var(--glass); backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    text-align: center; min-width: 120px;
+    transition: all 0.25s ease; cursor: default;
+  }
+  .partner-tag:hover { border-color: var(--cyan-dim); background: rgba(102,252,241,0.04); }
+  .partner-tag .p-name { font-size: 12px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; }
+  .partner-tag .p-desc { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+  .footer-legal {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; color: var(--text-muted); letter-spacing: 1px;
+    padding-top: 16px; border-top: 1px solid var(--glass-border);
+  }
+
+  /* Loading */
+  .loader {
+    position: fixed; inset: 0; z-index: 200; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-logo { font-size: 56px; font-weight: 700; color: var(--cyan); letter-spacing: 8px; margin-bottom: 32px; }
+  .loader-track { width: 180px; height: 2px; background: rgba(102,252,241,0.1); border-radius: 1px; overflow: hidden; }
+  .loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); border-radius: 1px; animation: loadBar 1.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+  @keyframes loadBar { to { width: 100%; } }
+  .loader-text { font-size: 10px; color: var(--text-muted); letter-spacing: 4px; text-transform: uppercase; margin-top: 20px; }
+
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr 1fr; grid-template-areas: "header header" "left right" "footer footer"; padding: 20px; }
+    .right-col { align-items: flex-start; }
+  }
+  @media (max-width: 768px) {
+    .layout { display: flex; flex-direction: column; gap: 20px; padding: 16px; overflow-y: auto; height: 100vh; }
+    .bg-grid { mask-image: none; -webkit-mask-image: none; }
+    .partner-card h2 { font-size: 22px; }
+    .whitepaper-btn, .presentation-btn { width: 100px; height: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-logo">UDO</div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
+  <div class="loader-text">System Initialisierung</div>
+</div>
+
+<div class="bg-layer" id="bgLayer"></div>
+<div class="bg-grid"></div>
+
+<div class="layout">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="sys-status">System Secure & Ready</div>
+    <div class="header-right">
+      <span class="portal-ver">Portal Ver: 2.1.0</span>
+      <div class="lang-toggle">
+        <button>DE</button>
+        <button class="active">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LEFT COLUMN — Partner Card + Info -->
+  <div class="left-col">
+    <div class="partner-card">
+      <div class="verified-badge">&#10003; Verified Partner</div>
+      <div class="partner-logo">&#9877;</div>
+      <div class="subtitle">Dr. med.</div>
+      <h2>ULRIKE<br>BONGARTZ</h2>
+      <div class="role">Neurology Expert Specialist</div>
+      <div class="divider"></div>
+      <div class="footer-line">Verification Partner &bull; U.D.O.</div>
+    </div>
+
+    <div class="info-pills">
+      <div class="pill">
+        <div class="pill-label">Guideline Core</div>
+        <div class="pill-title">S2k German Standard</div>
+        <div class="pill-desc">Lumbar spine segments L4/L5 & L5/S1</div>
+      </div>
+      <div class="pill">
+        <div class="pill-label">Consensus Jury</div>
+        <div class="pill-title">4 AI Neuro Experts</div>
+        <div class="pill-desc">Joint forensic voting consensus</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN — Whitepaper + Presentation + Portal -->
+  <div class="right-col">
+    <!-- Whitepaper Button -->
+    <div class="whitepaper-wrap">
+      <a href="/whitepaper" class="whitepaper-btn">
+        <span class="wp-icon">&#128214;</span>
+        <span class="wp-label">Whitepaper</span>
+      </a>
+      <span class="wp-sublabel">&#9888; Read carefully before use</span>
+      <span class="wp-hint">New: Read User Manual on Page 1</span>
+    </div>
+
+    <!-- Presentation Button — NEW -->
+    <div class="presentation-wrap">
+      <a href="/presentation" class="presentation-btn">
+        <span class="pres-icon">&#127909;</span>
+        <span class="pres-label">Präsentation</span>
+      </a>
+      <span class="pres-sublabel">Für Ärzte & Praxismanager</span>
+    </div>
+
+    <!-- Enter Portal -->
+    <div class="portal-cta-wrap">
+      <a href="/portal" class="portal-cta">
+        Enter Portal <span class="arrow">&#8594;</span>
+      </a>
+      <span class="portal-cta-sub">Authorized Medical Access Node</span>
+    </div>
+  </div>
+
+  <!-- FOOTER — Partners + Legal -->
+  <footer class="footer">
+    <div class="partners-label">Clinical-Grade Institutional Verification Partners</div>
+    <div class="partners">
+      <div class="partner-tag">
+        <div class="p-name">AWMF</div>
+        <div class="p-desc">S2k Leitlinie</div>
+      </div>
+      <div class="partner-tag">
+        <div class="p-name">DGUV</div>
+        <div class="p-desc">BK-Gesetz</div>
+      </div>
+      <div class="partner-tag">
+        <div class="p-name">eIDAS</div>
+        <div class="p-desc">QES Signatures</div>
+      </div>
+    </div>
+    <div class="footer-legal">
+      <span>&copy; 2026 U.D.O. Platform &bull; Secure GDPR Node</span>
+      <span>QES Signatures Active &bull; Hosted in German Cloud Run Registry</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Loading screen
+  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 1600);
+
+  // Mouse-following background gradient
+  const bg = document.getElementById('bgLayer');
+  let mx = 50, my = 50, tx = 50, ty = 50;
+  document.addEventListener('mousemove', e => {
+    tx = (e.clientX / window.innerWidth) * 100;
+    ty = (e.clientY / window.innerHeight) * 100;
+  });
+  function animate() {
+    mx += (tx - mx) * 0.04;
+    my += (ty - my) * 0.04;
+    bg.style.setProperty('--mx', mx + '%');
+    bg.style.setProperty('--my', my + '%');
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+</body>
+</html>

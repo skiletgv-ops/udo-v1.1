@@ -101,18 +101,22 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div 
+        className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-[#020813] pointer-events-auto"
+        style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-4xl max-h-[85vh] flex flex-col bg-[#0d0d15]/95 border border-[#B87333]/40 rounded-2xl shadow-[0_0_50px_rgba(184,115,51,0.2)] overflow-hidden text-slate-200 font-sans"
+          className="relative w-full max-w-4xl max-h-[85vh] flex flex-col bg-[#0a0f1d] border border-[#B87333]/40 rounded-2xl shadow-[0_0_50px_rgba(184,115,51,0.2)] overflow-hidden text-slate-200 font-sans"
         >
           {/* HEADER BAR */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-950/80">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-950">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#B87333]/20 border border-[#B87333]/40 text-[#E8A87C]">
+              <div className="p-2 rounded-lg bg-[#B87333]/20 border border-[#B87333]/40 text-[#E8A87C] hover:scale-110 transition-transform">
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
@@ -128,14 +132,14 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#B87333]/20 hover:bg-[#B87333]/40 border border-[#B87333]/50 text-[#E8A87C] hover:text-white text-xs font-mono font-semibold transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#B87333]/20 hover:bg-[#B87333]/40 border border-[#B87333]/50 hover:scale-105 active:scale-95 text-[#E8A87C] hover:text-white text-xs font-mono font-semibold transition-all cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 EXPORT TXT
               </button>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -18,17 +18,18 @@ import {
 import SystemWhitepaper from "./SystemWhitepaper";
 import { useGlobalSystem } from "./GlobalSystemContext";
 import SynapseBackground from "./ui/synapse-background";
+import SplineBackground from "./SplineBackground";
 
 interface IntroPresentationProps {
   onComplete: () => void;
 }
 
 export default function IntroPresentation({ onComplete }: IntroPresentationProps) {
-  const [progress, setProgress] = useState(0);
-  const [bootStage, setBootStage] = useState(0);
-  const [isBooted, setIsBooted] = useState(false);
+  const [progress, setProgress] = useState(100);
+  const [bootStage, setBootStage] = useState(5);
+  const [isBooted, setIsBooted] = useState(true);
   const [preLaunchActive, setPreLaunchActive] = useState(false);
-  const [preLaunchProgress, setPreLaunchProgress] = useState(0);
+  const [preLaunchProgress, setPreLaunchProgress] = useState(100);
   const [showWhitepaper, setShowWhitepaper] = useState(false);
   const [typedReminder, setTypedReminder] = useState("");
 
@@ -94,7 +95,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
       consensusSub: "Gemeinsame forensische Abstimmung",
       sphereTitle: "U.D.O. Sphäre",
       sphereDesc: "Whitepaper öffnen",
-      enterPortal: "Portal betreten",
+      enterPortal: "Enter portal",
       authNode: "Autorisierter medizinischer Zugangsknoten",
       regulatory: "© 2026 U.D.O. PLATTFORM • SICHERER DSGVO-KNOTEN",
       qesStatus: "QES-Signaturen Aktiv",
@@ -117,7 +118,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
       consensusSub: "Joint forensic voting consensus",
       sphereTitle: "U.D.O. Sphere",
       sphereDesc: "Open Whitepaper",
-      enterPortal: "Enter Clinical Portal",
+      enterPortal: "Enter portal",
       authNode: "Authorized Medical Access Node",
       regulatory: "© 2026 U.D.O. PLATFORM • SECURE GDPR NODE",
       qesStatus: "QES Signatures Active",
@@ -174,7 +175,21 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
     return () => clearInterval(interval);
   }, [preLaunchActive]);
 
-  const playClickSound = () => {
+  // Lock body scroll when whitepaper overlay is open to guarantee clean modal scrolling
+  useEffect(() => {
+    if (showWhitepaper) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showWhitepaper]);
+
+  const playClickSound = (forceOrEvent?: boolean | React.SyntheticEvent) => {
+    const force = typeof forceOrEvent === 'boolean' ? forceOrEvent : false;
+    if (showWhitepaper && !force) return;
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
@@ -200,12 +215,14 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
   };
 
   const handleSkipBoot = () => {
-    playClickSound();
+    playClickSound(true);
     setProgress(100);
     setPreLaunchActive(true);
   };
 
-  const playInnovationChime = () => {
+  const playInnovationChime = (forceOrEvent?: boolean | React.SyntheticEvent) => {
+    const force = typeof forceOrEvent === 'boolean' ? forceOrEvent : false;
+    if (showWhitepaper && !force) return;
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
@@ -254,7 +271,8 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
       particleCount={3000}
       className="fixed inset-0 bg-[#020813] text-white z-[9999] overflow-hidden select-none font-sans min-h-screen"
     >
-      <div className="absolute inset-0 z-0 overflow-y-auto overflow-x-hidden p-6 flex flex-col items-center justify-between min-h-screen bg-black/35 backdrop-blur-none">
+      <SplineBackground />
+      <div className={`absolute inset-0 z-0 overflow-y-auto overflow-x-hidden p-6 flex flex-col items-center justify-between min-h-screen bg-black/35 backdrop-blur-none transition-all duration-300 ${showWhitepaper ? 'pointer-events-none select-none opacity-20' : 'pointer-events-auto'}`}>
         
         {/* Cinematic Ambient Background Gradients */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -286,7 +304,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
         </div>
 
         {/* TOP HEADER STATUS LINE */}
-        <div className="w-full max-w-6xl flex justify-between items-center relative z-10 font-mono text-[11px] text-slate-300 tracking-[0.15em] uppercase pt-3 pb-3 border-b border-white/5 mb-4">
+        <div className="w-full max-w-6xl flex justify-between items-center relative z-10 font-mono text-[11px] text-slate-300 tracking-[0.15em] uppercase pt-3 pb-3 border-b border-white/5 mb-4 pointer-events-auto">
           <div className="flex items-center gap-2">
             <span className={`w-3.5 h-3.5 rounded-full ${isBooted ? "bg-emerald-400" : "bg-teal-400 animate-pulse"} flex items-center justify-center`}>
               <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
@@ -567,13 +585,13 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                 initial={{ opacity: 0, scale: 0.75, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", damping: 18, stiffness: 140 }}
-                className="w-full flex flex-col lg:flex-row items-center justify-center gap-12 max-w-5xl px-4"
+                className="w-full max-w-[1400px] xl:max-w-[1530px] mx-auto flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 lg:gap-12 px-4 md:px-8 lg:px-12 pointer-events-none my-auto"
               >
                 {/* LEFT SIDE: Brand Header & Medical Partner Badge */}
-                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
+                <div className="w-full max-w-lg lg:max-w-[430px] xl:max-w-[460px] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 pointer-events-auto shrink-0">
                   
                   {/* PROFESSIONAL MEDICAL CARD */}
-                  <div className="p-8 md:p-10 bg-slate-950/85 backdrop-blur-2xl border border-white/15 rounded-[32px] shadow-[0_25px_80px_rgba(0,0,0,0.85)] group max-w-lg w-full relative">
+                  <div className="p-8 md:p-10 bg-slate-950/85 backdrop-blur-2xl border border-white/15 rounded-[32px] shadow-[0_25px_80px_rgba(0,0,0,0.85)] group w-full relative">
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono uppercase font-black tracking-widest">
                       <CheckCircle size={12} /> {t[currentLang].verifiedPartner}
                     </div>
@@ -604,14 +622,14 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                   </div>
  
                   {/* Micro info parameters blocks */}
-                  <div className="hidden md:grid grid-cols-2 gap-5 w-full max-w-lg text-left font-mono">
+                  <div className="hidden md:grid grid-cols-2 gap-4 w-full text-left font-mono">
                     <motion.div 
                       animate={{ 
                         boxShadow: ["0 0 15px rgba(45,212,191,0.1)", "0 0 25px rgba(34,211,238,0.25)", "0 0 15px rgba(45,212,191,0.1)"],
                         borderColor: ["rgba(45,212,191,0.2)", "rgba(34,211,238,0.5)", "rgba(45,212,191,0.2)"]
                       }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="p-5 bg-gradient-to-br from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border rounded-[24px] transition-all"
+                      className="p-4 bg-gradient-to-br from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border rounded-[24px] transition-all"
                     >
                       <span className="text-[10px] text-teal-400 font-extrabold block uppercase tracking-widest">{t[currentLang].guidelineCore}</span>
                       <span className="text-sm text-white font-black block uppercase mt-1.5">{t[currentLang].guidelineCoreDetail}</span>
@@ -623,7 +641,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                         borderColor: ["rgba(212,175,55,0.2)", "rgba(52,211,153,0.5)", "rgba(212,175,55,0.2)"]
                       }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                      className="p-5 bg-gradient-to-br from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border rounded-[24px] transition-all"
+                      className="p-4 bg-gradient-to-br from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border rounded-[24px] transition-all"
                     >
                       <span className="text-[10px] text-[#D4AF37] font-extrabold block uppercase tracking-widest">{t[currentLang].consensusJury}</span>
                       <span className="text-sm text-white font-black block uppercase mt-1.5">{t[currentLang].consensusJuryDetail}</span>
@@ -632,7 +650,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                   </div>
 
                   {/* INSTITUTIONAL COOPERATIVE PARTNERS - APPLE/DELOITTE GRADE LOGO GRID */}
-                  <div className="w-full max-w-lg space-y-3 pt-2">
+                  <div className="w-full space-y-3 pt-1">
                     <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-slate-500 block text-center lg:text-left">
                       Clinical-Grade Institutional Verification Partners
                     </span>
@@ -655,83 +673,78 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                 </div>
  
                 {/* RIGHT SIDE: Interactive U.D.O. Sphere & Main Action Trigger */}
-                <div className="flex flex-col items-center justify-center space-y-10 select-none">
+                <div className="w-full max-w-lg lg:max-w-[400px] xl:max-w-[440px] flex flex-col items-center justify-center space-y-8 lg:space-y-10 select-none pointer-events-auto shrink-0 lg:translate-y-6 lg:mt-4">
                   
                   {/* GLOWING REVOLVING SPHERE SYSTEM */}
                   <div className="relative flex flex-col items-center justify-center pointer-events-auto">
                     
                     {/* Outer Orbit Rings */}
-                    <div className="absolute w-72 h-72 rounded-full border border-teal-500/10 animate-pulse pointer-events-none" />
+                    <div className="absolute w-72 h-72 rounded-full border border-purple-500/15 animate-pulse pointer-events-none" />
                     <motion.div 
                       animate={{ rotate: 360 }}
                       transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                      className="absolute w-80 h-80 rounded-full border border-teal-500/5 pointer-events-none"
+                      className="absolute w-80 h-80 rounded-full border border-purple-500/10 pointer-events-none"
                     />
                     <motion.div 
                       animate={{ rotate: -360 }}
                       transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-                      className="absolute w-[360px] h-[360px] rounded-full border border-dashed border-teal-500/10 pointer-events-none"
+                      className="absolute w-[360px] h-[360px] rounded-full border border-dashed border-purple-500/15 pointer-events-none"
                     />
  
                     {/* Ground Holo Base Reflection */}
-                    <div className="absolute bottom-[-20px] w-48 h-6 bg-teal-400/20 rounded-full blur-xl pointer-events-none" />
+                    <div className="absolute bottom-[-20px] w-48 h-6 bg-purple-500/20 rounded-full blur-xl pointer-events-none" />
  
-                    {/* SPHERE SPATIAL BUTTON TARGET */}
+                    {/* SPATIAL BUTTON TARGET */}
                     <motion.button
                       onClick={() => {
-                        playInnovationChime();
+                        playInnovationChime(true);
                         setShowWhitepaper(true);
                       }}
-                      onMouseEnter={playClickSound}
-                      whileHover={{ scale: 1.08 }}
+                      onMouseEnter={() => playClickSound(false)}
+                      whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.95 }}
                       animate={{
                         y: [0, -8, 0],
-                        boxShadow: [
-                          "0 0 45px rgba(20,184,166,0.25)",
-                          "0 0 80px rgba(20,184,166,0.55)",
-                          "0 0 45px rgba(20,184,166,0.25)"
-                        ]
                       }}
                       transition={{
                         y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-                        boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
                       }}
-                      className="relative w-56 h-56 rounded-full bg-slate-950/45 border border-white/20 hover:border-teal-400/80 p-5 backdrop-blur-2xl transition-all duration-500 flex flex-col items-center justify-center gap-3 cursor-pointer group overflow-hidden z-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
+                      disabled={showWhitepaper}
+                      className="relative w-56 h-56 rounded-full bg-[rgba(20,10,30,0.6)] backdrop-blur-xl border border-[rgba(168,85,247,0.4)] shadow-[0_0_24px_rgba(168,85,247,0.35),0_0_8px_rgba(216,150,255,0.5)_inset] hover:shadow-[0_0_36px_rgba(168,85,247,0.5),0_0_12px_rgba(216,150,255,0.65)_inset] hover:scale-[1.03] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] p-5 flex flex-col items-center justify-center gap-3 cursor-pointer group overflow-hidden z-10"
                     >
                       {/* Interactive Radar Scanning Ring (Ripples) */}
-                      <div className="absolute inset-0 rounded-full border-2 border-teal-400/10 animate-[ping_3s_infinite]" />
-                      <div className="absolute inset-4 rounded-full border border-cyan-400/5 animate-[ping_4s_infinite_1s]" />
+                      <div className="absolute inset-0 rounded-full border-2 border-purple-400/20 animate-[ping_3s_infinite]" />
+                      <div className="absolute inset-4 rounded-full border border-fuchsia-400/10 animate-[ping_4s_infinite_1s]" />
 
-                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-teal-300 to-transparent opacity-50 group-hover:opacity-100 animate-bounce" />
+                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-violet-300 to-transparent opacity-50 group-hover:opacity-100 animate-bounce" />
                       
                       {/* Concentric rotating orbits inside */}
-                      <div className="absolute inset-2 rounded-full border border-teal-500/25 animate-spin" style={{ animationDuration: "10s" }} />
-                      <div className="absolute inset-4 rounded-full border border-dashed border-teal-500/20 animate-spin" style={{ animationDuration: "6s", animationDirection: "reverse" }} />
-                      <div className="absolute inset-8 rounded-full border border-double border-teal-500/10 animate-spin" style={{ animationDuration: "16s" }} />
+                      <div className="absolute inset-2 rounded-full border border-purple-500/30 animate-spin" style={{ animationDuration: "10s" }} />
+                      <div className="absolute inset-4 rounded-full border border-dashed border-purple-500/20 animate-spin" style={{ animationDuration: "6s", animationDirection: "reverse" }} />
+                      <div className="absolute inset-8 rounded-full border border-double border-purple-500/15 animate-spin" style={{ animationDuration: "16s" }} />
  
                       {/* Central Orb Core with continuous soft pulsing and scale animation */}
                       <motion.div 
                         animate={{
                           scale: [1, 1.06, 1],
-                          borderColor: ["rgba(45,212,191,0.4)", "rgba(34,211,238,0.8)", "rgba(45,212,191,0.4)"]
+                          borderColor: ["rgba(168,85,247,0.4)", "rgba(216,150,255,0.8)", "rgba(168,85,247,0.4)"]
                         }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-teal-500/30 via-teal-500/10 to-cyan-500/35 border flex items-center justify-center shadow-inner group-hover:border-teal-400/90 transition-all"
+                        className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-violet-600/30 via-purple-500/20 to-fuchsia-400/35 border border-violet-400/50 flex items-center justify-center shadow-inner group-hover:border-violet-300 transition-all"
                       >
-                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.35),transparent_70%)] animate-pulse" />
-                        <BookOpen size={36} className="text-teal-400 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
+                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.35),transparent_70%)] animate-pulse" />
+                        <BookOpen size={36} className="text-violet-200 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
                       </motion.div>
  
                       <div className="z-10 text-center space-y-1">
-                        <span className="text-xs font-mono font-black text-teal-400 tracking-wider block uppercase group-hover:text-white transition-colors">
+                        <span className="text-xs font-mono font-black bg-gradient-to-r from-violet-200 to-white bg-clip-text text-transparent tracking-wide block uppercase transition-colors">
                           UDO Whitepaper
                         </span>
                         <span className="text-[9px] font-mono tracking-widest text-slate-300 uppercase block font-extrabold">
                           ⚠️ Read carefully before use
                         </span>
                         {typedReminder && (
-                          <div className="text-[8px] font-mono text-emerald-400 animate-pulse tracking-wide h-4 flex items-center justify-center font-bold">
+                          <div className="text-[8px] font-mono text-violet-300 animate-pulse tracking-wide h-4 flex items-center justify-center font-bold">
                             {typedReminder}
                           </div>
                         )}
@@ -743,10 +756,11 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
                   <div className="flex flex-col items-center gap-4 w-full">
                     <motion.button
                       onClick={() => {
-                        playInnovationChime();
+                        playInnovationChime(true);
                         onComplete();
                       }}
-                      onMouseEnter={playClickSound}
+                      onMouseEnter={() => playClickSound(false)}
+                      disabled={showWhitepaper}
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.96 }}
                       animate={{
@@ -788,7 +802,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
         </div>
 
         {/* FOOTER & REGULATORY STANDARDS */}
-        <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center text-[9px] font-mono text-slate-500 tracking-wider relative z-10 border-t border-white/5 pt-4">
+        <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center text-[9px] font-mono text-slate-500 tracking-wider relative z-10 border-t border-white/5 pt-4 pointer-events-auto">
           <div>
             <span>{t[currentLang].regulatory}</span>
           </div>
@@ -803,30 +817,26 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
         <AnimatePresence>
           {showWhitepaper && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.75, y: 30 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.75, y: 30 }}
-              transition={{ type: "spring", damping: 20, stiffness: 130 }}
-              className="fixed inset-0 bg-slate-950/98 backdrop-blur-2xl z-[10000] overflow-y-auto p-6 md:p-12 flex items-start justify-center"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 22, stiffness: 150 }}
+              className="fixed inset-0 bg-[#020813] z-[100000] overflow-y-auto p-4 sm:p-6 md:p-10 block pointer-events-auto"
+              style={{ WebkitOverflowScrolling: 'touch', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
             >
-              <div className="max-w-5xl mx-auto space-y-6 relative w-full pt-4">
-                
-                {/* Back / Close button */}
-                <div className="flex justify-end">
+              <div className="max-w-5xl mx-auto space-y-6 relative w-full pt-2 pb-20">
+                <div className="flex justify-end sticky top-0 z-50 pt-2 pb-4 bg-[#020813] border-b border-white/10">
                   <button
                     onClick={() => {
-                      playClickSound();
+                      playClickSound(true);
                       setShowWhitepaper(false);
                     }}
-                    onMouseEnter={playClickSound}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 text-white font-mono text-xs uppercase tracking-wider cursor-pointer transition-all active:scale-95 shadow-md"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 hover:scale-105 text-teal-300 font-mono text-xs uppercase tracking-wider cursor-pointer transition-all active:scale-95 shadow-lg"
                   >
                     <X size={16} />
                     <span>{t[currentLang].closeWhitepaper}</span>
                   </button>
                 </div>
-
-                {/* Render Whitepaper Component */}
                 <SystemWhitepaper />
               </div>
             </motion.div>

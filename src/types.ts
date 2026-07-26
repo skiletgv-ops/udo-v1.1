@@ -155,5 +155,26 @@ export interface Message {
   timestamp: string;
 }
 
-export type ActiveTab = 'upload' | 'scan' | 'review' | 'gutachten' | 'dashboard' | 'consult' | 'documents' | 'eeg' | 'video' | 'calendar' | 'admin' | 'approvals';
+export type ActiveTab =
+  | 'upload'
+  | 'scan'
+  | 'review'
+  | 'gutachten'
+  | 'dashboard'
+  | 'consult'
+  | 'documents'
+  | 'eeg'
+  | 'video'
+  | 'calendar'
+  | 'admin'
+  | 'approvals'
+  | 'devices'
+  | 'intake'
+  | 'insurance'
+  | 'dictate'
+  | 'retention'
+  | 'audit'
+  | 'analytics'
+  | 'portal'
+  | 'whitepaper';
 

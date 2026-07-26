@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDO Präsentation — Für Ärzte</title>
+<style>
+  :root {
+    --bg: #020813;
+    --bg-slide: #0a0f1a;
+    --border: rgba(102, 252, 241, 0.15);
+    --text: #e8e8ec;
+    --text-secondary: #8b8fa3;
+    --text-muted: #4a4f66;
+    --cyan: #66fcf1;
+    --cyan-dim: #45a29e;
+    --violet: #b829dd;
+    --green: #06d6a0;
+    --orange: #ffd166;
+    --red: #ef476f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh; overflow: hidden;
+  }
+
+  /* Slide container */
+  .slides-container {
+    position: relative; width: 100%; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .slide {
+    position: absolute; width: 100%; height: 100%;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 40px; text-align: center;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .slide.active { display: flex; opacity: 1; }
+
+  /* Large text for older doctors */
+  .slide h1 { font-size: 52px; font-weight: 700; line-height: 1.15; margin-bottom: 24px; }
+  .slide h1 em { color: var(--cyan); font-style: normal; }
+  .slide h2 { font-size: 38px; font-weight: 700; line-height: 1.2; margin-bottom: 32px; }
+  .slide h2 em { color: var(--cyan); font-style: normal; }
+  .slide p { font-size: 22px; color: var(--text-secondary); line-height: 1.6; max-width: 800px; }
+  .slide .big-number {
+    font-size: 120px; font-weight: 700; color: var(--cyan);
+    line-height: 1; margin: 20px 0;
+  }
+  .slide .big-label { font-size: 20px; color: var(--text-secondary); margin-bottom: 40px; }
+
+  /* Cards on slides */
+  .slide-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    max-width: 1000px; margin-top: 40px;
+  }
+  .slide-card {
+    background: var(--bg-slide); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px 24px; text-align: center;
+  }
+  .slide-card .icon { font-size: 40px; margin-bottom: 16px; }
+  .slide-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+  .slide-card p { font-size: 16px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Comparison rows */
+  .compare-row {
+    display: flex; align-items: center; justify-content: center; gap: 40px;
+    margin: 20px 0; max-width: 900px;
+  }
+  .compare-box {
+    flex: 1; padding: 24px; border-radius: 12px; text-align: left;
+  }
+  .compare-box.before { background: rgba(239,71,111,0.08); border: 1px solid rgba(239,71,111,0.2); }
+  .compare-box.after { background: rgba(6,214,160,0.08); border: 1px solid rgba(6,214,160,0.2); }
+  .compare-box h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+  .compare-box.before h4 { color: var(--red); }
+  .compare-box.after h4 { color: var(--green); }
+  .compare-box li { font-size: 18px; color: var(--text-secondary); margin-bottom: 10px; list-style: none; }
+  .compare-box li::before { content: "• "; margin-right: 8px; }
+  .compare-box.before li::before { color: var(--red); }
+  .compare-box.after li::before { color: var(--green); }
+
+  /* Navigation */
+  .nav-bar {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 20px; z-index: 100;
+    background: rgba(10, 15, 26, 0.9); border: 1px solid var(--border);
+    border-radius: 50px; padding: 12px 28px; backdrop-filter: blur(10px);
+  }
+  .nav-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .slide-counter { font-size: 14px; color: var(--text-muted); min-width: 60px; text-align: center; }
+  .progress-bar {
+    width: 120px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--cyan); border-radius: 2px; transition: width 0.3s; }
+
+  /* Exit button */
+  .exit-btn {
+    position: fixed; top: 24px; right: 24px; z-index: 100;
+    padding: 8px 18px; border-radius: 8px;
+    border: 1px solid var(--border); background: rgba(10,15,26,0.8);
+    color: var(--text-muted); font-size: 12px; letter-spacing: 1px;
+    text-decoration: none; cursor: pointer; transition: all 0.2s;
+  }
+  .exit-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* Glow accents */
+  .glow-hero {
+    position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(102,252,241,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  @media (max-width: 768px) {
+    .slide h1 { font-size: 32px; }
+    .slide h2 { font-size: 26px; }
+    .slide p { font-size: 16px; }
+    .slide-cards { grid-template-columns: 1fr; }
+    .compare-row { flex-direction: column; gap: 16px; }
+    .big-number { font-size: 72px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-hero"></div>
+
+<div class="slides-container">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide active">
+    <div style="font-size:14px;color:var(--cyan-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Präsentation für Ärzte</div>
+    <h1>UDO<br><em>Automatisierung</em><br>für Ihre Praxis</h1>
+    <p style="font-size:20px;">Weniger Papierkram. Mehr Zeit für Patienten.<br>Mehr Sicherheit. Mehr Umsatz.</p>
+    <div style="margin-top:40px;font-size:13px;color:var(--text-muted);">Dr. med. Ulrike Bongartz &bull; Neurologie &amp; Psychiatrie &bull; Köln</div>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Das Problem</div>
+    <h2>Jeden Tag vergeuden Ärzte<br><em>Stunden</em> mit Verwaltung</h2>
+    <div class="slide-cards" style="grid-template-columns:repeat(2,1fr);max-width:700px;">
+      <div class="slide-card">
+        <div class="icon">&#128221;</div>
+        <h3>15 Minuten</h3>
+        <p>pro Patientenakte manuell eintippen</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#128196;</div>
+        <h3>2 Stunden</h3>
+        <p>pro Gutachten schreiben</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#128242;</div>
+        <h3>15%</h3>
+        <p>der Patienten erscheinen nicht</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#128176;</div>
+        <h3>3&ndash;5%</h3>
+        <p>Abrechnungsfehler kosten Geld</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: What is UDO -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--cyan-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Die Lösung</div>
+    <h2>UDO liest, prüft und<br>strukturiert <em>automatisch</em></h2>
+    <p>Sie scannen ein Dokument. Die Künstliche Intelligenz extrahiert alle Daten.<br>Ihr Team prüft es an zwei Kontrollpunkten. Sie unterschreiben mit einem Klick.</p>
+    <div class="slide-cards" style="margin-top:48px;">
+      <div class="slide-card">
+        <div class="icon">&#128194;</div>
+        <h3>Einlesen</h3>
+        <p>Scan, Foto oder PDF</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#129302;</div>
+        <h3>KI-Extraktion</h3>
+        <p>Automatisch strukturiert</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#9989;</div>
+        <h3>Doppel-Prüfung</h3>
+        <p>WORK + ADMIN Kontrolle</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Time Savings -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--green);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Zeitersparnis</div>
+    <h2>Pro Patientenakte</h2>
+    <div class="big-number">12 Minuten</div>
+    <div class="big-label">weniger Verwaltungsaufwand</div>
+    <p>Bei 20 Patienten pro Tag sind das <strong style="color:var(--cyan);">4 Stunden</strong>, die Sie zurückgewinnen.<br>Pro Woche. Jede Woche.</p>
+  </div>
+
+  <!-- SLIDE 5: Gutachten -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--orange);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Gutachten</div>
+    <h2>Gutachten in <em>30 Minuten</em><br>statt 2 Stunden</h2>
+    <p>Sie diktieren das Gutachten. UDO transkribiert und strukturiert es<br>in die korrekten rechtlichen Abschnitte. Sie prüfen und genehmigen.</p>
+    <div style="margin-top:40px;display:flex;gap:40px;justify-content:center;">
+      <div style="text-align:center;">
+        <div style="font-size:64px;font-weight:700;color:var(--red);">2h</div>
+        <div style="font-size:16px;color:var(--text-secondary);">vor UDO</div>
+      </div>
+      <div style="font-size:48px;color:var(--text-muted);display:flex;align-items:center;">&#8594;</div>
+      <div style="text-align:center;">
+        <div style="font-size:64px;font-weight:700;color:var(--green);">30m</div>
+        <div style="font-size:16px;color:var(--text-secondary);">mit UDO</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: No-Shows -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--violet);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Terminausfälle</div>
+    <h2>Weniger Ausfälle.<br>Mehr <em>Einnahmen.</em></h2>
+    <div class="big-number" style="font-size:96px;">1.500 &euro;</div>
+    <div class="big-label">geschützter Umsatz pro Monat</div>
+    <p>Automatische SMS-Erinnerungen reduzieren No-Shows von 15% auf 5%.<br>Bei 150 &euro; pro Termin sind das 10 gerettete Termine pro Monat.</p>
+  </div>
+
+  <!-- SLIDE 7: Safety -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--cyan-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Sicherheit</div>
+    <h2>Nichts Ungeprüftes<br>erreicht Ihren <em>Schreibtisch</em></h2>
+    <div class="slide-cards" style="grid-template-columns:repeat(2,1fr);max-width:700px;">
+      <div class="slide-card">
+        <div class="icon">&#128101;</div>
+        <h3>WORK prüft</h3>
+        <p>Medizinische Fachangestellte vergleichen Scan und extrahierte Daten</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#128274;</div>
+        <h3>ADMIN freigegeben</h3>
+        <p>Praxismanager gibt erst dann frei, wenn alles stimmt</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#128203;</div>
+        <h3>Vollständiger Audit-Trail</h3>
+        <p>Jede Aktion protokolliert: Wer, Wann, Was</p>
+      </div>
+      <div class="slide-card">
+        <div class="icon">&#127760;</div>
+        <h3>Deutsche Server</h3>
+        <p>Daten bleiben in Deutschland. DSGVO-konform.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Before vs After -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--cyan-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Vergleich</div>
+    <h2>Vor UDO &mdash; Mit UDO</h2>
+    <div class="compare-row">
+      <div class="compare-box before">
+        <h4>Vor UDO</h4>
+        <ul>
+          <li>15 Minuten tippen pro Akte</li>
+          <li>2 Stunden pro Gutachten</li>
+          <li>15% Terminausfälle</li>
+          <li>3&ndash;5% Abrechnungsfehler</li>
+          <li>Personal überlastet</li>
+        </ul>
+      </div>
+      <div style="font-size:32px;color:var(--text-muted);">vs</div>
+      <div class="compare-box after">
+        <h4>Mit UDO</h4>
+        <ul>
+          <li>45 Sekunden + 2 Minuten Review</li>
+          <li>30 Minuten mit Diktat</li>
+          <li>5% mit Erinnerungen</li>
+          <li>&lt;0,3% nach Prüfung</li>
+          <li>Personal für Patienten frei</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Modules -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--cyan-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Module</div>
+    <h2>Alles in <em>einer</em> Plattform</h2>
+    <div class="slide-cards" style="grid-template-columns:repeat(3,1fr);max-width:900px;">
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#128194; Dokumente</h3>
+        <p style="font-size:13px;">Einlesen &amp; KI-Extraktion</p>
+      </div>
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#128200; Geräte</h3>
+        <p style="font-size:13px;">EEG, EKG, Testberichte</p>
+      </div>
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#128221; Anmeldung</h3>
+        <p style="font-size:13px;">Digitale Formulare</p>
+      </div>
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#9888; Triage</h3>
+        <p style="font-size:13px;">Dringlichkeitsbewertung</p>
+      </div>
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#127908; Diktat</h3>
+        <p style="font-size:13px;">Sprache zu Gutachten</p>
+      </div>
+      <div class="slide-card" style="padding:20px;">
+        <h3 style="font-size:16px;">&#128176; Abrechnung</h3>
+        <p style="font-size:13px;">GOÄ/EBM Vorschläge</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: CTA -->
+  <div class="slide">
+    <div style="font-size:14px;color:var(--green);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Nächster Schritt</div>
+    <h2>4 Stunden pro Tag<br><em>zurückgewinnen</em></h2>
+    <p style="margin-bottom:40px;">Testen Sie UDO mit synthetischen Daten.<br>Sehen Sie, wie es funktioniert — ohne Risiko.</p>
+    <a href="/portal" style="display:inline-flex;align-items:center;gap:10px;padding:18px 48px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--green));color:#000;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;box-shadow:0 8px 32px rgba(102,252,241,0.25);transition:all 0.3s;">
+      Portal betreten &#8594;
+    </a>
+    <div style="margin-top:32px;font-size:14px;color:var(--text-muted);">
+      Fragen? <a href="mailto:praxis@bongartz-koeln.de" style="color:var(--cyan-dim);">praxis@bongartz-koeln.de</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <button class="nav-btn" onclick="prevSlide()">&#10094;</button>
+  <div class="slide-counter"><span id="current">1</span> / <span id="total">10</span></div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <button class="nav-btn" onclick="nextSlide()">&#10095;</button>
+</div>
+
+<a href="/" class="exit-btn">&#10005; Schließen</a>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+
+  function showSlide(i) {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('current').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+  function nextSlide() { current = (current + 1) % total; showSlide(current); }
+  function prevSlide() { current = (current - 1 + total) % total; showSlide(current); }
+
+  // Keyboard nav
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'Escape') window.location.href = '/';
+  });
+
+  // Touch swipe
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) diff > 0 ? nextSlide() : prevSlide();
+  });
+</script>
+
+</body>
+</html>

@@ -10,8 +10,15 @@ import {
   Calendar,
   Key,
   ShieldCheck,
-  X
+  X,
+  FileCheck2,
+  Lock,
+  UserPlus,
+  ClipboardList,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
+import DeviceIcon from './dock/DeviceIcon';
 import { ActiveTab } from '../types';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
@@ -30,25 +37,18 @@ export const BottomDock: React.FC<BottomDockProps> = ({
 
   const dockItems: { id: ActiveTab | null; label: string; icon: React.ReactNode; colorClass: string; title: string; badge?: number }[] = [
     { id: null, label: 'Hauptraum', icon: <Home className="w-4 h-4 text-cyan-400 shrink-0" />, colorClass: 'text-cyan-400', title: 'Hauptraum Canvas' },
-    { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 className="w-4 h-4 text-indigo-400 shrink-0" />, colorClass: 'text-indigo-400', title: 'Executive Board' },
-    { id: 'consult', label: 'Voice & Chat', icon: <Mic className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />, colorClass: 'text-cyan-400', title: 'AI Consultation Portal' },
-    { id: 'documents', label: 'Dokumente', icon: <FolderOpen className="w-4 h-4 text-cyan-400 shrink-0" />, colorClass: 'text-cyan-400', title: 'Dokumenten OCR Board' },
+    { id: 'devices', label: 'Geräte', icon: <DeviceIcon size={16} className="text-cyan-400" />, colorClass: 'text-cyan-400', title: 'Medizinische Geräte-Integration & Queue' },
+    { id: 'dictate', label: 'Diktat', icon: <Mic className="w-4 h-4 text-violet-400 shrink-0 animate-pulse" />, colorClass: 'text-violet-400', title: 'Sprach-Diktat & AI-S2k-Drafting' },
     { id: 'gutachten', label: 'Gutachten', icon: <FileText className="w-4 h-4 text-emerald-400 shrink-0" />, colorClass: 'text-emerald-400', title: 'S2k Gutachten Generator' },
-    ...(isAdmin
-      ? [
-          {
-            id: 'approvals' as ActiveTab,
-            label: 'Queue',
-            icon: <ShieldCheck className="w-4 h-4 text-[#E8A87C] shrink-0" />,
-            colorClass: 'text-[#E8A87C]',
-            title: 'Chefärztliche Freigabe-Queue',
-            badge: pendingCount
-          }
-        ]
-      : []),
-    { id: 'eeg', label: 'EEG', icon: <Activity className="w-4 h-4 text-violet-400 shrink-0" />, colorClass: 'text-violet-400', title: 'EEG Neural Workspace' },
-    { id: 'video', label: 'Video', icon: <Video className="w-4 h-4 text-purple-400 shrink-0" />, colorClass: 'text-purple-400', title: 'Video Diagnostics' },
+    { id: 'insurance', label: 'Kosten', icon: <FileCheck2 className="w-4 h-4 text-cyan-300 shrink-0" />, colorClass: 'text-cyan-300', title: 'Versicherungs- & Kostenübernahme' },
+    { id: 'analytics', label: 'KPIs', icon: <BarChart3 className="w-4 h-4 text-indigo-400 shrink-0" />, colorClass: 'text-indigo-400', title: 'Praxis Performance Analytics' },
+    { id: 'retention', label: 'DSGVO Fristen', icon: <Lock className="w-4 h-4 text-rose-400 shrink-0" />, colorClass: 'text-rose-400', title: '10 Jahre Retention Monitor' },
+    { id: 'audit', label: 'Audit Log', icon: <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />, colorClass: 'text-emerald-400', title: 'Unveränderbares Revisions-Protokoll' },
+    { id: 'portal', label: 'Portal', icon: <ClipboardList className="w-4 h-4 text-violet-300 shrink-0" />, colorClass: 'text-violet-300', title: 'Patienten-Portal & Screening' },
+    { id: 'intake', label: 'Intake', icon: <UserPlus className="w-4 h-4 text-teal-300 shrink-0" />, colorClass: 'text-teal-300', title: 'Patienten-Aufnahmebogen' },
     { id: 'calendar', label: 'Kalender', icon: <Calendar className="w-4 h-4 text-indigo-400 shrink-0" />, colorClass: 'text-indigo-400', title: 'Kalender & Termine' },
+    { id: 'documents', label: 'OCR', icon: <FolderOpen className="w-4 h-4 text-cyan-400 shrink-0" />, colorClass: 'text-cyan-400', title: 'Dokumenten OCR Board' },
+    { id: 'whitepaper', label: 'Whitepaper', icon: <BookOpen className="w-4 h-4 text-violet-400 shrink-0" />, colorClass: 'text-violet-400', title: 'System Whitepaper & Spezifikationen' },
     { id: 'admin', label: 'Admin', icon: <Key className="w-4 h-4 text-rose-400 shrink-0" />, colorClass: 'text-rose-400', title: 'Admin & API Keys' },
   ];
 

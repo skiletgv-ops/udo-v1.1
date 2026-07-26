@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 import { useGlobalSystem } from "./GlobalSystemContext";
-import SynapseBackground from "./ui/synapse-background";
+import TypewriterText from "./ui/TypewriterText";
 
 export default function SystemWhitepaper() {
   const { language, setLanguage } = useGlobalSystem();
@@ -231,17 +231,7 @@ export default function SystemWhitepaper() {
   ];
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background that animates continuously behind all whitepaper pages without frozen visual artifacts */}
-      <SynapseBackground 
-        lineColor={0x0ea5e9} 
-        particleColor={0x38bdf8} 
-        pulseColor={0xd946ef} 
-        connectionDistance={75} 
-        particleCount={3000} 
-        className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-100 bg-[#020813]" 
-      />
-
+    <div className="relative min-h-screen bg-[#020813]">
       <div className="space-y-8 text-slate-100 font-sans pb-12 animate-fade-in relative z-10" id="udo-system-whitepaper-portal">
       {/* HEADER SECTION - REDESIGNED PREMIUM PUBLICATION BLOCK */}
       <div className="relative overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-8 lg:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.95)]">
@@ -263,20 +253,20 @@ export default function SystemWhitepaper() {
           </div>
 
           {/* Institutional Metadata Panel */}
-          <div className="bg-slate-950/85 border border-white/10 rounded-2xl p-4 min-w-[280px] font-mono text-[10px] text-slate-400 space-y-2.5 shadow-2xl relative overflow-hidden group">
+          <div className="bg-slate-900 border border-teal-500/30 rounded-2xl p-4 min-w-[280px] font-mono text-[10px] text-slate-300 space-y-2.5 shadow-2xl relative overflow-hidden group hover:scale-105 hover:border-teal-400 transition-all cursor-pointer">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-400" />
             <div className="pl-2.5 space-y-1.5">
-              <div className="flex justify-between border-b border-white/5 pb-1">
-                <span className="font-semibold text-slate-500 uppercase">PUBLICATION DATE:</span>
+              <div className="flex justify-between border-b border-white/10 pb-1">
+                <span className="font-semibold text-slate-400 uppercase">PUBLICATION DATE:</span>
                 <strong className="text-white">OCTOBER 2026</strong>
               </div>
-              <div className="flex justify-between border-b border-white/5 pb-1">
-                <span className="font-semibold text-slate-500 uppercase">DOC ID REFERENCE:</span>
-                <strong className="text-teal-400 font-bold">COGNITIVE-FORENSIC-S2K-V3.8</strong>
+              <div className="flex justify-between border-b border-white/10 pb-1">
+                <span className="font-semibold text-slate-400 uppercase">DOC ID REFERENCE:</span>
+                <strong className="text-teal-300 font-bold">COGNITIVE-FORENSIC-S2K-V3.8</strong>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold text-slate-500 uppercase">CLASSIFICATION:</span>
-                <strong className="text-amber-400 animate-pulse font-extrabold">RESTRICTED // CLINICAL COMM.</strong>
+                <span className="font-semibold text-slate-400 uppercase">CLASSIFICATION:</span>
+                <strong className="text-amber-300 animate-pulse font-extrabold">RESTRICTED // CLINICAL COMM.</strong>
               </div>
             </div>
           </div>
@@ -285,53 +275,53 @@ export default function SystemWhitepaper() {
         {/* 4 Majestic Executive KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
           {/* KPI 1 */}
-          <div className="relative overflow-hidden bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-inner hover:border-teal-400/40 transition-all duration-300 group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-teal-500" />
-            <span className="text-[10px] font-mono text-slate-500 font-extrabold uppercase block tracking-wider">Clinical Guideline Compliance</span>
+          <div className="relative overflow-hidden bg-slate-900 border border-teal-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-teal-400 hover:shadow-[0_0_30px_rgba(45,212,191,0.3)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-teal-400" />
+            <span className="text-[10px] font-mono text-teal-300/80 font-extrabold uppercase block tracking-wider">Clinical Guideline Compliance</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">99.8%</strong>
-              <span className="text-[10px] font-mono text-teal-400 font-bold">AWMF Segment</span>
+              <span className="text-[10px] font-mono text-teal-300 font-bold">AWMF Segment</span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal mt-2">
+            <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Cross-checked through four parallel S2k algorithmic causality validations.
             </p>
           </div>
 
           {/* KPI 2 */}
-          <div className="relative overflow-hidden bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-inner hover:border-violet-400/40 transition-all duration-300 group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-violet-500" />
-            <span className="text-[10px] font-mono text-slate-500 font-extrabold uppercase block tracking-wider">Multi-Agent Consensus Speed</span>
+          <div className="relative overflow-hidden bg-slate-900 border border-violet-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-violet-400 hover:shadow-[0_0_30px_rgba(184,41,221,0.3)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-violet-400" />
+            <span className="text-[10px] font-mono text-violet-300/80 font-extrabold uppercase block tracking-wider">Multi-Agent Consensus Speed</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">0.85s</strong>
-              <span className="text-[10px] font-mono text-violet-400 font-bold">Parallel Inf.</span>
+              <span className="text-[10px] font-mono text-violet-300 font-bold">Parallel Inf.</span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal mt-2">
+            <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Real-time synchronization across independent medical intelligence instances.
             </p>
           </div>
 
           {/* KPI 3 */}
-          <div className="relative overflow-hidden bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-inner hover:border-emerald-400/40 transition-all duration-300 group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-500" />
-            <span className="text-[10px] font-mono text-slate-500 font-extrabold uppercase block tracking-wider">Forensic Audit Safety Rate</span>
+          <div className="relative overflow-hidden bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(6,214,160,0.3)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-400" />
+            <span className="text-[10px] font-mono text-emerald-300/80 font-extrabold uppercase block tracking-wider">Forensic Audit Safety Rate</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">100%</strong>
-              <span className="text-[10px] font-mono text-emerald-400 font-bold">eIDAS QES Pass</span>
+              <span className="text-[10px] font-mono text-emerald-300 font-bold">eIDAS QES Pass</span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal mt-2">
+            <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Non-repudiated digital envelopes containing immutable block-hashes.
             </p>
           </div>
 
           {/* KPI 4 */}
-          <div className="relative overflow-hidden bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-inner hover:border-amber-400/40 transition-all duration-300 group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-500" />
-            <span className="text-[10px] font-mono text-slate-500 font-extrabold uppercase block tracking-wider">Practice Cost Reduction</span>
+          <div className="relative overflow-hidden bg-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(255,209,102,0.3)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-400" />
+            <span className="text-[10px] font-mono text-amber-300/80 font-extrabold uppercase block tracking-wider">Practice Cost Reduction</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">82%</strong>
-              <span className="text-[10px] font-mono text-amber-400 font-bold">Admin Savings</span>
+              <span className="text-[10px] font-mono text-amber-300 font-bold">Admin Savings</span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal mt-2">
+            <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Replaces manual report preparation timelines with certified draft generation.
             </p>
           </div>
@@ -339,7 +329,7 @@ export default function SystemWhitepaper() {
       </div>
 
       {/* SEGMENTED NAVIGATION BAR */}
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap gap-2.5 border-b border-white/10 pb-4">
         {[
           { id: "architecture", label: t[currentLang].tabArch, icon: Cpu, desc: t[currentLang].tabArchDesc },
           { id: "guidelines", label: t[currentLang].tabGuide, icon: Workflow, desc: t[currentLang].tabGuideDesc },
@@ -358,18 +348,18 @@ export default function SystemWhitepaper() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 min-w-[200px] text-left p-4 rounded-2xl border transition-all duration-300 relative cursor-pointer overflow-hidden ${
                 isActive 
-                  ? "bg-teal-500 text-slate-950 border-teal-400 shadow-[0_10px_30px_rgba(20,184,166,0.15)] scale-[1.02]" 
-                  : "bg-slate-900/50 hover:bg-slate-900/90 text-slate-300 border-white/5 hover:border-teal-500/20"
+                  ? "bg-gradient-to-r from-teal-400 via-cyan-400 to-emerald-400 text-slate-950 font-black border-cyan-300 shadow-[0_0_30px_rgba(45,212,191,0.35)] scale-[1.03]" 
+                  : "bg-slate-900 border-slate-800 hover:bg-slate-800/90 text-slate-200 hover:border-teal-400/50 hover:scale-[1.02] hover:text-white"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <IconComponent size={20} className={isActive ? "text-slate-950" : "text-teal-400"} />
-                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />}
+                {isActive && <div className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />}
               </div>
               <span className="text-xs font-black uppercase tracking-wider block leading-tight">
                 {tab.label}
               </span>
-              <span className={`text-[9px] font-mono block mt-1 ${isActive ? "text-slate-900 font-semibold" : "text-slate-500"}`}>
+              <span className={`text-[9px] font-mono block mt-1 ${isActive ? "text-slate-950 font-bold" : "text-slate-400"}`}>
                 {tab.desc}
               </span>
             </button>
@@ -385,69 +375,69 @@ export default function SystemWhitepaper() {
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              <div className="lg:col-span-2 bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
-                <h3 className="text-lg font-bold text-white uppercase tracking-wider border-b border-white/5 pb-2 flex items-center gap-2">
+              <div className="lg:col-span-2 bg-slate-900 border border-teal-500/30 rounded-2xl p-6 space-y-4 hover:border-teal-400 hover:shadow-[0_0_30px_rgba(45,212,191,0.2)] transition-all duration-300">
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider border-b border-white/10 pb-2 flex items-center gap-2">
                   <Cpu className="text-teal-400" size={18} />
                   Decentralized Expert Consensus Jury (Jury-Voting-System)
                 </h3>
-                <p className="text-sm text-slate-300 leading-relaxed">
+                <p className="text-sm text-slate-200 leading-relaxed">
                   Forensic neurological evaluation has historically suffered from high inter-expert variability. To eliminate cognitive bias, U.D.O. implements a real-time, decentralized Multi-Agent Consensus Engine. Every uploaded report is evaluated in parallel by four independent clinical intelligence instances:
                 </p>
 
                 <div className="space-y-3 pt-2">
-                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center font-bold text-amber-400 text-xs font-mono shrink-0">1</div>
+                  <div className="p-4 bg-slate-800/80 border border-amber-500/30 hover:border-amber-400 hover:scale-[1.02] transition-all duration-200 rounded-xl flex items-start gap-3.5 cursor-pointer">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-bold text-amber-300 text-xs font-mono shrink-0">1</div>
                     <div>
                       <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Clara (Med-Gemini Integration)</span>
-                      <p className="text-xs text-slate-400 mt-1">Specializes in radiological diagnostic mapping. Extracts spinal segment metrics (L4/L5, L5/S1), osteochondrosis indices, and performs real-time anatomical radiculopathy correlation.</p>
+                      <p className="text-xs text-slate-300 mt-1">Specializes in radiological diagnostic mapping. Extracts spinal segment metrics (L4/L5, L5/S1), osteochondrosis indices, and performs real-time anatomical radiculopathy correlation.</p>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center font-bold text-teal-400 text-xs font-mono shrink-0">2</div>
+                  <div className="p-4 bg-slate-800/80 border border-teal-500/30 hover:border-teal-400 hover:scale-[1.02] transition-all duration-200 rounded-xl flex items-start gap-3.5 cursor-pointer">
+                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/40 flex items-center justify-center font-bold text-teal-300 text-xs font-mono shrink-0">2</div>
                     <div>
                       <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Eric (Claude-3.5 Legal Expert)</span>
-                      <p className="text-xs text-slate-400 mt-1">Orchestrates MdE (Minderung der Erwerbsfähigkeit) alignment. Evaluates clinical findings against strict legal guidelines of German Berufsgenossenschaften (BGHM/BGV).</p>
+                      <p className="text-xs text-slate-300 mt-1">Orchestrates MdE (Minderung der Erwerbsfähigkeit) alignment. Evaluates clinical findings against strict legal guidelines of German Berufsgenossenschaften (BGHM/BGV).</p>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center font-bold text-green-400 text-xs font-mono shrink-0">3</div>
+                  <div className="p-4 bg-slate-800/80 border border-green-500/30 hover:border-green-400 hover:scale-[1.02] transition-all duration-200 rounded-xl flex items-start gap-3.5 cursor-pointer">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/20 border border-green-500/40 flex items-center justify-center font-bold text-green-300 text-xs font-mono shrink-0">3</div>
                     <div>
                       <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Marcus (GPT-4o Biomechanical Vector Analyst)</span>
-                      <p className="text-xs text-slate-400 mt-1">Calculates kinetic force dynamics based on the lifting trauma event (e.g. lifting 45kg crates). Ensures causal biomechanical alignment between mechanical stress and structural herniations.</p>
+                      <p className="text-xs text-slate-300 mt-1">Calculates kinetic force dynamics based on the lifting trauma event (e.g. lifting 45kg crates). Ensures causal biomechanical alignment between mechanical stress and structural herniations.</p>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-bold text-indigo-400 text-xs font-mono shrink-0">4</div>
+                  <div className="p-4 bg-slate-800/80 border border-indigo-500/30 hover:border-indigo-400 hover:scale-[1.02] transition-all duration-200 rounded-xl flex items-start gap-3.5 cursor-pointer">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center font-bold text-indigo-300 text-xs font-mono shrink-0">4</div>
                     <div>
                       <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Gratsiano (DeepSeek-R1 Cognitive Synthesis)</span>
-                      <p className="text-xs text-slate-400 mt-1">Executes an extended Chain-of-Thought (CoT) synthesis loop over the debates of the other three experts, weighing contra-indications and formulating a unified consensus output.</p>
+                      <p className="text-xs text-slate-300 mt-1">Executes an extended Chain-of-Thought (CoT) synthesis loop over the debates of the other three experts, weighing contra-indications and formulating a unified consensus output.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-teal-400 font-mono">Consensus Flow Chart</h4>
+                <div className="bg-slate-900 border border-teal-500/30 hover:border-teal-400 hover:scale-[1.02] transition-all duration-300 rounded-2xl p-6 space-y-4 cursor-pointer">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-teal-300 font-mono">Consensus Flow Chart</h4>
                   <div className="space-y-2 text-xs font-mono">
-                    <div className="flex items-center gap-2 text-slate-300">
+                    <div className="flex items-center gap-2 text-slate-200">
                       <TrendingUp size={14} className="text-teal-400" />
                       <span>Ingestion of Clinical Dossier</span>
                     </div>
-                    <div className="h-4 border-l-2 border-dashed border-teal-500/30 ml-1.5" />
-                    <div className="flex items-center gap-2 text-slate-300">
+                    <div className="h-4 border-l-2 border-dashed border-teal-500/40 ml-1.5" />
+                    <div className="flex items-center gap-2 text-slate-200">
                       <Users size={14} className="text-teal-400" />
                       <span>Parallel Multi-Agent Inferences</span>
                     </div>
-                    <div className="h-4 border-l-2 border-dashed border-teal-500/30 ml-1.5" />
-                    <div className="flex items-center gap-2 text-slate-300">
+                    <div className="h-4 border-l-2 border-dashed border-teal-500/40 ml-1.5" />
+                    <div className="flex items-center gap-2 text-slate-200">
                       <Sparkles size={14} className="text-teal-400" />
                       <span>Deep Reasoning Cross-Evaluation</span>
                     </div>
-                    <div className="h-4 border-l-2 border-dashed border-teal-500/30 ml-1.5" />
+                    <div className="h-4 border-l-2 border-dashed border-teal-500/40 ml-1.5" />
                     <div className="flex items-center gap-2 text-white font-bold">
                       <CheckCircle size={14} className="text-emerald-400" />
                       <span>Consensus Vote & QES Packaging</span>
@@ -455,7 +445,7 @@ export default function SystemWhitepaper() {
                   </div>
                 </div>
 
-                <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-2">
+                <div className="bg-slate-900 border border-violet-500/30 hover:border-violet-400 hover:scale-[1.02] transition-all duration-300 rounded-2xl p-6 space-y-2 cursor-pointer">
                   <h4 className="text-xs font-black uppercase tracking-widest text-white font-mono">Core Tech Stack</h4>
                   <div className="space-y-2.5 pt-2">
                     {techStack.map((item, idx) => (
