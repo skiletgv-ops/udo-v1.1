@@ -528,7 +528,7 @@ export const VoiceChatPanel: React.FC<VoiceChatPanelProps> = ({
                 ))}
               </div>
               <span className="font-mono text-xs text-violet-300 font-bold tracking-wider">
-                Claude Sonnet 5 analysiert...
+                DeepSeek Voice Engine analysiert...
               </span>
             </div>
           )}

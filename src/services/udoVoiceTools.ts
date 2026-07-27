@@ -3,102 +3,128 @@ import { albisGdtService } from "./albisGdtService";
 import { calendarService } from "./calendarService";
 import { generateUdoPatientRecord } from "../utils/udo";
 
-export const UDO_CLAUDE_TOOLS = [
+export const UDO_DEEPSEEK_TOOLS = [
   {
-    name: "get_patient_info",
-    description: "Abfragen von Patientendaten, Vorerkrankungen und S2k Gutachten-Status im UDO-System.",
-    input_schema: {
-      type: "object",
-      properties: {
-        patient_name_or_id: {
-          type: "string",
-          description: "Name oder Patientennummer (z.B. 'Thomas Müller', 'pat-101', oder '10687')"
-        }
-      },
-      required: ["patient_name_or_id"]
-    }
-  },
-  {
-    name: "get_case_status",
-    description: "Prüft den aktuellen Gutachten- oder Behandlungsfall-Status in der Praxis.",
-    input_schema: {
-      type: "object",
-      properties: {
-        case_id: {
-          type: "string",
-          description: "Fall-ID oder Patientenname"
-        }
-      },
-      required: ["case_id"]
-    }
-  },
-  {
-    name: "generate_gutachten_section",
-    description: "Generiert einen rechtssicheren S2k-Neurologie Gutachten-Abschnitt für L4/L5, L5/S1 oder MdE-Berechnung.",
-    input_schema: {
-      type: "object",
-      properties: {
-        section_type: {
-          type: "string",
-          enum: ["l4_l5_radiculopathy", "mde_calculation", "trauma_causality", "full_summary"],
-          description: "Typ des Gutachtenabschnitts"
+    type: "function" as const,
+    function: {
+      name: "get_patient_info",
+      description: "Abfragen von Patientendaten, Vorerkrankungen und S2k Gutachten-Status im UDO-System.",
+      parameters: {
+        type: "object",
+        properties: {
+          patient_name_or_id: {
+            type: "string",
+            description: "Name oder Patientennummer (z.B. 'Thomas Müller', 'pat-101', oder '10687')"
+          }
         },
-        patient_name: {
-          type: "string",
-          description: "Name des Patienten"
-        }
-      },
-      required: ["section_type", "patient_name"]
+        required: ["patient_name_or_id"]
+      }
     }
   },
   {
-    name: "check_albis_gdt_status",
-    description: "Prüft den Verbindungs- und Synchronisationsstatus der CGM ALBIS GDT 2.1 Praxisschnittstelle.",
-    input_schema: {
-      type: "object",
-      properties: {}
+    type: "function" as const,
+    function: {
+      name: "get_case_status",
+      description: "Prüft den aktuellen Gutachten- oder Behandlungsfall-Status in der Praxis.",
+      parameters: {
+        type: "object",
+        properties: {
+          case_id: {
+            type: "string",
+            description: "Fall-ID oder Patientenname"
+          }
+        },
+        required: ["case_id"]
+      }
     }
   },
   {
-    name: "book_calendar_slot",
-    description: "Bucht einen verfügbaren Praxistermin für einen Patienten.",
-    input_schema: {
-      type: "object",
-      properties: {
-        slot_id: {
-          type: "string",
-          description: "ID des Kalenderslots"
+    type: "function" as const,
+    function: {
+      name: "generate_gutachten_section",
+      description: "Generiert einen rechtssicheren S2k-Neurologie Gutachten-Abschnitt für L4/L5, L5/S1 oder MdE-Berechnung.",
+      parameters: {
+        type: "object",
+        properties: {
+          section_type: {
+            type: "string",
+            enum: ["l4_l5_radiculopathy", "mde_calculation", "trauma_causality", "full_summary"],
+            description: "Typ des Gutachtenabschnitts"
+          },
+          patient_name: {
+            type: "string",
+            description: "Name des Patienten"
+          }
         },
-        patient_name: {
-          type: "string",
-          description: "Vollständiger Name des Patienten"
-        },
-        reason: {
-          type: "string",
-          description: "Grund des Termins"
-        },
-        phone: {
-          type: "string",
-          description: "Telefonnummer"
-        }
-      },
-      required: ["slot_id", "patient_name"]
+        required: ["section_type", "patient_name"]
+      }
     }
   },
   {
-    name: "get_compliance_audit_log",
-    description: "Ruft die neuesten DSGVO Art. 15/17 Audit-Log-Einträge der Praxis ab.",
-    input_schema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "number",
-          description: "Anzahl der Einträge (Standard: 5)"
+    type: "function" as const,
+    function: {
+      name: "check_albis_gdt_status",
+      description: "Prüft den Verbindungs- und Synchronisationsstatus der CGM ALBIS GDT 2.1 Praxisschnittstelle.",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "book_calendar_slot",
+      description: "Bucht einen verfügbaren Praxistermin für einen Patienten.",
+      parameters: {
+        type: "object",
+        properties: {
+          slot_id: {
+            type: "string",
+            description: "ID des Kalenderslots"
+          },
+          patient_name: {
+            type: "string",
+            description: "Vollständiger Name des Patienten"
+          },
+          reason: {
+            type: "string",
+            description: "Grund des Termins"
+          },
+          phone: {
+            type: "string",
+            description: "Telefonnummer"
+          }
+        },
+        required: ["slot_id", "patient_name"]
+      }
+    }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "get_compliance_audit_log",
+      description: "Ruft die neuesten DSGVO Art. 15/17 Audit-Log-Einträge der Praxis ab.",
+      parameters: {
+        type: "object",
+        properties: {
+          limit: {
+            type: "number",
+            description: "Anzahl der Einträge (Standard: 5)"
+          }
         }
       }
     }
   }
 ];
+
+export const UDO_TOOLS = UDO_DEEPSEEK_TOOLS;
+
+export const UDO_CLAUDE_TOOLS = UDO_DEEPSEEK_TOOLS.map(t => ({
+  name: t.function.name,
+  description: t.function.description,
+  input_schema: t.function.parameters
+}));
 
 export async function executeUdoTool(toolName: string, args: Record<string, any>): Promise<any> {
   switch (toolName) {

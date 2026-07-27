@@ -61,27 +61,33 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
       {/* FLOATING LEFT TOGGLE BUTTON (WORKSPACE NAVIGATOR) */}
       <button
         onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-        className={`fixed left-3 top-20 z-[90] h-10 w-10 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 text-slate-300 flex items-center justify-center transition-all duration-200 cursor-pointer pointer-events-auto ${
+        className={`fixed left-3 top-18 z-[90] h-11 px-3.5 rounded-xl bg-[#111217]/95 backdrop-blur-2xl border border-cyan-500/40 text-slate-200 flex items-center gap-2 transition-all duration-200 cursor-pointer pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] ${
           leftPanelOpen
-            ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300 shadow-[0_0_20px_rgba(0,212,170,0.35)]'
-            : 'hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300 hover:shadow-[0_0_12px_rgba(0,212,170,0.2)]'
+            ? 'bg-cyan-500/25 border-cyan-400 text-white shadow-[0_0_20px_rgba(0,212,170,0.4)] font-bold'
+            : 'hover:bg-cyan-500/20 hover:border-cyan-400 hover:text-white'
         }`}
-        title="Workspace Navigator umschalten"
+        title="Workspace Menü öffnen"
       >
-        <LayoutGrid className="w-5 h-5 text-cyan-400" />
+        <LayoutGrid className="w-5 h-5 text-cyan-400 shrink-0" />
+        <span className="text-xs font-sans font-bold uppercase tracking-wider hidden sm:inline">
+          Menü
+        </span>
       </button>
 
       {/* FLOATING RIGHT TOGGLE BUTTON (SYSTEM CONTROL) */}
       <button
         onClick={() => setRightPanelOpen(!rightPanelOpen)}
-        className={`fixed right-3 top-20 z-[90] h-10 w-10 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 text-slate-300 flex items-center justify-center transition-all duration-200 cursor-pointer pointer-events-auto ${
+        className={`fixed right-3 top-18 z-[90] h-11 px-3.5 rounded-xl bg-[#111217]/95 backdrop-blur-2xl border border-violet-500/40 text-slate-200 flex items-center gap-2 transition-all duration-200 cursor-pointer pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] ${
           rightPanelOpen
-            ? 'bg-violet-500/20 border-violet-400/50 text-violet-300 shadow-[0_0_20px_rgba(139,92,246,0.35)]'
-            : 'hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 hover:shadow-[0_0_12px_rgba(139,92,246,0.2)]'
+            ? 'bg-violet-500/25 border-violet-400 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] font-bold'
+            : 'hover:bg-violet-500/20 hover:border-violet-400 hover:text-white'
         }`}
-        title="System Control umschalten"
+        title="System Status & Telemetrie"
       >
-        <SlidersHorizontal className="w-5 h-5 text-violet-400" />
+        <SlidersHorizontal className="w-5 h-5 text-violet-400 shrink-0" />
+        <span className="text-xs font-sans font-bold uppercase tracking-wider hidden sm:inline">
+          Status
+        </span>
       </button>
 
       {/* LEFT SIDEBAR PANEL */}
@@ -128,7 +134,7 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
         {children}
       </main>
 
-      {/* VOICE CHAT PANEL (WAKE WORD & CLAUDE SONNET 5) */}
+      {/* VOICE CHAT PANEL (WAKE WORD & DEEPSEEK) */}
       <VoiceChatPanel
         isOpen={voicePanelOpen}
         onClose={() => setVoicePanelOpen(false)}

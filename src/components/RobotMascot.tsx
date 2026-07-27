@@ -6,67 +6,73 @@ interface RobotMascotProps {
   state: RobotState;
   messageBubble?: string;
   onBubbleClick?: () => void;
+  size?: "sm" | "md" | "lg";
+  showBadge?: boolean;
+  className?: string;
 }
 
-export default function RobotMascot({ state, messageBubble, onBubbleClick }: RobotMascotProps) {
+export default function RobotMascot({
+  state,
+  messageBubble,
+  onBubbleClick,
+  size = "md",
+  showBadge = false,
+  className = ""
+}: RobotMascotProps) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   // Track cursor coordinates relative to the robot to animate head rotation globally
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: MouseEvent | TouchEvent) => {
       if (!containerRef.current) return;
 
-      const rect = containerRef.current.getBoundingClientRect();
-      const robotCenterX = rect.left + rect.width / 2;
-      const robotCenterY = rect.top + rect.height / 2;
+      const clientX = 'touches' in e ? e.touches[0]?.clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0]?.clientY : e.clientY;
 
-      // Normalize between -1 and 1
-      const dx = (e.clientX - robotCenterX) / (window.innerWidth / 2);
-      const dy = (e.clientY - robotCenterY) / (window.innerHeight / 2);
+      if (clientX === undefined || clientY === undefined) return;
 
-      setMousePos({ 
-        x: Math.max(-1, Math.min(1, dx)), 
-        y: Math.max(-1, Math.min(1, dy)) 
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+
+      animFrameRef.current = requestAnimationFrame(() => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const robotCenterX = rect.left + rect.width / 2;
+        const robotCenterY = rect.top + rect.height / 2;
+
+        // Normalize between -1 and 1
+        const dx = (clientX - robotCenterX) / (window.innerWidth / 2);
+        const dy = (clientY - robotCenterY) / (window.innerHeight / 2);
+
+        setMousePos({ 
+          x: Math.max(-1, Math.min(1, dx)), 
+          y: Math.max(-1, Math.min(1, dy)) 
+        });
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handlePointerMove, { passive: true });
+    window.addEventListener("touchmove", handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("touchmove", handlePointerMove);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
   }, []);
 
-  // Determine colors and animation speed multipliers based on active state
-  const getGlowColor = () => {
-    switch (state) {
-      case "THINKING":
-      case "PROCESSING":
-        return "shadow-purple-500/50 text-purple-400";
-      case "SPEAKING":
-        return "shadow-teal-400/50 text-teal-400 animate-pulse";
-      case "SURPRISED":
-      case "ERROR":
-        return "shadow-red-500/60 text-red-400 animate-bounce";
-      case "HAPPY":
-      case "SUCCESS":
-        return "shadow-teal-400/80 text-teal-300";
-      case "ATTENTION":
-        return "shadow-cyan-400/60 text-cyan-300";
-      case "EXPORT":
-        return "shadow-emerald-400/60 text-emerald-300";
-      default:
-        return "shadow-teal-500/30 text-teal-300";
-    }
-  };
+  const scaleFactor = size === "sm" ? 0.75 : size === "lg" ? 1.25 : 1;
 
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col items-center justify-center p-4 select-none"
+      className={`relative flex flex-col items-center justify-center p-2 select-none pointer-events-auto ${className}`}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ perspective: "800px" }}
     >
       {/* Dr. Altenberg's Robot Chat Bubble (if active) */}
       {messageBubble && (
@@ -253,16 +259,18 @@ export default function RobotMascot({ state, messageBubble, onBubbleClick }: Rob
       </div>
 
       {/* State Badge for Diagnostic Feedback (Interactive element) */}
-      <div className="mt-3 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 border border-white/5 backdrop-blur-sm shadow text-[9px] uppercase tracking-wider font-mono text-slate-400">
-        <span className={`w-1.5 h-1.5 rounded-full ${
-          state === "THINKING" || state === "PROCESSING" ? "bg-purple-400 animate-ping" :
-          state === "SPEAKING" ? "bg-teal-400 animate-pulse" :
-          state === "SURPRISED" || state === "ERROR" ? "bg-red-400 animate-bounce" :
-          state === "HAPPY" || state === "SUCCESS" ? "bg-teal-300 animate-pulse" :
-          "bg-teal-500"
-        }`} />
-        U.D.O. Modus: <strong className="text-teal-300 font-semibold">{state}</strong>
-      </div>
+      {showBadge && (
+        <div className="mt-3 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 border border-white/5 backdrop-blur-sm shadow text-[9px] uppercase tracking-wider font-mono text-slate-400">
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            state === "THINKING" || state === "PROCESSING" ? "bg-purple-400 animate-ping" :
+            state === "SPEAKING" ? "bg-teal-400 animate-pulse" :
+            state === "SURPRISED" || state === "ERROR" ? "bg-red-400 animate-bounce" :
+            state === "HAPPY" || state === "SUCCESS" ? "bg-teal-300 animate-pulse" :
+            "bg-teal-500"
+          }`} />
+          U.D.O. Modus: <strong className="text-teal-300 font-semibold">{state}</strong>
+        </div>
+      )}
     </div>
   );
 }

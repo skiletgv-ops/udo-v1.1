@@ -8,7 +8,7 @@ import { calendarService } from "./src/services/calendarService";
 import { complianceService } from "./src/services/complianceService";
 import { albisGdtService } from "./src/services/albisGdtService";
 import { parseGdt, writeGdt } from "./src/lib/gdt";
-import { UDO_CLAUDE_TOOLS, executeUdoTool } from "./src/services/udoVoiceTools";
+import { UDO_DEEPSEEK_TOOLS, executeUdoTool } from "./src/services/udoVoiceTools";
 
 dotenv.config();
 
@@ -1048,8 +1048,8 @@ app.post("/api/admin/test-key", async (req, res) => {
   }
 });
 
-// Helper: Handles Anthropic SSE Stream Parsing & Tool Execution Loop
-async function handleAnthropicSseStream(
+// Helper: Handles DeepSeek SSE Stream Parsing & Tool Execution Loop
+async function handleDeepSeekSseStream(
   response: any,
   res: express.Response,
   onTextChunk: (text: string) => void
@@ -1059,7 +1059,7 @@ async function handleAnthropicSseStream(
 
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
-  const toolCallsMap: Map<number, { id: string; name: string; inputJson: string }> = new Map();
+  const toolCallsMap: Map<number, { id: string; name: string; arguments: string }> = new Map();
 
   while (true) {
     const { done, value } = await reader.read();
@@ -1077,25 +1077,29 @@ async function handleAnthropicSseStream(
 
       try {
         const parsed = JSON.parse(dataStr);
+        const choice = parsed.choices?.[0];
+        if (!choice) continue;
 
-        if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
-          const textChunk = parsed.delta.text;
+        if (choice.delta?.content) {
+          const textChunk = choice.delta.content;
           onTextChunk(textChunk);
           res.write(`data: ${JSON.stringify({ text: textChunk })}\n\n`);
         }
 
-        if (parsed.type === "content_block_start" && parsed.content_block?.type === "tool_use") {
-          toolCallsMap.set(parsed.index, {
-            id: parsed.content_block.id,
-            name: parsed.content_block.name,
-            inputJson: ""
-          });
-        }
-
-        if (parsed.type === "content_block_delta" && parsed.delta?.type === "input_json_delta") {
-          const tc = toolCallsMap.get(parsed.index);
-          if (tc) {
-            tc.inputJson += parsed.delta.partial_json;
+        if (choice.delta?.tool_calls && Array.isArray(choice.delta.tool_calls)) {
+          for (const tc of choice.delta.tool_calls) {
+            const idx = tc.index ?? 0;
+            if (!toolCallsMap.has(idx)) {
+              toolCallsMap.set(idx, {
+                id: tc.id || `call_${Date.now()}_${idx}`,
+                name: tc.function?.name || "",
+                arguments: ""
+              });
+            }
+            const item = toolCallsMap.get(idx)!;
+            if (tc.id) item.id = tc.id;
+            if (tc.function?.name) item.name = tc.function.name;
+            if (tc.function?.arguments) item.arguments += tc.function.arguments;
           }
         }
       } catch (e) {
@@ -1109,12 +1113,15 @@ async function handleAnthropicSseStream(
     toolCallsMap.forEach((tc) => {
       let inputObj = {};
       try {
-        inputObj = JSON.parse(tc.inputJson || "{}");
-      } catch (e) {}
+        inputObj = JSON.parse(tc.arguments || "{}");
+      } catch (e) {
+        console.warn("Could not parse DeepSeek tool call arguments:", tc.arguments);
+      }
       toolCalls.push({
         id: tc.id,
         name: tc.name,
-        input: inputObj
+        input: inputObj,
+        rawArguments: tc.arguments
       });
     });
     return toolCalls;
@@ -1124,11 +1131,11 @@ async function handleAnthropicSseStream(
 }
 
 // -------------------------------------------------------------
-// Voice-Activated Chat API (Claude Sonnet 5 + SSE + Tool Calling)
+// Voice-Activated Chat API (DeepSeek R1/V3 + SSE + Tool Calling)
 // -------------------------------------------------------------
 app.post("/api/voice-chat/completion", async (req, res) => {
-  const { messages = [], transcript = "", effort = "medium" } = req.body;
-  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+  const { messages = [], transcript = "", apiKey: clientApiKey } = req.body;
+  const deepseekApiKey = process.env.DEEPSEEK_API_KEY || clientApiKey;
 
   const systemInstruction = `You are U.D.O. (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
 You speak with the calm, precise, authoritative, and warm persona of a senior neurologist with 50 years of clinical experience.
@@ -1147,33 +1154,34 @@ Data processing is GDPR Art. 6/9 compliant.`;
   res.setHeader("Connection", "keep-alive");
 
   let fullResponseText = "";
-  let processedWithAnthropic = false;
+  let processedWithDeepSeek = false;
 
   try {
-    if (anthropicApiKey) {
+    if (deepseekApiKey) {
       try {
         let loopCount = 0;
-        let currentMessages = fullMessages.map(m => ({
-          role: m.role === "assistant" || m.role === "model" ? "assistant" : "user",
-          content: m.content || m.text || ""
-        }));
+        let currentMessages: any[] = [
+          { role: "system", content: systemInstruction },
+          ...fullMessages.map(m => ({
+            role: m.role === "assistant" || m.role === "model" || m.role === "udo" ? "assistant" : "user",
+            content: m.content || m.text || ""
+          }))
+        ];
 
         while (loopCount < 5) {
           loopCount++;
 
-          const response = await fetch("https://api.anthropic.com/v1/messages", {
+          const response = await fetch("https://api.deepseek.com/chat/completions", {
             method: "POST",
             headers: {
-              "x-api-key": anthropicApiKey,
-              "anthropic-version": "2023-06-01",
-              "content-type": "application/json"
+              "Authorization": `Bearer ${deepseekApiKey}`,
+              "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              model: "claude-sonnet-5",
-              system: systemInstruction,
+              model: "deepseek-chat",
               messages: currentMessages,
-              tools: UDO_CLAUDE_TOOLS,
-              effort: effort || "medium",
+              tools: UDO_DEEPSEEK_TOOLS,
+              temperature: 0.7,
               max_tokens: 1024,
               stream: true
             })
@@ -1181,69 +1189,47 @@ Data processing is GDPR Art. 6/9 compliant.`;
 
           if (!response.ok) {
             const errText = await response.text();
-            console.warn("Anthropic API primary call response status:", response.status, errText);
-
-            if (response.status === 400 && (errText.includes("model") || errText.includes("not_found"))) {
-              const fbResponse = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                  "x-api-key": anthropicApiKey,
-                  "anthropic-version": "2023-06-01",
-                  "content-type": "application/json"
-                },
-                body: JSON.stringify({
-                  model: "claude-3-5-sonnet-20241022",
-                  system: systemInstruction,
-                  messages: currentMessages,
-                  tools: UDO_CLAUDE_TOOLS,
-                  max_tokens: 1024,
-                  stream: true
-                })
-              });
-              if (fbResponse.ok) {
-                await handleAnthropicSseStream(fbResponse, res, (text) => { fullResponseText += text; });
-                processedWithAnthropic = true;
-                break;
-              }
-            }
-            throw new Error(`Anthropic API (${response.status}): ${errText}`);
+            console.warn("DeepSeek API call response status:", response.status, errText);
+            throw new Error(`DeepSeek API (${response.status}): ${errText}`);
           }
 
-          const toolCalls = await handleAnthropicSseStream(response, res, (text) => { fullResponseText += text; });
+          const toolCalls = await handleDeepSeekSseStream(response, res, (text) => { fullResponseText += text; });
 
           if (toolCalls && toolCalls.length > 0) {
             currentMessages.push({
               role: "assistant",
-              content: toolCalls as any
+              content: null,
+              tool_calls: toolCalls.map(tc => ({
+                id: tc.id,
+                type: "function",
+                function: {
+                  name: tc.name,
+                  arguments: tc.rawArguments || JSON.stringify(tc.input)
+                }
+              }))
             });
 
-            const toolResults: any[] = [];
             for (const tc of toolCalls) {
               const result = await executeUdoTool(tc.name, tc.input);
-              toolResults.push({
-                type: "tool_result",
-                tool_use_id: tc.id,
-                content: JSON.stringify(result)
+              currentMessages.push({
+                role: "tool",
+                tool_call_id: tc.id,
+                content: typeof result === "string" ? result : JSON.stringify(result)
               });
             }
-
-            currentMessages.push({
-              role: "user",
-              content: toolResults as any
-            });
           } else {
-            processedWithAnthropic = true;
+            processedWithDeepSeek = true;
             break;
           }
         }
-      } catch (anthropicErr: any) {
-        console.warn("Anthropic call failed, falling back to Gemini Flash:", anthropicErr.message);
-        processedWithAnthropic = false;
+      } catch (deepseekErr: any) {
+        console.warn("DeepSeek call failed, attempting fallback:", deepseekErr.message);
+        processedWithDeepSeek = false;
       }
     }
 
-    if (!processedWithAnthropic) {
-      // Fallback using Gemini Flash
+    if (!processedWithDeepSeek) {
+      // Fallback if DeepSeek Key is not set or failed: run tools locally & generate response with Gemini Flash
       const ai = getGeminiClient();
       const lastMsg = fullMessages[fullMessages.length - 1]?.content || transcript || "Hallo UDO";
 
@@ -1271,7 +1257,7 @@ Data processing is GDPR Art. 6/9 compliant.`;
     }
 
     if (transcript) {
-      complianceService.logVoiceSession(transcript, fullResponseText || "Anfrage verarbeitet", "Voice Wake-Word Interface");
+      complianceService.logVoiceSession(transcript, fullResponseText || "Anfrage verarbeitet", "Voice Wake-Word Interface (DeepSeek)");
     }
 
     res.write("data: [DONE]\n\n");

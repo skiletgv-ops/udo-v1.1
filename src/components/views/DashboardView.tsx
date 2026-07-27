@@ -29,44 +29,45 @@ export const DashboardView: React.FC = () => {
   return (
     <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in font-sans text-[#CBD5E1]">
       
-      {/* HEADER SECTION: Left Dr. Bongartz Profile & Credentials, Right SYSTEM SECURE Badge */}
-      <div className="p-5 rounded-2xl bg-[#0d1322]/90 border border-[#1E293B] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+      {/* HEADER SECTION: Left Administrator Mrs. Ulrike Bongartz Profile & Credentials, Right SYSTEM SECURE Badge */}
+      <div className="p-6 sm:p-7 rounded-2xl bg-[#0f172a] border border-[#334155] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="flex items-center gap-5 relative z-10">
           <div className="relative shrink-0">
-            <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 flex items-center justify-center text-[#8B5CF6] shadow-[0_0_20px_rgba(139,92,246,0.2)]">
-              <Award className="w-7 h-7 text-[#8B5CF6]" />
+            <div className="w-16 h-16 rounded-2xl bg-violet-500/20 border-2 border-violet-400 flex items-center justify-center text-violet-300 shadow-[0_0_25px_rgba(139,92,246,0.3)]">
+              <Award className="w-8 h-8 text-violet-300" />
             </div>
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#2DD4BF] border-2 border-[#0A0A0F] shadow-[0_0_8px_rgba(45,212,191,0.8)]" />
+            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-cyan-400 border-2 border-[#0A0A0F] shadow-[0_0_10px_rgba(45,212,191,0.9)]" />
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-medium text-[#64748B] uppercase tracking-wider font-mono">
-                Medical Verification Partner
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="px-3 py-1 rounded-md text-xs font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/50 uppercase tracking-wider">
+                Administrator
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#2DD4BF]/10 text-[#2DD4BF] border border-[#2DD4BF]/30 uppercase">
-                AWMF-S2k Certified
+              <span className="px-3 py-1 rounded-md text-xs font-mono font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-400/50 uppercase tracking-wider">
+                AWMF-S2k Certified Forensic Hub
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight mt-0.5">
-              Dr. med. Ulrike Bongartz
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              Frau Dr. med. Ulrike Bongartz
             </h1>
-            <p className="text-[13px] font-medium text-[#64748B] mt-0.5">
-              Fachärztin für Neurologie & Chief Forensic Examiner • Chief Gutachter: Dr. med. A. Voss
+            <p className="text-sm sm:text-base font-semibold text-slate-200 mt-1">
+              Praxisinhaberin & Leitung S2k-Forensik • Senior Medical Administrator
             </p>
           </div>
         </div>
 
         {/* Top Right "SYSTEM SECURE" Badge */}
-        <div className="flex items-center gap-3 shrink-0 self-start md:self-auto">
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#2DD4BF]/10 border border-[#2DD4BF]/30 text-[#2DD4BF] text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(45,212,191,0.2)]">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2DD4BF] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2DD4BF]" />
+        <div className="flex flex-wrap items-center gap-3 shrink-0 self-start md:self-auto relative z-10">
+          <div className="px-4 py-2 rounded-xl bg-teal-400/20 border-2 border-teal-400 text-teal-200 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider flex items-center gap-2 shadow-[0_0_20px_rgba(45,212,191,0.3)]">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-80" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-400" />
             </span>
             <span>SYSTEM SECURE</span>
           </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 text-[#8B5CF6] text-xs font-mono font-bold uppercase tracking-wider">
+          <div className="px-4 py-2 rounded-xl bg-violet-500/20 border-2 border-violet-400 text-violet-200 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider">
             PORTAL V2.1
           </div>
         </div>
@@ -76,98 +77,98 @@ export const DashboardView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* STAT 1: 99.8% */}
-        <div className="p-5 rounded-2xl bg-[#0d1322]/90 border border-[#1E293B] shadow-xl flex flex-col justify-between space-y-3 hover:border-[#2DD4BF]/40 transition-all group">
+        <div className="p-5.5 rounded-2xl bg-[#0f172a] border border-[#334155] shadow-xl flex flex-col justify-between space-y-3 hover:border-cyan-400 transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[#64748B] uppercase tracking-wider font-mono">
+            <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
               Clinical Compliance
             </span>
-            <div className="w-9 h-9 rounded-xl bg-[#2DD4BF]/10 border border-[#2DD4BF]/30 flex items-center justify-center text-[#2DD4BF]">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300">
               <ShieldCheck className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-[22px] font-bold text-[#2DD4BF] font-mono tracking-tight">
+            <div className="text-3xl font-extrabold text-cyan-300 font-mono tracking-tight">
               99.8%
             </div>
-            <p className="text-[13px] font-medium text-[#64748B] mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-1 leading-snug">
               AWMF S2k Guideline Compliance
             </p>
           </div>
-          <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px] font-mono text-[#2DD4BF]">
+          <div className="pt-2 border-t border-[#334155] flex items-center justify-between text-xs font-mono text-cyan-300 font-bold">
             <span>LEITLINIEN MATCH</span>
-            <span className="font-bold">L4/L5 & L5/S1</span>
+            <span>L4/L5 & L5/S1</span>
           </div>
         </div>
 
         {/* STAT 2: 0.85s */}
-        <div className="p-5 rounded-2xl bg-[#0d1322]/90 border border-[#1E293B] shadow-xl flex flex-col justify-between space-y-3 hover:border-[#8B5CF6]/40 transition-all group">
+        <div className="p-5.5 rounded-2xl bg-[#0f172a] border border-[#334155] shadow-xl flex flex-col justify-between space-y-3 hover:border-violet-400 transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[#64748B] uppercase tracking-wider font-mono">
+            <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
               Consensus Speed
             </span>
-            <div className="w-9 h-9 rounded-xl bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 flex items-center justify-center text-[#8B5CF6]">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-400 flex items-center justify-center text-violet-300">
               <Zap className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-[22px] font-bold text-[#8B5CF6] font-mono tracking-tight">
+            <div className="text-3xl font-extrabold text-violet-300 font-mono tracking-tight">
               0.85s
             </div>
-            <p className="text-[13px] font-medium text-[#64748B] mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-1 leading-snug">
               Multi-Agent Consensus Speed
             </p>
           </div>
-          <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px] font-mono text-[#8B5CF6]">
+          <div className="pt-2 border-t border-[#334155] flex items-center justify-between text-xs font-mono text-violet-300 font-bold">
             <span>INFERENCE TIME</span>
-            <span className="font-bold">Parallel Quad-Core</span>
+            <span>Parallel Quad-Core</span>
           </div>
         </div>
 
         {/* STAT 3: 100% */}
-        <div className="p-5 rounded-2xl bg-[#0d1322]/90 border border-[#1E293B] shadow-xl flex flex-col justify-between space-y-3 hover:border-[#2DD4BF]/40 transition-all group">
+        <div className="p-5.5 rounded-2xl bg-[#0f172a] border border-[#334155] shadow-xl flex flex-col justify-between space-y-3 hover:border-teal-400 transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[#64748B] uppercase tracking-wider font-mono">
+            <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
               Forensic Safety
             </span>
-            <div className="w-9 h-9 rounded-xl bg-[#2DD4BF]/10 border border-[#2DD4BF]/30 flex items-center justify-center text-[#2DD4BF]">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400 flex items-center justify-center text-teal-300">
               <Lock className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-[22px] font-bold text-white font-mono tracking-tight">
+            <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
               100%
             </div>
-            <p className="text-[13px] font-medium text-[#64748B] mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-1 leading-snug">
               Forensic Audit Safety Rate
             </p>
           </div>
-          <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px] font-mono text-[#2DD4BF]">
+          <div className="pt-2 border-t border-[#334155] flex items-center justify-between text-xs font-mono text-teal-300 font-bold">
             <span>AUDIT VERIFIED</span>
-            <span className="font-bold">eIDAS QES Pass</span>
+            <span>eIDAS QES Pass</span>
           </div>
         </div>
 
         {/* STAT 4: 82% */}
-        <div className="p-5 rounded-2xl bg-[#0d1322]/90 border border-[#1E293B] shadow-xl flex flex-col justify-between space-y-3 hover:border-[#FB923C]/40 transition-all group">
+        <div className="p-5.5 rounded-2xl bg-[#0f172a] border border-[#334155] shadow-xl flex flex-col justify-between space-y-3 hover:border-amber-400 transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[#64748B] uppercase tracking-wider font-mono">
+            <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
               Cost Reduction
             </span>
-            <div className="w-9 h-9 rounded-xl bg-[#FB923C]/10 border border-[#FB923C]/30 flex items-center justify-center text-[#FB923C]">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300">
               <TrendingDown className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-[22px] font-bold text-[#FB923C] font-mono tracking-tight">
+            <div className="text-3xl font-extrabold text-amber-300 font-mono tracking-tight">
               82%
             </div>
-            <p className="text-[13px] font-medium text-[#64748B] mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-1 leading-snug">
               Practice Cost & Admin Reduction
             </p>
           </div>
-          <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px] font-mono text-[#FB923C]">
+          <div className="pt-2 border-t border-[#334155] flex items-center justify-between text-xs font-mono text-amber-300 font-bold">
             <span>SAVINGS INDEX</span>
-            <span className="font-bold">BG Bau & Sozialgericht</span>
+            <span>BG Bau & Sozialgericht</span>
           </div>
         </div>
 

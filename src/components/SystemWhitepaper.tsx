@@ -231,18 +231,27 @@ export default function SystemWhitepaper() {
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#020813]">
+    <div className="relative min-h-screen bg-[#0a0a0f]">
       <div className="space-y-8 text-slate-100 font-sans pb-12 animate-fade-in relative z-10" id="udo-system-whitepaper-portal">
       {/* HEADER SECTION - REDESIGNED PREMIUM PUBLICATION BLOCK */}
-      <div className="relative overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-8 lg:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.95)]">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+      <div className="relative overflow-hidden rounded-[28px] border border-cyan-500/30 bg-[#111217]/90 backdrop-blur-2xl p-6 sm:p-8 lg:p-10 shadow-[0_20px_80px_rgba(0,0,0,0.9)]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
         
         {/* Formal Institutional Ribbon Header */}
         <div className="border-b border-white/10 pb-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-300 text-[10px] font-mono uppercase tracking-[0.15em] font-black">
-              <BookOpen size={11} className="animate-pulse" />
-              {t[currentLang].badge}
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono uppercase tracking-[0.15em] font-black">
+                <BookOpen size={11} className="animate-pulse text-cyan-400" />
+                {t[currentLang].badge}
+              </div>
+              <button
+                onClick={() => setLanguage(language === "de" ? "en" : "de")}
+                className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-cyan-300 hover:border-cyan-400 text-[10px] font-mono font-bold uppercase transition-all cursor-pointer"
+                title={language === "de" ? "Sprache wechseln (EN)" : "Switch Language (DE)"}
+              >
+                🌐 {language.toUpperCase()}
+              </button>
             </div>
             <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tight leading-tight mt-2 uppercase font-sans">
               {t[currentLang].title}
@@ -253,8 +262,8 @@ export default function SystemWhitepaper() {
           </div>
 
           {/* Institutional Metadata Panel */}
-          <div className="bg-slate-900 border border-teal-500/30 rounded-2xl p-4 min-w-[280px] font-mono text-[10px] text-slate-300 space-y-2.5 shadow-2xl relative overflow-hidden group hover:scale-105 hover:border-teal-400 transition-all cursor-pointer">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-400" />
+          <div className="bg-[#0d1322] border border-cyan-500/30 rounded-2xl p-4 min-w-[280px] font-mono text-[10px] text-slate-300 space-y-2.5 shadow-2xl relative overflow-hidden group hover:border-cyan-400 transition-all cursor-pointer">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-cyan-400" />
             <div className="pl-2.5 space-y-1.5">
               <div className="flex justify-between border-b border-white/10 pb-1">
                 <span className="font-semibold text-slate-400 uppercase">PUBLICATION DATE:</span>
@@ -262,7 +271,7 @@ export default function SystemWhitepaper() {
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
                 <span className="font-semibold text-slate-400 uppercase">DOC ID REFERENCE:</span>
-                <strong className="text-teal-300 font-bold">COGNITIVE-FORENSIC-S2K-V3.8</strong>
+                <strong className="text-cyan-300 font-bold">COGNITIVE-FORENSIC-S2K-V3.8</strong>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-slate-400 uppercase">CLASSIFICATION:</span>
@@ -272,15 +281,15 @@ export default function SystemWhitepaper() {
           </div>
         </div>
 
-        {/* 4 Majestic Executive KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+        {/* 4 Executive KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-2">
           {/* KPI 1 */}
-          <div className="relative overflow-hidden bg-slate-900 border border-teal-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-teal-400 hover:shadow-[0_0_30px_rgba(45,212,191,0.3)] transition-all duration-300 cursor-pointer group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-teal-400" />
-            <span className="text-[10px] font-mono text-teal-300/80 font-extrabold uppercase block tracking-wider">Clinical Guideline Compliance</span>
+          <div className="relative overflow-hidden bg-[#0d1322] border border-cyan-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(45,212,191,0.25)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-cyan-400" />
+            <span className="text-[10px] font-mono text-cyan-300/80 font-extrabold uppercase block tracking-wider">Clinical Guideline Compliance</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">99.8%</strong>
-              <span className="text-[10px] font-mono text-teal-300 font-bold">AWMF Segment</span>
+              <span className="text-[10px] font-mono text-cyan-300 font-bold">AWMF Segment</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Cross-checked through four parallel S2k algorithmic causality validations.
@@ -288,7 +297,7 @@ export default function SystemWhitepaper() {
           </div>
 
           {/* KPI 2 */}
-          <div className="relative overflow-hidden bg-slate-900 border border-violet-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-violet-400 hover:shadow-[0_0_30px_rgba(184,41,221,0.3)] transition-all duration-300 cursor-pointer group">
+          <div className="relative overflow-hidden bg-[#0d1322] border border-violet-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-violet-400 hover:shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 cursor-pointer group">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-violet-400" />
             <span className="text-[10px] font-mono text-violet-300/80 font-extrabold uppercase block tracking-wider">Multi-Agent Consensus Speed</span>
             <div className="flex items-baseline gap-1 mt-1.5">
@@ -301,12 +310,12 @@ export default function SystemWhitepaper() {
           </div>
 
           {/* KPI 3 */}
-          <div className="relative overflow-hidden bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(6,214,160,0.3)] transition-all duration-300 cursor-pointer group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-400" />
-            <span className="text-[10px] font-mono text-emerald-300/80 font-extrabold uppercase block tracking-wider">Forensic Audit Safety Rate</span>
+          <div className="relative overflow-hidden bg-[#0d1322] border border-teal-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-teal-400 hover:shadow-[0_0_30px_rgba(20,184,166,0.25)] transition-all duration-300 cursor-pointer group">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-teal-400" />
+            <span className="text-[10px] font-mono text-teal-300/80 font-extrabold uppercase block tracking-wider">Forensic Audit Safety Rate</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <strong className="text-3xl font-black text-white font-mono">100%</strong>
-              <span className="text-[10px] font-mono text-emerald-300 font-bold">eIDAS QES Pass</span>
+              <span className="text-[10px] font-mono text-teal-300 font-bold">eIDAS QES Pass</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-normal mt-2">
               Non-repudiated digital envelopes containing immutable block-hashes.
@@ -314,7 +323,7 @@ export default function SystemWhitepaper() {
           </div>
 
           {/* KPI 4 */}
-          <div className="relative overflow-hidden bg-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(255,209,102,0.3)] transition-all duration-300 cursor-pointer group">
+          <div className="relative overflow-hidden bg-[#0d1322] border border-amber-500/30 rounded-2xl p-5 shadow-xl hover:scale-105 hover:-translate-y-1 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] transition-all duration-300 cursor-pointer group">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-400" />
             <span className="text-[10px] font-mono text-amber-300/80 font-extrabold uppercase block tracking-wider">Practice Cost Reduction</span>
             <div className="flex items-baseline gap-1 mt-1.5">
@@ -346,14 +355,14 @@ export default function SystemWhitepaper() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 min-w-[200px] text-left p-4 rounded-2xl border transition-all duration-300 relative cursor-pointer overflow-hidden ${
+              className={`flex-1 min-w-[190px] text-left p-4 rounded-2xl border transition-all duration-300 relative cursor-pointer overflow-hidden ${
                 isActive 
-                  ? "bg-gradient-to-r from-teal-400 via-cyan-400 to-emerald-400 text-slate-950 font-black border-cyan-300 shadow-[0_0_30px_rgba(45,212,191,0.35)] scale-[1.03]" 
-                  : "bg-slate-900 border-slate-800 hover:bg-slate-800/90 text-slate-200 hover:border-teal-400/50 hover:scale-[1.02] hover:text-white"
+                  ? "bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-400 text-slate-950 font-black border-cyan-300 shadow-[0_0_25px_rgba(45,212,191,0.35)] scale-[1.02]" 
+                  : "bg-[#111217] border-white/10 hover:border-cyan-500/40 text-slate-300 hover:bg-[#161922] hover:text-white"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <IconComponent size={20} className={isActive ? "text-slate-950" : "text-teal-400"} />
+                <IconComponent size={20} className={isActive ? "text-slate-950" : "text-cyan-400"} />
                 {isActive && <div className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />}
               </div>
               <span className="text-xs font-black uppercase tracking-wider block leading-tight">

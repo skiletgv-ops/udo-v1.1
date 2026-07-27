@@ -6,6 +6,13 @@ import {
   GDT_FIELD_DESCRIPTIONS,
 } from './gdtTypes';
 
+const utf8Encoder = new TextEncoder();
+const utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+
+function getByteLength(str: string): number {
+  return utf8Encoder.encode(str).length;
+}
+
 // CP850 <-> Unicode Mapping Table for German Umlauts and special characters
 const CP850_TO_UNICODE: Record<number, string> = {
   0x80: 'Ç', 0x81: 'ü', 0x82: 'é', 0x83: 'â', 0x84: 'ä', 0x85: 'à', 0x86: 'å', 0x87: 'ç',
@@ -26,9 +33,9 @@ const UNICODE_TO_CP850: Record<string, number> = Object.entries(CP850_TO_UNICODE
 );
 
 /**
- * Decode CP850 Buffer to UTF-8 String
+ * Decode CP850 Uint8Array to UTF-8 String
  */
-export function decodeCp850(buf: Buffer): string {
+export function decodeCp850(buf: Uint8Array): string {
   let str = '';
   for (let i = 0; i < buf.length; i++) {
     const byte = buf[i];
@@ -44,9 +51,9 @@ export function decodeCp850(buf: Buffer): string {
 }
 
 /**
- * Encode UTF-8 String to CP850 Buffer
+ * Encode UTF-8 String to CP850 Uint8Array
  */
-export function encodeCp850(str: string): Buffer {
+export function encodeCp850(str: string): Uint8Array {
   const bytes: number[] = [];
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
@@ -59,7 +66,7 @@ export function encodeCp850(str: string): Buffer {
       bytes.push(0x3f); // Fallback to '?'
     }
   }
-  return Buffer.from(bytes);
+  return new Uint8Array(bytes);
 }
 
 /**
@@ -92,25 +99,26 @@ export function formatIsoToGdtDate(isoOrDate?: string | Date): string {
 }
 
 /**
- * Parses raw GDT buffer or text string into a typed GdtInboundRecord
+ * Parses raw GDT byte buffer or text string into a typed GdtInboundRecord
  */
-export function parseGdt(input: Buffer | string): GdtParseResult {
+export function parseGdt(input: Uint8Array | string): GdtParseResult {
   try {
     let rawText = '';
     let encoding: 'CP850' | 'UTF-8' = 'CP850';
 
-    if (Buffer.isBuffer(input)) {
+    if (typeof input !== 'string' && input && typeof input.length === 'number') {
+      const u8Input = input instanceof Uint8Array ? input : new Uint8Array(input);
       // Check if text looks like UTF-8 or CP850
-      const sampleUtf8 = input.toString('utf-8');
+      const sampleUtf8 = utf8Decoder.decode(u8Input);
       if (sampleUtf8.includes('8000') && !/[\uFFFD]/.test(sampleUtf8)) {
         rawText = sampleUtf8;
         encoding = 'UTF-8';
       } else {
-        rawText = decodeCp850(input);
+        rawText = decodeCp850(u8Input);
         encoding = 'CP850';
       }
     } else {
-      rawText = input;
+      rawText = typeof input === 'string' ? input : '';
     }
 
     if (!rawText.trim()) {
@@ -138,7 +146,7 @@ export function parseGdt(input: Buffer | string): GdtParseResult {
 
       // Verify line length calculation according to QMS spec:
       // Line length = 3 (length) + 4 (code) + value.length + 2 (CRLF)
-      const actualByteLen = 3 + 4 + Buffer.byteLength(value, 'utf-8') + 2;
+      const actualByteLen = 3 + 4 + getByteLength(value) + 2;
       if (!isNaN(expectedLen) && expectedLen !== actualByteLen && expectedLen !== actualByteLen - 1) {
         parseErrors.push(
           `Satzlängen-Abweichung in Zeile ${i + 1} (Feld ${code}): Header gab ${expectedLen} Bytes an, tatsächlich ${actualByteLen} Bytes.`
@@ -221,7 +229,7 @@ export function parseGdt(input: Buffer | string): GdtParseResult {
     return {
       success: false,
       error: `Kritischer Fehler beim Parsen der GDT-Datei: ${err.message || String(err)}`,
-      rawText: typeof input === 'string' ? input : input.toString('utf-8'),
+      rawText: typeof input === 'string' ? input : '',
     };
   }
 }
@@ -232,7 +240,7 @@ export function parseGdt(input: Buffer | string): GdtParseResult {
  */
 export function formatGdtLine(code: string, value: string): string {
   // Length = 3 (length) + 4 (code) + value.length + 2 (CRLF)
-  const lineContentLen = 3 + 4 + Buffer.byteLength(value, 'utf-8') + 2;
+  const lineContentLen = 3 + 4 + getByteLength(value) + 2;
   const lenPrefix = String(lineContentLen).padStart(3, '0');
   return `${lenPrefix}${code}${value}\r\n`;
 }
@@ -240,7 +248,7 @@ export function formatGdtLine(code: string, value: string): string {
 /**
  * Generates an outbound GDT-OUT (Satzart 6310) string or buffer for ALBIS
  */
-export function writeGdt(input: GdtOutboundInput): { rawText: string; buffer: Buffer } {
+export function writeGdt(input: GdtOutboundInput): { rawText: string; buffer: Uint8Array } {
   const patientId = input.patientId;
   const caseId = input.caseId;
   const examName = input.examName || 'UDO Gutachten';
@@ -277,14 +285,14 @@ export function writeGdt(input: GdtOutboundInput): { rawText: string; buffer: Bu
 
   // Compute exact total byte length for 8100
   const rawTextTemp = lines.join('');
-  const totalByteLength = Buffer.byteLength(rawTextTemp, 'utf-8');
+  const totalByteLength = getByteLength(rawTextTemp);
 
   // Replace line 8100 with computed length
   const formatted8100 = formatGdtLine('8100', String(totalByteLength).padStart(5, '0'));
   lines[1] = formatted8100;
 
   const rawText = lines.join('');
-  const buffer = input.encoding === 'UTF-8' ? Buffer.from(rawText, 'utf-8') : encodeCp850(rawText);
+  const buffer = input.encoding === 'UTF-8' ? utf8Encoder.encode(rawText) : encodeCp850(rawText);
 
   return { rawText, buffer };
 }
@@ -310,8 +318,9 @@ export function generateSampleAlbisGdtIn(patientId = 'SYN-90412', lastName = 'Mu
   lines.push(formatGdtLine('8410', 'Verdacht auf Bandscheibenvorfall L4/L5, Minderung Erwerbsfähigkeit prüfen'));
 
   const temp = lines.join('');
-  const totalBytes = Buffer.byteLength(temp, 'utf-8');
+  const totalBytes = getByteLength(temp);
   lines[1] = formatGdtLine('8100', String(totalBytes).padStart(5, '0'));
 
   return lines.join('');
 }
+

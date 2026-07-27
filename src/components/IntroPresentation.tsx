@@ -19,6 +19,7 @@ import SystemWhitepaper from "./SystemWhitepaper";
 import { useGlobalSystem } from "./GlobalSystemContext";
 import SynapseBackground from "./ui/synapse-background";
 import SplineBackground from "./SplineBackground";
+import RobotMascot from "./RobotMascot";
 
 interface IntroPresentationProps {
   onComplete: () => void;
@@ -33,7 +34,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
   const [showWhitepaper, setShowWhitepaper] = useState(false);
   const [typedReminder, setTypedReminder] = useState("");
 
-  const { language, setLanguage } = useGlobalSystem();
+  const { language, setLanguage, robotState, robotBubble, handleRobotClick } = useGlobalSystem();
 
   useEffect(() => {
     if (!isBooted) return;
@@ -672,9 +673,20 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
  
                 </div>
  
-                {/* RIGHT SIDE: Interactive U.D.O. Sphere & Main Action Trigger */}
-                <div className="w-full max-w-lg lg:max-w-[400px] xl:max-w-[440px] flex flex-col items-center justify-center space-y-8 lg:space-y-10 select-none pointer-events-auto shrink-0 lg:translate-y-6 lg:mt-4">
+                {/* RIGHT SIDE: Interactive U.D.O. Robot & Main Action Trigger */}
+                <div className="w-full max-w-lg lg:max-w-[400px] xl:max-w-[440px] flex flex-col items-center justify-center space-y-6 select-none pointer-events-auto shrink-0">
                   
+                  {/* ROBOT MASCOT HEAD - Always tracking cursor */}
+                  <div className="relative z-20 flex justify-center hover:scale-105 transition-transform duration-300 cursor-pointer" onClick={handleRobotClick}>
+                    <RobotMascot
+                      state={robotState || "IDLE"}
+                      messageBubble={robotBubble}
+                      onBubbleClick={handleRobotClick}
+                      size="lg"
+                      showBadge={false}
+                    />
+                  </div>
+
                   {/* GLOWING REVOLVING SPHERE SYSTEM */}
                   <div className="relative flex flex-col items-center justify-center pointer-events-auto">
                     

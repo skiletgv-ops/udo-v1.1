@@ -22,9 +22,9 @@ export const ROLE_DEFINITIONS: Record<'main' | 'admin', RoleUser> = {
   },
   admin: {
     role: 'admin',
-    name: 'Prof. Dr. med. E. Bongartz',
-    title: 'Chefärztin & Forensische Hauptgutachterin',
-    label: 'Admin — Prof. Dr. med. E. Bongartz',
+    name: 'Frau Dr. med. Ulrike Bongartz',
+    title: 'Praxisinhaberin & Administratorin',
+    label: 'Admin — Frau Dr. med. Ulrike Bongartz',
     colorScheme: 'copper',
     canApprove: true,
   },

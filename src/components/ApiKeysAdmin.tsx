@@ -358,10 +358,10 @@ export default function ApiKeysAdmin() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white uppercase tracking-wide">
-                  DeepSeek R1 Reasoning Engine (Dr. Gratsiano)
+                  DeepSeek R1 / V3 Engine (Voice Agent & Dr. Gratsiano)
                 </h4>
                 <span className="text-[10px] font-mono text-indigo-400 block">
-                  Chain-of-Thought Kausalitätsanalyse & S2k-Leitlinien-Konsens
+                  UDO Voice Agent, Chain-of-Thought Kausalitätsanalyse & S2k-Leitlinien-Konsens
                 </span>
               </div>
             </div>

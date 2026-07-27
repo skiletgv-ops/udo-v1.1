@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
+import { useGlobalSystem } from './GlobalSystemContext';
 import { ActiveTab } from '../types';
 import { MicState } from '../hooks/useWakeWord';
 
@@ -43,7 +44,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
-  const [language, setLanguage] = useState<'DE' | 'EN'>('DE');
+  const { language, setLanguage } = useGlobalSystem();
 
   const { role, user, isAdmin, selectRole, clearRole } = useRoleContext();
   const { pendingCount } = usePrescriptionContext();
@@ -57,6 +58,8 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
     }
   };
 
+  const isAnyModalOpen = notificationsOpen || settingsOpen || roleMenuOpen;
+
   return (
     <>
       <input
@@ -67,7 +70,19 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
         onChange={handleDeviceUpload}
       />
 
-      <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-[#0a0a0f]/90 backdrop-blur-2xl border-b border-white/10 px-4 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+      <div className="fixed top-0 left-0 right-0 z-[100] group/topbar pointer-events-auto">
+        {/* TOP EDGE CURSOR SENSOR */}
+        <div className="h-3 w-full absolute top-0 left-0 z-[101]" />
+
+        <header
+          className={`h-14 bg-[#0a0a0f]/95 backdrop-blur-2xl border-b border-cyan-500/30 px-4 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.95)] transition-all duration-300 ease-out transform ${
+            isAnyModalOpen
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-[calc(100%-6px)] group-hover/topbar:translate-y-0 hover:translate-y-0 focus-within:translate-y-0 opacity-90 hover:opacity-100'
+          }`}
+        >
+          {/* TOP SLIDER INDICATOR BAR */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full bg-cyan-400/80 shadow-[0_0_10px_#00d4aa] group-hover/topbar:opacity-0 transition-opacity" />
         {/* TOP LEFT: BRAND & ACTIVE MODULE INDICATOR */}
         <div className="flex items-center gap-3">
           <div
@@ -220,7 +235,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-[#E8A87C]" />
-                    <span>Prof. Dr. Bongartz (Admin)</span>
+                    <span>Frau Dr. med. Ulrike Bongartz (Admin)</span>
                   </div>
                   {role === 'admin' && <CheckCircle2 className="w-3.5 h-3.5 text-[#E8A87C]" />}
                 </button>
@@ -255,11 +270,11 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
 
           {/* LANGUAGE TOGGLE */}
           <button
-            onClick={() => setLanguage(l => l === 'DE' ? 'EN' : 'DE')}
+            onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
             className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/30 text-xs font-mono font-bold uppercase transition-all duration-200 cursor-pointer"
-            title="Sprache wechseln"
+            title={language === 'de' ? "Sprache wechseln (EN)" : "Switch Language (DE)"}
           >
-            {language}
+            {language.toUpperCase()}
           </button>
 
           {/* NOTIFICATION BELL */}
@@ -296,6 +311,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
           </button>
         </div>
       </header>
+      </div>
 
       {/* NOTIFICATIONS MODAL */}
       {notificationsOpen && (

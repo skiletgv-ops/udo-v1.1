@@ -215,16 +215,26 @@ export function App() {
         {route === '/presentation' ? (
           <PresentationSlideDeck />
         ) : route === '/whitepaper' ? (
-          <div className="min-h-screen bg-[#020813] text-slate-100 font-sans">
-            <header className="sticky top-0 z-50 border-b border-violet-500/20 bg-[#020813] px-4 py-3 sm:px-8 flex items-center justify-between">
-              <a href="/" className="text-xs font-mono tracking-widest text-teal-400 uppercase hover:text-teal-300 hover:scale-105 active:scale-95 transition-all inline-block">
-                &larr; Zurück zur Übersicht
-              </a>
-              <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">
-                UDO System Whitepaper
-              </span>
+          <div className="min-h-screen bg-[#0a0a0f] text-slate-100 font-sans relative overflow-x-hidden">
+            <header className="sticky top-0 z-50 h-14 bg-[#0a0a0f]/90 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-8 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+              <div className="flex items-center gap-3">
+                <a
+                  href="/"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-all text-xs font-mono"
+                >
+                  <span className="text-cyan-400 font-bold">&larr;</span>
+                  <span>Startseite</span>
+                </a>
+                <span className="h-4 w-[1px] bg-white/10 hidden sm:block" />
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-xs font-mono font-bold tracking-widest text-white uppercase">
+                    UDO System Whitepaper
+                  </span>
+                </div>
+              </div>
             </header>
-            <div className="max-w-6xl mx-auto p-6 md:p-12">
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
               <SystemWhitepaper />
             </div>
           </div>
