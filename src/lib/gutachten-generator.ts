@@ -17,7 +17,7 @@ export function generateGutachtenReport(
       id: 'sec-1',
       number: 1,
       title: 'Auftrag und Befugnis',
-      content: `Im Auftrag der ${patient.commissioningEntity} wird für Herrn ${patient.lastName}, ${patient.firstName}, geb. am ${patient.birthDate}, wohnhaft in ${patient.address}, ein medizinisches S2k-Fachgutachten zur Klärung des Zusammenhangs zwischen den nachgewiesenen Vorbefunden und der aktuellen Minderung der Erwerbsfähigkeit (MdE) erstellt.\n\nDas Gutachten stützt sich auf die AWMF-S2k-Leitlinien für Orthopädie, Pathologie sowie Innere Medizin (Stand 2026). Die Bearbeitung erfolgte durch das KI-Konsil U.D.O. S2k mit anschließender fachärztlicher Validierung.`,
+      content: `Im Auftrag der ${patient.commissioningEntity} wird für Herrn ${patient.lastName}, ${patient.firstName}, geb. am ${patient.birthDate}, wohnhaft in ${patient.address}, ein medizinisches S2k-Fachgutachten zur Klärung des Zusammenhangs zwischen den nachgewiesenen Vorbefunden und der aktuellen Minderung der Erwerbsfähigkeit (MdE) erstellt.\n\nDas Gutachten stützt sich auf die AWMF-S2k-Leitlinien für Orthopädie, Pathologie sowie Innere Medizin (Stand 2026). Die Bearbeitung erfolgte durch das KI-Konsil UDO S2k mit anschließender fachärztlicher Validierung.`,
       citations: [
         { docName: 'Beauftragungsaktenzeichen', date: currentDate, page: 1 }
       ]
@@ -86,7 +86,7 @@ export function generateGutachtenReport(
       title: 'Konsil der KI-Agenten (Konsensanalyse)',
       content: `Die S2k-Pipeline führte eine getrennte Evaluierung durch 4 spezialisierte neuronale Agenten aus:\n\n• Dr. Clara Voss (Radiologie KI): 99.8% Übereinstimmung bzgl. L4/L5 Kompression.\n• Dr. Eric Thorne (Pathologie KI): 99.4% Übereinstimmung bzgl. Histologie & Labor.\n• Dr. Marcel Richter (Klinische KI): 97.9% Konformität mit S2k-Leitlinien für Schmerztherapie.\n• Dr. Gratsiano Silva (Forschungs KI): 99.6% Übereinstimmung mit AWMF & ECCO Evidenz.\n\nGesamter KI-Konsenskoeffizient: 99.2% (Einstimmiger Beschluss).`,
       citations: [
-        { docName: 'U.D.O. S2k Consensus Matrix', date: currentDate, page: 1 }
+        { docName: 'UDO S2k Consensus Matrix', date: currentDate, page: 1 }
       ]
     },
     {
@@ -102,7 +102,7 @@ export function generateGutachtenReport(
       id: 'sec-10',
       number: 10,
       title: 'Schlussbemerkung & Signatur',
-      content: `Dieses Gutachten wurde automatisiert aus den verifizierten Primärdokumenten durch das U.D.O. S2k Neural Core erstellt und abschließend von der leitenden Fachärztin qualifiziert elektronisch signiert (QES nach eIDAS).\n\nBerlin, den ${currentDate}\n\nDr. med. A. Voss\nFacharzt für Orthopädie, Unfallchirurgie und Sozialmedizin\nZulassungsnummer: G-2026-7742-QES`,
+      content: `Dieses Gutachten wurde automatisiert aus den verifizierten Primärdokumenten durch das UDO S2k Neural Core erstellt und abschließend von der leitenden Fachärztin qualifiziert elektronisch signiert (QES nach eIDAS).\n\nBerlin, den ${currentDate}\n\nDr. med. A. Voss\nFacharzt für Orthopädie, Unfallchirurgie und Sozialmedizin\nZulassungsnummer: G-2026-7742-QES`,
       citations: [
         { docName: 'QES Certificate eIDAS DE-8819', date: currentDate, page: 1 }
       ]
@@ -128,7 +128,7 @@ export function generateGutachtenReport(
 
 export function exportGutachtenAsText(report: GutachtenReport): string {
   let text = `================================================================================\n`;
-  text += `                       U.D.O. S2k FORENSIC HUB - GUTACHTEN\n`;
+  text += `                       UDO S2k FORENSIC HUB - GUTACHTEN\n`;
   text += `================================================================================\n\n`;
   text += `GUTACHTEN-ID: ${report.id}\n`;
   text += `DATUM: ${report.generatedAt}\n`;

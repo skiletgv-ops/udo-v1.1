@@ -16,7 +16,7 @@ import { Component as AsciiOrbBackground } from "./ui/artificial-hero";
 import { SplineScene } from "./ui/splite";
 
 /**
- * Single-file Stellar Card Gallery Integrated into U.D.O. Clinical Platform
+ * Single-file Stellar Card Gallery Integrated into UDO Clinical Platform
  */
 
 /* =========================
@@ -336,7 +336,7 @@ function CardModal({ setActiveView }: CardModalProps) {
 
             <h3 className="text-slate-900 text-lg font-bold mb-1 text-center">{selectedCard.title}</h3>
             <p className="text-slate-500 font-mono text-[10px] text-center uppercase tracking-wider mb-4 font-semibold">
-              U.D.O. Dienst: {selectedCard.moduleName}
+              UDO Dienst: {selectedCard.moduleName}
             </p>
 
             <div className="flex gap-2 mb-3">
@@ -386,7 +386,7 @@ function CardModal({ setActiveView }: CardModalProps) {
               {selectedCard.moduleId === "upgrades" && <Sparkles size={13} />}
               {selectedCard.moduleId === "analytics" && <LineChart size={13} />}
               {selectedCard.moduleId === "eeg" && <Cpu size={13} />}
-              <span>In U.D.O. Bereich laden &rarr;</span>
+              <span>In UDO Bereich laden &rarr;</span>
             </button>
           </div>
         </div>

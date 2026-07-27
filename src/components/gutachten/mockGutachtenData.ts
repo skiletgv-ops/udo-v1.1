@@ -754,7 +754,7 @@ export const initialConsensusOutputs: ConsensusModelOutput[] = [
   },
   {
     modelId: "gratsiano_deepseek",
-    modelName: "Dr. Gratsiano (DeepSeek-R1)",
+    modelName: "Dr. Gratsiano (UDO-R1 (Dr. Gratsiano))",
     avatarColor: "from-rose-500 to-pink-500",
     findingTitle: "Kognitive Evidenzsynthese & CoT",
     assessmentText: "Cross-Evaluierung von EMG-Leitgeschwindigkeiten des M. tibialis anterior (Abfall auf 42 m/s) mit der L4/L5 MRT-Schnittführung. Der seitliche Kompressionsvektor der L5-Wurzel ist konsolidiert. Chronifizierungsrisiko ist mäßig; konservative Optionen sind ausgereizt. MdE 20% rechtlich und medizinisch unstrittig.",

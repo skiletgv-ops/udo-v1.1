@@ -32,7 +32,7 @@ export function SplineSceneBasic() {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
           <span className="text-[10px] font-mono tracking-widest text-teal-400 font-extrabold uppercase flex items-center gap-1">
-            <Cpu size={12} /> U.D.O. Core Engine 1.0
+            <Cpu size={12} /> UDO Core Engine 1.0
           </span>
         </div>
         
@@ -113,7 +113,7 @@ export function SplineSceneBasic() {
 
       {/* Floating Footer Indicators */}
       <div className="relative z-20 flex justify-between items-center w-full pt-3 border-t border-slate-800/60 text-[9px] font-mono text-slate-500 shrink-0">
-        <span>© 2026 U.D.O. SYSTEM ENGINE v2.0</span>
+        <span>© 2026 UDO SYSTEM ENGINE v2.0</span>
         <span>DRÜCKEN & ZIEHEN ZUM ROTIEREN</span>
       </div>
     </div>

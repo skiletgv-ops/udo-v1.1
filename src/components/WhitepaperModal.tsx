@@ -28,16 +28,16 @@ export function WhitepaperModal({ isOpen, onClose }: WhitepaperModalProps) {
   const handleDownload = () => {
     const textContent = `
 ================================================================================
-U.D.O. S2k FORENSIC HUB — TECHNICAL & CLINICAL WHITEPAPER
+UDO S2k FORENSIC HUB — TECHNICAL & CLINICAL WHITEPAPER
 Version 2.0 • Neural Diagnostic Core & S2k Guideline Consensus Engine
 ================================================================================
 
 1. ABSTRACT & EXECUTIVE OVERVIEW
 --------------------------------------------------------------------------------
-The U.D.O. (Ultimate Diagnostic Operator) S2k Forensic Hub represents the next-generation
+The UDO (Ultimate Diagnostic Operator) S2k Forensic Hub represents the next-generation
 clinical AI infrastructure designed for medical-legal and forensic neurological evaluations.
 By integrating multi-agent consensus algorithms, automated S2k guideline checking (BK 2108/2109),
-and Qualified Electronic Signatures (QES eIDAS), U.D.O. reduces administrative evaluation times
+and Qualified Electronic Signatures (QES eIDAS), UDO reduces administrative evaluation times
 by up to 82% while maintaining a 100% audit safety rate.
 
 2. CORE TECHNOLOGY ARCHITECTURE
@@ -53,7 +53,7 @@ by up to 82% while maintaining a 100% audit safety rate.
 - Dr. Clara (Med-Gemini Integration): Radiological & MRI anatomical segment parser
 - Dr. Eric (Claude 3.5 Sonnet): Legal & MdE (Minderung der Erwerbsfähigkeit) expert
 - Dr. Marcus (GPT-4o): Biomechanical vector & force dynamics analyst
-- Dr. Gratsiano (DeepSeek-R1): Extended Chain-of-Thought (CoT) consensus synthesis
+- Dr. Gratsiano (UDO-R1 (Dr. Gratsiano)): Extended Chain-of-Thought (CoT) consensus synthesis
 
 4. CONSENSUS ENGINE & S2k GUIDELINES
 --------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
 - Q3 2026: Automated EEG Signal Biosignal Artifact Filtering
 - Q4 2026: Pan-European eHealth Cross-Border QES Verification
 
-© 2026 U.D.O. Medical Systems · AES-256 · ISO 13485
+© 2026 UDO Medical Systems · AES-256 · ISO 13485
     `;
 
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
@@ -121,7 +121,7 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white tracking-wide">
-                  U.D.O. S2k Forensic Hub Whitepaper
+                  UDO S2k Forensic Hub Whitepaper
                 </h2>
                 <p className="text-[10px] font-mono text-[#E8A87C] uppercase tracking-wider">
                   Technical & Clinical Architecture Specification · v2.0
@@ -182,10 +182,10 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
                     1. Abstract & Executive Overview
                   </h3>
                   <p className="text-slate-300">
-                    The U.D.O. (Ultimate Diagnostic Operator) S2k Forensic Hub represents the next-generation clinical AI infrastructure designed for medical-legal and forensic neurological evaluations.
+                    The UDO (Ultimate Diagnostic Operator) S2k Forensic Hub represents the next-generation clinical AI infrastructure designed for medical-legal and forensic neurological evaluations.
                   </p>
                   <p className="text-slate-400">
-                    By integrating multi-agent consensus algorithms, automated S2k guideline checking (BK 2108/2109), and Qualified Electronic Signatures (QES eIDAS), U.D.O. reduces administrative evaluation times by up to 82% while maintaining a 100% audit safety rate.
+                    By integrating multi-agent consensus algorithms, automated S2k guideline checking (BK 2108/2109), and Qualified Electronic Signatures (QES eIDAS), UDO reduces administrative evaluation times by up to 82% while maintaining a 100% audit safety rate.
                   </p>
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1">
@@ -238,7 +238,7 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
                       <p className="text-xs text-slate-400 mt-1">Biomechanical vector and lifting force dynamics calculation.</p>
                     </div>
                     <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
-                      <h4 className="text-xs font-bold text-[#00D4AA]">Dr. Gratsiano (DeepSeek-R1)</h4>
+                      <h4 className="text-xs font-bold text-[#00D4AA]">Dr. Gratsiano (UDO-R1 (Dr. Gratsiano))</h4>
                       <p className="text-xs text-slate-400 mt-1">Deep reasoning extended Chain-of-Thought consensus synthesis engine.</p>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ Evaluates lumbar spine trauma (L4/L5 & L5/S1 segments) against German AWMF S2k g
 
           {/* FOOTER */}
           <div className="px-6 py-3 border-t border-white/10 bg-slate-950/90 flex justify-between items-center text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-            <span>© 2026 U.D.O. Medical Systems</span>
+            <span>© 2026 UDO Medical Systems</span>
             <span>AES-256 · ISO 13485 CERTIFIED</span>
           </div>
         </motion.div>

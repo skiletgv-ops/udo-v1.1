@@ -19,7 +19,7 @@ export const AdminView: React.FC = () => {
             <Badge variant="emerald">CGM ALBIS GDT 2.1 Aktiv</Badge>
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight mt-1">
-            U.D.O. Systemverwaltung & Integrationen
+            UDO Systemverwaltung & Integrationen
           </h1>
         </div>
 

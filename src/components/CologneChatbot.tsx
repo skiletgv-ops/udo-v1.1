@@ -18,10 +18,10 @@ interface CologneChatbotProps {
 }
 
 const PRESET_CHIPS = [
-  "How can you help me with this project?",
-  "What are the core clinical guidelines for L4/L5?",
-  "Summarize Thomas Muller's medical status",
-  "How do I calculate reduction in earning capacity?"
+  "Befundanalyse für Dr. Bongartz mit 4-KI-Konsil",
+  "S2k Leitlinienabgleich L4/L5 & HWS Schleudertrauma",
+  "Patienten-Stimmung & Zusammenfassung für Dr. Bongartz",
+  "Wie berechne ich die MdE nach AWMF-Standards?"
 ];
 
 export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, onMinimize }: CologneChatbotProps) {
@@ -107,7 +107,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
           </div>
           <div>
             <h3 className="text-xs font-black text-white font-sans uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
-              <span>U.D.O. Clinical Intelligence</span>
+              <span>UDO Clinical Intelligence</span>
               <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-950/40 border border-teal-500/30 px-1.5 py-0.5 rounded uppercase tracking-widest">
                 Nova Voice
               </span>
@@ -239,7 +239,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
         </div>
 
         <span className="text-[9px] font-mono text-slate-500 font-bold uppercase hidden md:inline-block">
-          U.D.O. Cologne Medical Core
+          UDO Cologne Medical Core
         </span>
       </div>
 
@@ -621,7 +621,7 @@ export default function CologneChatbot({ onRobotStateChange, onDrBubbleTrigger, 
           <input
             type="text"
             disabled={isLoading}
-            placeholder={language === "de" ? "Kollegiale Anfrage an die U.D.O. Facharztjury..." : "Submit collegial inquiry to the U.D.O. expert board..."}
+            placeholder={language === "de" ? "Kollegiale Anfrage an die UDO Facharztjury..." : "Submit collegial inquiry to the UDO expert board..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             className="w-full bg-black/25 border border-white/10 rounded-xl pl-4 pr-24 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 leading-normal"

@@ -24,7 +24,7 @@ export default function MultiAIConsensusPanel({
               </span>
             </h3>
             <p className="text-[10px] text-slate-400">
-              Unabhängige Parallel-Beurteilung durch Med-Gemini, Claude 3.5, GPT-4o und DeepSeek-R1
+              Unabhängige Parallel-Beurteilung durch Med-Gemini, Claude 3.5, GPT-4o und UDO-R1 (Dr. Gratsiano)
             </p>
           </div>
         </div>

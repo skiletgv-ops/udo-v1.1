@@ -73,7 +73,7 @@ const MOCK_PATIENT_LIST: Patient[] = [
         { date: "12.03.2025", event: "Arbeitsunfall (Hebetrauma) mit akutem LWS-Syndrom", source: "Erstbericht D-Arzt" },
         { date: "15.03.2025", event: "Beginn der konservativen Physiotherapie", source: "Verordnung" },
         { date: "28.03.2025", event: "MRT-Untersuchung LWS zeigt Bandscheibenvorfall L4/L5 links", source: "Radiologie Köln-Nord" },
-        { date: "11.07.2026", event: "Gutachterliche Untersuchung durch U.D.O.", source: "U.D.O. Begutachtung" }
+        { date: "11.07.2026", event: "Gutachterliche Untersuchung durch UDO", source: "UDO Begutachtung" }
       ]
     },
     consensusRounds: [
@@ -896,7 +896,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                   KI-Votierung & medizinischer Abgleich
                 </h3>
                 <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                  U.D.O. fragt gleichzeitig UDO Neuro, UDO Cognitive und UDO Biometrics zu kritischen Befundkonklusionen ab. Das Abstimmungssystem ermittelt nach Mehrheitsentscheid (KEEP/REJECT/NEUTRAL) das rechtssichere Gesamtergebnis und listet Abweichungen auf.
+                  UDO fragt gleichzeitig UDO Neuro, UDO Cognitive und UDO Biometrics zu kritischen Befundkonklusionen ab. Das Abstimmungssystem ermittelt nach Mehrheitsentscheid (KEEP/REJECT/NEUTRAL) das rechtssichere Gesamtergebnis und listet Abweichungen auf.
                 </p>
               </div>
 
@@ -1032,7 +1032,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                   <div className="grid grid-cols-2 bg-slate-900 text-white border-b border-slate-950 text-[9px] font-black uppercase tracking-wider">
                     <div className="px-3 py-1.5 border-r border-slate-950 flex items-center justify-between">
                       <span>I. Patientenidentifikation (EHR Meta)</span>
-                      <span className="text-[8px] font-mono text-teal-400 font-medium">Verified by U.D.O.</span>
+                      <span className="text-[8px] font-mono text-teal-400 font-medium">Verified by UDO</span>
                     </div>
                     <div className="px-3 py-1.5 flex items-center justify-between">
                       <span>II. Auftraggeber & Beauftragendes Mandat</span>
@@ -1144,7 +1144,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                           { date: "12.03.2025", event: "Arbeitsunfall (Hebe-Trauma) mit akutem Lendenwirbelsäulensyndrom", source: "D-Arztbericht" },
                           { date: "15.03.2025", event: "Einleitung einer konservativen physiotherapeutischen Behandlung", source: "Heilmittelverordnung" },
                           { date: "28.03.2025", event: "Lendenwirbelsäulen-MRT bestätigt L4/L5-Bandscheibenvorfall links", source: "Radiologie Köln-Nord" },
-                          { date: "11.07.2026", event: "Medizinisches Gutachten durch U.D.O. Verifikations-Hub", source: "U.D.O. System" }
+                          { date: "11.07.2026", event: "Medizinisches Gutachten durch UDO Verifikations-Hub", source: "UDO System" }
                         ]).map((evt, idx) => (
                           <tr key={idx} className="hover:bg-slate-50 transition-colors">
                             <td className="py-2 px-3 font-mono font-bold text-slate-950 border-r border-slate-200">{evt.date}</td>
@@ -1179,7 +1179,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                 {/* Signatures Footer */}
                 <div className="pt-6 border-t border-slate-200 flex justify-between items-end font-sans">
                   <div>
-                    <p className="text-[8px] font-mono text-slate-400 uppercase tracking-widest font-bold">U.D.O. - ULTIMATE DIAGNOSTIC OPERATOR | SECURE QES CRYPTO VERIFIED</p>
+                    <p className="text-[8px] font-mono text-slate-400 uppercase tracking-widest font-bold">UDO - ULTIMATE DIAGNOSTIC OPERATOR | SECURE QES CRYPTO VERIFIED</p>
                   </div>
                   <div className="text-right space-y-1">
                     <div className="w-36 h-0.5 bg-slate-400 mx-auto" />
@@ -1233,7 +1233,7 @@ export default function PhaseWorkflow({ onRobotStateChange, activePatient, setAc
                 Kryptografische Signierung & Gerichts-Schnittstelle
               </h3>
               <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                Gemäß § 130a ZPO müssen Gutachten mit einer qualifizierten elektronischen Signatur (QES) versehen werden, um vor Gerichten Beweiskraft zu erlangen. U.D.O. simuliert die Verschlüsselung (RSA-4096-Sicherheits-Hash) und den sicheren Versand über den EGVP-Verbund.
+                Gemäß § 130a ZPO müssen Gutachten mit einer qualifizierten elektronischen Signatur (QES) versehen werden, um vor Gerichten Beweiskraft zu erlangen. UDO simuliert die Verschlüsselung (RSA-4096-Sicherheits-Hash) und den sicheren Versand über den EGVP-Verbund.
               </p>
             </div>
 

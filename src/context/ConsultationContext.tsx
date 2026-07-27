@@ -184,7 +184,7 @@ export const ConsultationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         role: "assistant",
         content: aiReply,
         timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-        senderName: "U.D.O. Consultant"
+        senderName: "UDO Consultant"
       };
 
       setConversationHistory([...newHistory, aiTurn]);

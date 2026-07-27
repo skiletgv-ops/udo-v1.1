@@ -56,7 +56,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
                 <polygon points="48,44 56,56 48,68 40,56" fill="url(#cyanGradWel)" />
               </svg>
               <span className="text-xl font-bold tracking-[0.25em] font-sans">
-                U.D.O. <span className="text-[#B87333]">S2k</span>
+                UDO <span className="text-[#B87333]">S2k</span>
               </span>
             </div>
 
@@ -148,7 +148,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
 
           {/* 4. FOOTER */}
           <footer className="pt-6 text-[10px] font-mono text-slate-600 uppercase tracking-widest">
-            © 2026 U.D.O. Medical Systems · AES-256 · ISO 13485
+            © 2026 UDO Medical Systems · AES-256 · ISO 13485
           </footer>
         </motion.div>
       )}

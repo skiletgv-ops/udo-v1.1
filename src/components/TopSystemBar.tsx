@@ -15,7 +15,9 @@ import {
   LogOut,
   RefreshCw,
   Mic,
-  Radio
+  BookOpen,
+  Zap,
+  PanelRightOpen
 } from 'lucide-react';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
@@ -30,6 +32,9 @@ interface TopSystemBarProps {
   onSelectTab?: (tab: ActiveTab) => void;
   micState?: MicState;
   onOpenVoicePanel?: () => void;
+  onToggleSideDocs?: () => void;
+  onOpenSideDocsTab?: (tab: 'docs' | 'functions' | 'voice_specs' | 'status_cases') => void;
+  sideDocsOpen?: boolean;
 }
 
 export const TopSystemBar: React.FC<TopSystemBarProps> = ({
@@ -38,7 +43,10 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
   onDrBubbleTrigger,
   onSelectTab,
   micState = 'idle',
-  onOpenVoicePanel
+  onOpenVoicePanel,
+  onToggleSideDocs,
+  onOpenSideDocsTab,
+  sideDocsOpen = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -75,7 +83,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
         <div className="h-3 w-full absolute top-0 left-0 z-[101]" />
 
         <header
-          className={`h-14 bg-[#0a0a0f]/95 backdrop-blur-2xl border-b border-cyan-500/30 px-4 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.95)] transition-all duration-300 ease-out transform ${
+          className={`h-14 bg-[#0a0a0f]/95 backdrop-blur-2xl border-b border-cyan-500/30 px-2 sm:px-4 flex items-center justify-between max-w-[1920px] mx-auto w-full shadow-[0_8px_32px_rgba(0,0,0,0.95)] transition-all duration-300 ease-out transform ${
             isAnyModalOpen
               ? 'translate-y-0 opacity-100'
               : '-translate-y-[calc(100%-6px)] group-hover/topbar:translate-y-0 hover:translate-y-0 focus-within:translate-y-0 opacity-90 hover:opacity-100'
@@ -84,20 +92,20 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
           {/* TOP SLIDER INDICATOR BAR */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full bg-cyan-400/80 shadow-[0_0_10px_#00d4aa] group-hover/topbar:opacity-0 transition-opacity" />
         {/* TOP LEFT: BRAND & ACTIVE MODULE INDICATOR */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div
             onClick={onResetToMain}
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-2 cursor-pointer group"
             title="Zurück zum Hauptraum"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 p-0.5 shadow-[0_0_15px_rgba(0,212,170,0.4)] group-hover:shadow-[0_0_20px_rgba(0,212,170,0.6)] transition-all duration-200">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 p-0.5 shadow-[0_0_15px_rgba(0,212,170,0.4)] group-hover:shadow-[0_0_20px_rgba(0,212,170,0.6)] transition-all duration-200 shrink-0">
               <div className="w-full h-full bg-[#0a0a0f] rounded-[10px] flex items-center justify-center">
                 <BrainCircuit className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
               </div>
             </div>
-            <div className="hidden sm:block">
+            <div className="hidden md:block">
               <span className="font-extrabold text-white text-sm tracking-wide block leading-none font-sans">
-                U.D.O. S2k
+                UDO S2k
               </span>
               <span className="text-[9px] font-mono text-cyan-400 font-semibold uppercase tracking-wider block mt-0.5">
                 Forensic Hub
@@ -105,22 +113,22 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
             </div>
           </div>
 
-          <div className="h-5 w-px bg-white/10 mx-1 hidden sm:block" />
+          <div className="h-5 w-px bg-white/10 mx-0.5 hidden md:block" />
 
           {/* ACTIVE MODULE PULSE INDICATOR */}
-          <div className="flex items-center border border-cyan-500/30 shadow-[0_2px_10px_rgba(0,212,170,0.15)] px-2.5 py-1 rounded-lg bg-cyan-500/10">
-            <span className="relative flex h-2 w-2 mr-2">
+          <div className="hidden sm:flex items-center border border-cyan-500/30 shadow-[0_2px_10px_rgba(0,212,170,0.15)] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-cyan-500/10">
+            <span className="relative flex h-2 w-2 mr-1.5 sm:mr-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500 shadow-[0_0_8px_rgba(0,212,170,0.6)]" />
             </span>
-            <span className="text-cyan-300 font-bold tracking-wide uppercase text-xs font-mono">
+            <span className="text-cyan-300 font-bold tracking-wide uppercase text-[10px] sm:text-xs font-mono truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
               {activeModuleName}
             </span>
           </div>
         </div>
 
         {/* TOP CENTER: STATUS INDICATORS CHIPS WITH GLOW DOTS & ADMIN PENDING REZEPTE BADGE */}
-        <div className="hidden lg:flex items-center gap-2 font-mono">
+        <div className="hidden xl:flex items-center gap-2 font-mono shrink-0">
           {/* TOP BAR BADGE FOR ADMIN WHEN LOGGED IN */}
           {isAdmin && (
             <div
@@ -135,22 +143,46 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-md px-2.5 py-1">
+          <button
+            onClick={() => onOpenSideDocsTab?.('status_cases')}
+            className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-md px-2.5 py-1 hover:bg-rose-500/10 hover:border-rose-500/30 cursor-pointer transition-all"
+            title="Kritische Fälle im Seitenpanel öffnen"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
             <span className="text-xs font-mono text-rose-400 font-bold">2 KRITISCH</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-md px-2.5 py-1">
+          </button>
+          <button
+            onClick={() => onOpenSideDocsTab?.('status_cases')}
+            className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-md px-2.5 py-1 hover:bg-amber-500/10 hover:border-amber-500/30 cursor-pointer transition-all"
+            title="Prüffälle im Seitenpanel öffnen"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
             <span className="text-xs font-mono text-amber-400 font-bold">2 PRÜFUNG</span>
-          </div>
+          </button>
         </div>
 
         {/* TOP RIGHT: ICON BUTTONS & ROLE CHIP */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* DEDICATED S2K DOCS & QUICK TOOLS SIDE PANEL TRIGGER */}
+          <button
+            onClick={onToggleSideDocs}
+            className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              sideDocsOpen
+                ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(0,212,170,0.5)]'
+                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300'
+            }`}
+            title="S2k Dokumentation & Funktionen Seitenpanel (Side Docs)"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline uppercase text-[10px] tracking-wider">
+              S2k Docs
+            </span>
+          </button>
+
           {/* ALWAYS-VISIBLE VOICE WAKE-WORD MIC STATUS BADGE */}
           <button
             onClick={onOpenVoicePanel}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               micState === 'listening'
                 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse'
                 : micState === 'processing'
@@ -159,9 +191,9 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
                 ? 'bg-[#B87333]/20 border-[#B87333]/50 text-[#E8A87C] shadow-[0_0_12px_rgba(184,115,51,0.4)]'
                 : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 shadow-[0_0_8px_rgba(0,212,170,0.2)]'
             }`}
-            title="U.D.O. Voice Assistant 'Hey UDO' umschalten"
+            title="UDO Voice Assistant 'Hey UDO' umschalten"
           >
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-2 w-2 shrink-0">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
                 micState === 'listening' ? 'bg-emerald-400' : micState === 'processing' ? 'bg-violet-400' : micState === 'speaking' ? 'bg-[#B87333]' : 'bg-cyan-400'
               } opacity-75`} />
@@ -170,7 +202,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
               }`} />
             </span>
             <Mic className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline tracking-wider uppercase text-[10px]">
+            <span className="hidden md:inline tracking-wider uppercase text-[10px]">
               {micState === 'listening' ? 'HÖRT ZU' : micState === 'processing' ? 'ANALYSE' : micState === 'speaking' ? 'VOICE' : 'HEY UDO'}
             </span>
           </button>
@@ -179,7 +211,7 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
           <div className="relative">
             <button
               onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-              className={`px-3 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 sm:px-3 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 isAdmin
                   ? 'bg-[#B87333]/20 border-[#B87333]/50 text-[#E8A87C] shadow-[0_0_10px_rgba(184,115,51,0.2)] hover:border-[#E8A87C]'
                   : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-[0_0_10px_rgba(0,212,170,0.2)] hover:border-cyan-400'
@@ -187,14 +219,14 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
               title="Rolle umschalten"
             >
               {isAdmin ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-[#E8A87C]" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#E8A87C] shrink-0" />
               ) : (
-                <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <UserCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               )}
-              <span className="hidden sm:inline">
+              <span className="hidden md:inline">
                 {user ? user.name : 'Rolle wählen'}
               </span>
-              <RefreshCw className="w-3 h-3 text-slate-400 ml-1" />
+              <RefreshCw className="w-3 h-3 text-slate-400 shrink-0 hidden sm:inline" />
             </button>
 
             {/* ROLE DROPDOWN MENU */}

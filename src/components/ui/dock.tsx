@@ -141,6 +141,17 @@ function Dock({
   );
 }
 
+type DockItemContextType = {
+  dimension: MotionValue<number>;
+  isHovered: MotionValue<number>;
+};
+
+const DockItemContext = createContext<DockItemContextType | undefined>(undefined);
+
+function useDockItem() {
+  return useContext(DockItemContext);
+}
+
 function DockItem({ children, className, onClick, title }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -183,17 +194,16 @@ function DockItem({ children, className, onClick, title }: DockItemProps) {
       role='button'
       aria-haspopup='true'
     >
-      {Children.map(children, (child) => {
-        if (!React.isValidElement(child)) return child;
-        return cloneElement(child as React.ReactElement<any>, { dimension, isHovered });
-      })}
+      <DockItemContext.Provider value={{ dimension, isHovered }}>
+        {children}
+      </DockItemContext.Provider>
     </motion.div>
   );
 }
 
-function DockLabel({ children, className, ...rest }: DockLabelProps) {
-  const restProps = rest as Record<string, unknown>;
-  const isHovered = restProps['isHovered'] as MotionValue<number>;
+function DockLabel({ children, className }: DockLabelProps) {
+  const itemContext = useDockItem();
+  const isHovered = itemContext?.isHovered;
   const [isVisible, setIsVisible] = useState(false);
   const { orientation } = useDock();
   const isVertical = orientation === 'vertical';
@@ -231,9 +241,10 @@ function DockLabel({ children, className, ...rest }: DockLabelProps) {
   );
 }
 
-function DockIcon({ children, className, ...rest }: DockIconProps) {
-  const restProps = rest as Record<string, unknown>;
-  const dimension = (restProps['dimension'] || restProps['width']) as MotionValue<number>;
+function DockIcon({ children, className }: DockIconProps) {
+  const itemContext = useDockItem();
+  const fallbackMotion = useMotionValue(24);
+  const dimension = itemContext?.dimension || fallbackMotion;
 
   const iconSizeTransform = useTransform(dimension, (val) => (val ? val * 0.55 : 24));
 

@@ -50,7 +50,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
             </div>
             <span className="text-xs font-mono font-extrabold text-cyan-400 tracking-wider uppercase">
-              U.D.O. S2k Forensic Hub
+              UDO S2k Forensic Hub
             </span>
           </div>
 
@@ -181,7 +181,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <Sparkles className="w-4 h-4 text-cyan-400" />
             <span>Lokale Rollenspeicherung im Browser-Kontext</span>
           </div>
-          <span className="text-slate-500">U.D.O. S2k v2026.2 Compliance Standard</span>
+          <span className="text-slate-500">UDO S2k v2026.2 Compliance Standard</span>
         </div>
       </div>
     </div>

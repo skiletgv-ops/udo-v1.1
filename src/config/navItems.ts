@@ -51,7 +51,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
   // UDO Module
   {
     id: "udo",
-    label: "U.D.O. Neural Module",
+    label: "UDO Neural Module",
     shortLabel: "UDO Core",
     icon: Sparkles,
     category: "automation",

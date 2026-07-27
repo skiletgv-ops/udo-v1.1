@@ -664,7 +664,7 @@ export default function AccessibilityWidget({ showPortalMenu, setShowPortalMenu 
                             )}
                           </div>
                           <span className="text-xs font-black text-slate-100 block truncate uppercase tracking-wide mt-0.5">
-                            {currentStation ? `${currentStation.name} ${currentStation.country === "Germany" ? "🇩🇪" : "🇳🇱"}` : "U.D.O. Broadcaster"}
+                            {currentStation ? `${currentStation.name} ${currentStation.country === "Germany" ? "🇩🇪" : "🇳🇱"}` : "UDO Broadcaster"}
                           </span>
                           <span className="text-[10px] font-mono text-slate-400 block truncate uppercase">
                             {currentStation ? `${currentStation.genre} ${currentStation.region ? `| ${currentStation.region}` : ''}` : "Select a station below to play"}

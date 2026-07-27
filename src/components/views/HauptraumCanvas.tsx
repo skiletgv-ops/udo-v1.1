@@ -37,7 +37,7 @@ export const HauptraumCanvas: React.FC<HauptraumCanvasProps> = ({
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
-          U.D.O. S2k Forensic Hub
+          UDO S2k Forensic Hub
         </h1>
 
         <p className="text-base text-[#CBD5E1] max-w-2xl mx-auto leading-relaxed">

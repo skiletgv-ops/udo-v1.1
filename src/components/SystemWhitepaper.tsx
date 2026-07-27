@@ -173,7 +173,7 @@ export default function SystemWhitepaper() {
   const t = {
     de: {
       badge: "TECHNISCHES & KLINISCHES WHITEPAPER",
-      title: "U.D.O. Plattform Whitepaper",
+      title: "UDO Plattform Whitepaper",
       subtitle: "Ultimate Diagnostic Operator v2.0 • S2k-Richtlinie & Konsens-Engine",
       certStatus: "Zertifizierungsstatus",
       gdpr: "DSGVO / GDPR Konform",
@@ -197,7 +197,7 @@ export default function SystemWhitepaper() {
     },
     en: {
       badge: "TECHNICAL & CLINICAL WHITEPAPER",
-      title: "U.D.O. Platform Whitepaper",
+      title: "UDO Platform Whitepaper",
       subtitle: "Ultimate Diagnostic Operator v2.0 • S2k Guideline & Consensus Engine",
       certStatus: "Certification Status",
       gdpr: "DSGVO / GDPR Compliant",
@@ -226,7 +226,7 @@ export default function SystemWhitepaper() {
   const techStack = [
     { name: "Frontend Architecture", detail: "React 18 + Vite + Tailwind CSS + Framer Motion (Translucent Glassmorphism Design System)" },
     { name: "Clinical AI Orchestrator", detail: "@google/genai SDK leveraging Med-Gemini (Clara) proxy server integration" },
-    { name: "Forensic Multi-Agent Jury", detail: "Synchronized consensus models including GPT-4o, Claude-3.5-Sonnet, DeepSeek-R1" },
+    { name: "Forensic Multi-Agent Jury", detail: "Synchronized consensus models including GPT-4o, Claude-3.5-Sonnet, UDO-R1 (Dr. Gratsiano)" },
     { name: "Regulatory Security Engine", detail: "Qualified Electronic Signature (QES) SHA-256 eHealth integration with localized GDPR nodes" }
   ];
 
@@ -390,7 +390,7 @@ export default function SystemWhitepaper() {
                   Decentralized Expert Consensus Jury (Jury-Voting-System)
                 </h3>
                 <p className="text-sm text-slate-200 leading-relaxed">
-                  Forensic neurological evaluation has historically suffered from high inter-expert variability. To eliminate cognitive bias, U.D.O. implements a real-time, decentralized Multi-Agent Consensus Engine. Every uploaded report is evaluated in parallel by four independent clinical intelligence instances:
+                  Forensic neurological evaluation has historically suffered from high inter-expert variability. To eliminate cognitive bias, UDO implements a real-time, decentralized Multi-Agent Consensus Engine. Every uploaded report is evaluated in parallel by four independent clinical intelligence instances:
                 </p>
 
                 <div className="space-y-3 pt-2">
@@ -421,7 +421,7 @@ export default function SystemWhitepaper() {
                   <div className="p-4 bg-slate-800/80 border border-indigo-500/30 hover:border-indigo-400 hover:scale-[1.02] transition-all duration-200 rounded-xl flex items-start gap-3.5 cursor-pointer">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center font-bold text-indigo-300 text-xs font-mono shrink-0">4</div>
                     <div>
-                      <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Gratsiano (DeepSeek-R1 Cognitive Synthesis)</span>
+                      <span className="text-xs font-bold text-white block uppercase tracking-wide">Dr. Gratsiano (UDO-R1 (Dr. Gratsiano) Cognitive Synthesis)</span>
                       <p className="text-xs text-slate-300 mt-1">Executes an extended Chain-of-Thought (CoT) synthesis loop over the debates of the other three experts, weighing contra-indications and formulating a unified consensus output.</p>
                     </div>
                   </div>
@@ -480,7 +480,7 @@ export default function SystemWhitepaper() {
                 S2k Guideline: Occupational Lumbar Spine Trauma (L4/L5 & L5/S1)
               </h3>
               <p className="text-sm text-slate-300 leading-relaxed">
-                U.D.O. utilizes the strict German medical guideline framework for occupational spine injuries (Bandscheibenschäden durch Heben und Tragen schwerer Lasten - Berufskrankheit 2108/2109). The verification engine correlates four crucial pillars of evidence:
+                UDO utilizes the strict German medical guideline framework for occupational spine injuries (Bandscheibenschäden durch Heben und Tragen schwerer Lasten - Berufskrankheit 2108/2109). The verification engine correlates four crucial pillars of evidence:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -529,7 +529,7 @@ export default function SystemWhitepaper() {
               <div className="mt-8 bg-slate-900/40 border border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <Sliders size={16} className="text-teal-400" />
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Workflow Comparison: Legacy vs. U.D.O. Core</h4>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Workflow Comparison: Legacy vs. UDO Core</h4>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   A side-by-side diagnostic execution comparison highlighting structural pipeline differences, audit logs, and temporal metrics.
@@ -541,7 +541,7 @@ export default function SystemWhitepaper() {
                       <tr className="border-b border-white/10 font-mono text-[10px] text-slate-500 uppercase tracking-wider bg-slate-950/50">
                         <th className="py-3 px-4 font-extrabold">Diagnostic Dimension</th>
                         <th className="py-3 px-4 font-extrabold text-red-400">Legacy Manual Workflow</th>
-                        <th className="py-3 px-4 font-extrabold text-teal-400">U.D.O. Cognitive Pipeline</th>
+                        <th className="py-3 px-4 font-extrabold text-teal-400">UDO Cognitive Pipeline</th>
                         <th className="py-3 px-4 font-extrabold text-right">Audit Delta</th>
                       </tr>
                     </thead>
@@ -590,7 +590,7 @@ export default function SystemWhitepaper() {
                   Regulatory Integrity & Compliance Protocols
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Medical reports must satisfy strict legal requirements to be admissible as evidence before courts and insurers. U.D.O. is designed to guarantee compliance with both medical regulations and German/EU data privacy directives:
+                  Medical reports must satisfy strict legal requirements to be admissible as evidence before courts and insurers. UDO is designed to guarantee compliance with both medical regulations and German/EU data privacy directives:
                 </p>
 
                 <div className="space-y-4 pt-2">
@@ -653,7 +653,7 @@ export default function SystemWhitepaper() {
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Clinical-Grade Forensic Risk Analysis Matrix</h4>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Adhering to the EU AI Act (Class II High-Risk System Parameters) and ISO 14971 (Medical Device Risk Management) protocols, this matrix lists systemic medical AI failure modes and the integrated real-time mitigations of the U.D.O. Core.
+                Adhering to the EU AI Act (Class II High-Risk System Parameters) and ISO 14971 (Medical Device Risk Management) protocols, this matrix lists systemic medical AI failure modes and the integrated real-time mitigations of the UDO Core.
               </p>
 
               <div className="overflow-x-auto">
@@ -672,7 +672,7 @@ export default function SystemWhitepaper() {
                       <td className="py-3 px-4 font-mono font-bold text-slate-300">LLM Hallucination of Spinal Findings</td>
                       <td className="py-3 px-4"><span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-mono font-bold text-[9px]">CRITICAL</span></td>
                       <td className="py-3 px-4 text-slate-300">
-                        <strong>Decentralized Consensus Jury Voting.</strong> If the segment analysis from Med-Gemini doesn't align with Claude 3.5's BG correlation or GPT-4o's biomechanical analysis, a <strong>Consensus Debate Exception</strong> is triggered, calling Dr. Gratsiano (DeepSeek-R1 CoT synthesis) for weighted vote resolution.
+                        <strong>Decentralized Consensus Jury Voting.</strong> If the segment analysis from Med-Gemini doesn't align with Claude 3.5's BG correlation or GPT-4o's biomechanical analysis, a <strong>Consensus Debate Exception</strong> is triggered, calling Dr. Gratsiano (UDO-R1 (Dr. Gratsiano) CoT synthesis) for weighted vote resolution.
                       </td>
                       <td className="py-3 px-4 text-emerald-400 font-mono font-bold">&lt;0.02% (Negligible)</td>
                       <td className="py-3 px-4 text-right text-slate-400 font-mono">ISO 14971 Sec. 5</td>
@@ -714,7 +714,7 @@ export default function SystemWhitepaper() {
                     Entwicklungs-Audit & Code-Metriken (Revisionsbericht)
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Soll-Ist-Vergleich des U.D.O. Systems unter Berücksichtigung von Codevolumen und manuellem Entwicklungsaufwand.
+                    Soll-Ist-Vergleich des UDO Systems unter Berücksichtigung von Codevolumen und manuellem Entwicklungsaufwand.
                   </p>
                 </div>
 
@@ -745,7 +745,7 @@ export default function SystemWhitepaper() {
                 <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-1.5 col-span-2">
                   <span className="text-[10px] font-mono uppercase text-teal-400 font-extrabold block">2. INTEGRALE PROJEKT-INFORMATIONEN (MODULÜBERSICHT)</span>
                   <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                    Das U.D.O.-Ökosystem umfasst: Einen vollwertigen **Express-Backend-Server** mit integriertem **Vite Middleware-Proxy**, **Google Gemini-3.5-Flash** zur on-demand Extraktion klinischer Befunde, eine **Multi-Agenten-Jury-Engine** zur Kausalitätsabstimmung, ein **Canvas-basiertes medizinisches Annotationstablett**, ein barrierefreies Steuerungspanel (Schriftgröße, Zeilenabstand, Farbschemata, Blaulichtfilter) sowie ein echtes **Audio-Streaming-System** inkl. Radio Köln Live-Schnittstelle.
+                    Das UDO-Ökosystem umfasst: Einen vollwertigen **Express-Backend-Server** mit integriertem **Vite Middleware-Proxy**, **Google Gemini-3.5-Flash** zur on-demand Extraktion klinischer Befunde, eine **Multi-Agenten-Jury-Engine** zur Kausalitätsabstimmung, ein **Canvas-basiertes medizinisches Annotationstablett**, ein barrierefreies Steuerungspanel (Schriftgröße, Zeilenabstand, Farbschemata, Blaulichtfilter) sowie ein echtes **Audio-Streaming-System** inkl. Radio Köln Live-Schnittstelle.
                   </p>
                 </div>
               </div>
@@ -764,7 +764,7 @@ export default function SystemWhitepaper() {
                 </div>
 
                 <p className="text-[11px] text-slate-300 leading-normal">
-                  Berechnen Sie hier den genauen monatlichen, quartalsweisen oder jährlichen Finanzgewinn durch den Einsatz der U.D.O. S2k KI-Pipeline im Vergleich zur manuellen Gutachten-Dokumentation.
+                  Berechnen Sie hier den genauen monatlichen, quartalsweisen oder jährlichen Finanzgewinn durch den Einsatz der UDO S2k KI-Pipeline im Vergleich zur manuellen Gutachten-Dokumentation.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-center">
@@ -787,7 +787,7 @@ export default function SystemWhitepaper() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-white/5">
                   <div className="text-[10px] font-mono text-slate-300">
-                    💡 Basis: 25 Gutachten/Monat &bull; Manuell: 82 Std. vs U.D.O.: 2 Std. pro Fall
+                    💡 Basis: 25 Gutachten/Monat &bull; Manuell: 82 Std. vs UDO: 2 Std. pro Fall
                   </div>
                   <div className="text-[10px] font-mono text-slate-400 text-right">
                     Software-ROI Factor: <span className="text-teal-300 font-bold">60x Lizenzkosten</span>
@@ -876,7 +876,7 @@ export default function SystemWhitepaper() {
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Cognitive Action Timeline & Temporal Metrics</h4>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Comparing baseline human clinical throughput constraints with the decentralized multi-agent cognitive architecture of U.D.O. across core diagnostic stages.
+                  Comparing baseline human clinical throughput constraints with the decentralized multi-agent cognitive architecture of UDO across core diagnostic stages.
                 </p>
 
                 <div className="space-y-4 pt-2">
@@ -897,7 +897,7 @@ export default function SystemWhitepaper() {
                           <strong className="text-red-400">45 Mins</strong>
                         </div>
                         <div className="px-3 py-1 bg-teal-500/15 border border-teal-500/20 rounded-lg text-[10px] w-20">
-                          <span className="text-teal-300 block uppercase font-bold text-[8px]">U.D.O.</span>
+                          <span className="text-teal-300 block uppercase font-bold text-[8px]">UDO</span>
                           <strong className="text-teal-300">0.12 Sec</strong>
                         </div>
                       </div>
@@ -921,7 +921,7 @@ export default function SystemWhitepaper() {
                           <strong className="text-red-400">90 Mins</strong>
                         </div>
                         <div className="px-3 py-1 bg-violet-500/15 border border-violet-500/20 rounded-lg text-[10px] w-20">
-                          <span className="text-violet-300 block uppercase font-bold text-[8px]">U.D.O.</span>
+                          <span className="text-violet-300 block uppercase font-bold text-[8px]">UDO</span>
                           <strong className="text-violet-300">0.22 Sec</strong>
                         </div>
                       </div>
@@ -945,7 +945,7 @@ export default function SystemWhitepaper() {
                           <strong className="text-red-400">120 Mins</strong>
                         </div>
                         <div className="px-3 py-1 bg-teal-500/15 border border-teal-500/20 rounded-lg text-[10px] w-20">
-                          <span className="text-teal-300 block uppercase font-bold text-[8px]">U.D.O.</span>
+                          <span className="text-teal-300 block uppercase font-bold text-[8px]">UDO</span>
                           <strong className="text-teal-300">0.45 Sec</strong>
                         </div>
                       </div>
@@ -969,7 +969,7 @@ export default function SystemWhitepaper() {
                           <strong className="text-red-400">180 Mins</strong>
                         </div>
                         <div className="px-3 py-1 bg-violet-500/15 border border-violet-500/20 rounded-lg text-[10px] w-20">
-                          <span className="text-violet-300 block uppercase font-bold text-[8px]">U.D.O.</span>
+                          <span className="text-violet-300 block uppercase font-bold text-[8px]">UDO</span>
                           <strong className="text-violet-300">0.28 Sec</strong>
                         </div>
                       </div>
@@ -993,7 +993,7 @@ export default function SystemWhitepaper() {
                           <strong className="text-red-400">15 Mins</strong>
                         </div>
                         <div className="px-3 py-1 bg-emerald-500/15 border border-emerald-500/20 rounded-lg text-[10px] w-20">
-                          <span className="text-emerald-300 block uppercase font-bold text-[8px]">U.D.O.</span>
+                          <span className="text-emerald-300 block uppercase font-bold text-[8px]">UDO</span>
                           <strong className="text-emerald-300">0.05 Sec</strong>
                         </div>
                       </div>
@@ -1027,13 +1027,13 @@ export default function SystemWhitepaper() {
               
               <div className="border-b border-white/5 pb-4">
                 <span className="text-[10px] font-mono text-teal-400 font-extrabold uppercase tracking-widest block">
-                  U.D.O. Funktionsmatrix & Modul-Verzeichnis
+                  UDO Funktionsmatrix & Modul-Verzeichnis
                 </span>
                 <h3 className="text-xl font-bold text-white uppercase tracking-wider mt-1">
                   Systemfunktionen und diagnostischer Leistungsumfang
                 </h3>
                 <p className="text-sm text-slate-300 mt-2 leading-relaxed">
-                  Dieses Whitepaper-Kapitel katalogisiert die funktionalen Module, die in der klinischen U.D.O. (v2.0) Instanz integriert sind. Jedes Modul ist voll einsatzbereit und kann über das integrierte Selbstdiagnose-Feld direkt auf Integrität überprüft werden.
+                  Dieses Whitepaper-Kapitel katalogisiert die funktionalen Module, die in der klinischen UDO (v2.0) Instanz integriert sind. Jedes Modul ist voll einsatzbereit und kann über das integrierte Selbstdiagnose-Feld direkt auf Integrität überprüft werden.
                 </p>
               </div>
 
@@ -1122,8 +1122,8 @@ export default function SystemWhitepaper() {
                     </h4>
                     <p className="text-xs text-slate-400 leading-relaxed">
                       {language === "de" 
-                        ? "Simuliert ein paritätisches medizinisches Konsilium zwischen Clara (Gemini), Eric (Claude), Marcus (GPT-4) und Gratsiano (DeepSeek). Berechnet gewichtete Kausalitätsabstimmungen."
-                        : "Simulates a joint medical panel between Clara (Gemini), Eric (Claude), Marcus (GPT-4), and Gratsiano (DeepSeek) to resolve causality with weighted majority votes."}
+                        ? "Simuliert ein paritätisches medizinisches Konsilium zwischen Clara (Gemini), Eric (Claude), Marcus (GPT-4) und Gratsiano (UDO Neural). Berechnet gewichtete Kausalitätsabstimmungen."
+                        : "Simulates a joint medical panel between Clara (Gemini), Eric (Claude), Marcus (GPT-4), and Gratsiano (UDO Neural) to resolve causality with weighted majority votes."}
                     </p>
                   </div>
                   
@@ -1347,8 +1347,8 @@ export default function SystemWhitepaper() {
                   </h4>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {language === "de"
-                      ? "U.D.O. unterstützt den direkten, zertifizierten Import von standardisierten neurologischen Dateiformaten wie EDF (European Data Format) und EDF+. Die Ingestion-Pipeline verarbeitet rohe Gehirnströme mit einer Abtastrate von bis zu 1000 Hz pro Kanal."
-                      : "U.D.O. supports direct, certified importing of standardized neurological file formats, including EDF (European Data Format) and EDF+. The ingestion pipeline processes raw brainwaves sampled up to 1000 Hz per channel."}
+                      ? "UDO unterstützt den direkten, zertifizierten Import von standardisierten neurologischen Dateiformaten wie EDF (European Data Format) und EDF+. Die Ingestion-Pipeline verarbeitet rohe Gehirnströme mit einer Abtastrate von bis zu 1000 Hz pro Kanal."
+                      : "UDO supports direct, certified importing of standardized neurological file formats, including EDF (European Data Format) and EDF+. The ingestion pipeline processes raw brainwaves sampled up to 1000 Hz per channel."}
                   </p>
                   <ul className="text-[10px] font-mono text-slate-400 space-y-2 pl-4 list-disc">
                     <li><strong>EDF / EDF+:</strong> Full 16-channel and 24-channel support.</li>
@@ -1403,8 +1403,8 @@ export default function SystemWhitepaper() {
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   {language === "de"
-                    ? "In retrospektiven Studien mit über 12.000 Patientenspuren zeigte die integrierte U.D.O. Biosignal-Engine eine hervorragende diagnostische Übereinstimmung mit erfahrenen Epileptologen. Das System ist nach MDR Klasse IIa für eHealth-Software zertifiziert."
-                    : "In retrospective trials involving over 12,000 clinical biosignal records, the integrated U.D.O. biosignal engine achieved superior diagnostic alignment with board-certified epileptologists. The software is registered under MDR Class IIa guidelines for medical software."}
+                    ? "In retrospektiven Studien mit über 12.000 Patientenspuren zeigte die integrierte UDO Biosignal-Engine eine hervorragende diagnostische Übereinstimmung mit erfahrenen Epileptologen. Das System ist nach MDR Klasse IIa für eHealth-Software zertifiziert."
+                    : "In retrospective trials involving over 12,000 clinical biosignal records, the integrated UDO biosignal engine achieved superior diagnostic alignment with board-certified epileptologists. The software is registered under MDR Class IIa guidelines for medical software."}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
@@ -1443,18 +1443,18 @@ export default function SystemWhitepaper() {
                     OFFIZIELLES BENUTZERHANDBUCH & BETRIEBSANLEITUNG
                   </span>
                   <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
-                    {language === "de" ? "⚙️ U.D.O. System-Anleitung & Funktions-Guide" : "⚙️ U.D.O. System Manual & Operational Guide"}
+                    {language === "de" ? "⚙️ UDO System-Anleitung & Funktions-Guide" : "⚙️ UDO System Manual & Operational Guide"}
                   </h3>
                   <p className="text-xs text-slate-300 mt-1 max-w-3xl">
                     {language === "de"
-                      ? "Schritt-für-Schritt-Anleitung für das gesamte U.D.O. Betriebssystem: Von der KI-Konsultation über die EEG-Biosignalanalyse bis hin zur rechtssicheren S2k-Gutachtenerstellung."
-                      : "Step-by-step operational guide for the entire U.D.O. Operating System: From AI Consultation and EEG Biosignal Analysis to AWMF S2k forensic report generation."}
+                      ? "Schritt-für-Schritt-Anleitung für das gesamte UDO Betriebssystem: Von der KI-Konsultation über die EEG-Biosignalanalyse bis hin zur rechtssicheren S2k-Gutachtenerstellung."
+                      : "Step-by-step operational guide for the entire UDO Operating System: From AI Consultation and EEG Biosignal Analysis to AWMF S2k forensic report generation."}
                   </p>
                 </div>
 
                 <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl text-right font-mono text-[10px] shrink-0">
                   <span className="text-slate-500 block">SYSTEM VERSION:</span>
-                  <strong className="text-teal-400 font-extrabold text-xs">U.D.O. v3.8 CORTICAL</strong>
+                  <strong className="text-teal-400 font-extrabold text-xs">UDO v3.8 CORTICAL</strong>
                 </div>
               </div>
 
@@ -1555,7 +1555,7 @@ export default function SystemWhitepaper() {
                   <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-2">
                     <strong className="text-white font-mono uppercase block text-xs">Schritt 2: Multi-Agenten Konsil</strong>
                     <ol className="list-decimal list-inside space-y-1 text-slate-400">
-                      <li>Nutzen Sie das integrierte Konsil, um Zweitmeinungen von <strong>Dr. Clara (Med-Gemini)</strong>, <strong>Dr. Eric (Claude 3.5)</strong>, <strong>Dr. Marcus (GPT-4o)</strong> und <strong>Dr. Gratsiano (DeepSeek R1)</strong> einzuholen.</li>
+                      <li>Nutzen Sie das integrierte Konsil, um Zweitmeinungen von <strong>Dr. Clara (Med-Gemini)</strong>, <strong>Dr. Eric (Claude 3.5)</strong>, <strong>Dr. Marcus (GPT-4o)</strong> und <strong>Dr. Gratsiano (UDO R1 (Dr. Gratsiano))</strong> einzuholen.</li>
                       <li>Das System berechnet gewichtete Kausalitäts-Mehrheiten für komplexe Streitfälle.</li>
                     </ol>
                   </div>
@@ -1740,7 +1740,7 @@ export default function SystemWhitepaper() {
                   <strong className="text-amber-400 font-mono text-sm">ADMIN</strong>
                 </div>
                 <p className="text-slate-300 font-sans leading-relaxed">
-                  Öffnen Sie das Modul <strong className="text-rose-300">Admin & API Keys</strong>, geben Sie den Passcode <strong className="text-amber-400 font-mono">ADMIN</strong> ein, um Ihre eigenen API-Schlüssel für Gemini, Claude, DeepSeek und OpenAI einzutragen. Jedes Modell bietet einen integrierten Live-Verbindungstest.
+                  Öffnen Sie das Modul <strong className="text-rose-300">Admin & API Keys</strong>, geben Sie den Passcode <strong className="text-amber-400 font-mono">ADMIN</strong> ein, um Ihre eigenen API-Schlüssel für Gemini, Claude, UDO Neural und OpenAI einzutragen. Jedes Modell bietet einen integrierten Live-Verbindungstest.
                 </p>
               </div>
             </div>
@@ -1874,7 +1874,7 @@ export default function SystemWhitepaper() {
                     Admin Passcode Geschützt
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                    Geben Sie den System-Passcode ein, um Zugriff auf die U.D.O. AI-Schlüssel-Verwaltung & Model-Directory zu erhalten.
+                    Geben Sie den System-Passcode ein, um Zugriff auf die UDO AI-Schlüssel-Verwaltung & Model-Directory zu erhalten.
                   </p>
                 </div>
 
@@ -1925,7 +1925,7 @@ export default function SystemWhitepaper() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-black text-teal-400 uppercase tracking-widest">
-                          U.D.O. AI Model Vault & Key Registry
+                          UDO AI Model Vault & Key Registry
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -1933,7 +1933,7 @@ export default function SystemWhitepaper() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-300 mt-1">
-                        Verwalten und testen Sie die API-Schlüssel aller im U.D.O. Konsens-System integrierten KI-Modelle.
+                        Verwalten und testen Sie die API-Schlüssel aller im UDO Konsens-System integrierten KI-Modelle.
                       </p>
                     </div>
                   </div>
@@ -2104,7 +2104,7 @@ export default function SystemWhitepaper() {
                     </div>
                   </div>
 
-                  {/* 3. DeepSeek R1 */}
+                  {/* 3. UDO R1 (Dr. Gratsiano) */}
                   <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-indigo-500/30 transition-all space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
                       <div className="flex items-center gap-3">
@@ -2113,7 +2113,7 @@ export default function SystemWhitepaper() {
                         </div>
                         <div>
                           <h4 className="text-sm font-bold text-white uppercase tracking-wide">
-                            DeepSeek R1 Reasoning Engine (Dr. Gratsiano)
+                            UDO R1 (Dr. Gratsiano) Reasoning Engine (Dr. Gratsiano)
                           </h4>
                           <span className="text-[10px] font-mono text-indigo-400 block">
                             Chain-of-Thought Kausalitätsanalyse & S2k-Leitlinien-Konsens
@@ -2122,7 +2122,7 @@ export default function SystemWhitepaper() {
                       </div>
 
                       <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
-                        DeepSeek API
+                        UDO Neural Key
                       </span>
                     </div>
 

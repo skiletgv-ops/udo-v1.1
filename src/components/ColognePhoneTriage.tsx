@@ -63,7 +63,7 @@ const EMERGENCY_KEYWORDS = [
 ];
 
 const INITIAL_PAYLOAD: PhoneCallPayload = {
-  reply_to_patient: "Guten Tag, hier ist U.D.O., Ihr KI-Willkommensberater der Praxis Dr. Bongartz in Köln (Neurologie & Psychiatrie). Ich bin ein KI-Assistent, der das Ärzteteam unterstützt und Ihre Anliegen vertraulich aufnimmt. Wie kann ich Ihnen heute helfen?",
+  reply_to_patient: "Guten Tag, hier ist UDO, Ihr KI-Willkommensberater der Praxis Dr. Bongartz in Köln (Neurologie & Psychiatrie). Ich bin ein KI-Assistent, der das Ärzteteam unterstützt und Ihre Anliegen vertraulich aufnimmt. Wie kann ich Ihnen heute helfen?",
   call_complete: false,
   patient: {
     first_name: "",
@@ -262,7 +262,7 @@ export default function ColognePhoneTriage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-mono font-black text-teal-400 uppercase tracking-widest block">
-                U.D.O. TELEPHONE TRIAGE ENGINE
+                UDO TELEPHONE TRIAGE ENGINE
               </span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[9px] font-mono text-emerald-300 font-bold uppercase">
                 Praxis Dr. Bongartz (Köln)
@@ -325,7 +325,7 @@ export default function ColognePhoneTriage() {
                       {isCallActive ? "Anruf aktiv - Leitung 0221 / 88921" : "Bereit für Inbound-Anruf"}
                     </span>
                     <span className="text-xs font-bold text-white uppercase">
-                      {isCallActive ? "U.D.O. KI-Agent spricht..." : "Praxis Dr. Bongartz, Köln-Altenberg"}
+                      {isCallActive ? "UDO KI-Agent spricht..." : "Praxis Dr. Bongartz, Köln-Altenberg"}
                     </span>
                   </div>
                 </div>
@@ -392,7 +392,7 @@ export default function ColognePhoneTriage() {
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[9px] font-mono font-extrabold text-slate-400 uppercase">
-                          {item.sender === "ai" ? "U.D.O. KI-Assistent (Dr. Bongartz)" : "Anrufer / Patient"}
+                          {item.sender === "ai" ? "UDO KI-Assistent (Dr. Bongartz)" : "Anrufer / Patient"}
                         </span>
                         <span className="text-[8px] font-mono text-slate-600">{item.time}</span>
                       </div>

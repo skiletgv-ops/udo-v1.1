@@ -261,7 +261,7 @@ export default function DocumentAnnotator({ documentText, patientName, caseId }:
         >
           {/* Stamp / Logo watermark */}
           <div className="absolute top-6 right-8 border border-slate-300 text-slate-400 p-2 text-[9px] font-mono rounded tracking-widest uppercase text-center rotate-6 pointer-events-none">
-            U.D.O. MEDICAL REPORT<br />
+            UDO MEDICAL REPORT<br />
             ID: {caseId}
           </div>
 

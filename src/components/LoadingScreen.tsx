@@ -10,7 +10,7 @@ const PHASES = [
   'LOADING FORENSIC DATABASES...',
   'CALIBRATING AI AGENTS...',
   'SYNCING CUPRA GEOMETRY...',
-  'U.D.O. S2k READY',
+  'UDO S2k READY',
 ];
 
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
@@ -123,7 +123,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           {/* BRAND TEXT BELOW LOGO */}
           <div className="text-center mb-8 space-y-1">
             <h1 className="text-3xl font-bold tracking-[0.3em] font-sans">
-              <span className="text-white">U.D.O. </span>
+              <span className="text-white">UDO </span>
               <span className="text-[#B87333]">S2k</span>
             </h1>
             <p className="text-[10px] uppercase tracking-[0.4em] text-slate-500 font-mono font-medium">

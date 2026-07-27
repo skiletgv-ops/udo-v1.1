@@ -118,7 +118,7 @@ export default function UnifiedConsultationPortal({
           </div>
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-wider font-mono">
-              {language === "en" ? "UDO Unified Consultation Portal" : "U.D.O. Konsultations-Portal"}
+              {language === "en" ? "UDO Unified Consultation Portal" : "UDO Konsultations-Portal"}
             </h3>
             <span className="text-[10px] text-slate-400 font-mono block">
               {language === "en" 

@@ -119,7 +119,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
   const [robotState, setRobotState] = useState<RobotState>("IDLE");
   const [language, setLanguage] = useState<"en" | "de">("en");
   const [robotBubble, setRobotBubble] = useState<string | undefined>(
-    "Welcome! I am U.D.O., your clinical assistant. Use the system action menu or select a 3D module to begin."
+    "Welcome! I am UDO, your clinical assistant. Use the system action menu or select a 3D module to begin."
   );
   const [activePatient, setActivePatient] = useState<Patient | null>(null);
   const [systemTime, setSystemTime] = useState("");
@@ -247,8 +247,8 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     {
       id: "init-1",
       sender: "doctor",
-      text: "Welcome to the U.D.O. Control Center! I am your personal U.D.O. Clinical & Forensic Medicine Specialist. Addressing you, my esteemed colleague in neurology, I am prepared to collaborate on complex cases, guideline adherence, or MdE evaluations. Feel free to speak directly or type your clinical inquiry. You can activate me anytime by saying 'UDO' followed by your question, or by using the microphone control below. Try saying: 'UDO, how can you help me with this project?' or 'What are the clinical guidelines?'",
-      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+      text: "Guten Tag, liebe Frau Doctor Bongartz! Willkommen im UDO Kontrollzentrum. Ich bin Ihr lehrreicher, hochinformativer und humorvoller KI-Konsiliardienst. Ich liefere Ihnen zu jeder Anfrage eine Fall-Zusammenfassung, Stimmungs-Analyse (Traurig/Wütend/Besorgt/Neutral), einen spontanen kollegialen Witz und die 4-KI-Konsil-Abstimmung (UDO Clara, Eric, Marcus & Gratsiano). Wie kann unser Konsil Ihnen heute helfen?",
+      timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
     }
   ]);
 
@@ -266,8 +266,8 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
             id: "init-1",
             sender: "doctor",
             text: language === "de"
-              ? "Willkommen im U.D.O. Kontrollzentrum! Ich bin Ihr persönlicher U.D.O. Medizinischer Konsiliardienst. Als Kollegin in der Neurologie unterstütze ich Sie mit Leitlinien und MdE-Analysen. Sprechen Sie einfach direkt mit mir oder tippen Sie Ihre Frage ein. Sie können mich jederzeit aktivieren, indem Sie 'UDO' gefolgt von Ihrer Frage sagen, oder indem Sie die Mikrofonsteuerung unten verwenden."
-              : "Welcome to the U.D.O. Control Center! I am your personal U.D.O. Clinical & Forensic Medicine Specialist. Addressing you, my esteemed colleague in neurology, I am prepared to collaborate on complex cases, guideline adherence, or MdE evaluations. Feel free to speak directly or type your clinical inquiry. You can activate me anytime by saying 'UDO' followed by your question, or by using the microphone control below.",
+              ? "Guten Tag, liebe Frau Doctor Bongartz! Willkommen im UDO Kontrollzentrum. Ich bin Ihr lehrreicher, hochinformativer und humorvoller KI-Konsiliardienst. Ich liefere Ihnen zu jeder Anfrage eine Fall-Zusammenfassung, Stimmungs-Analyse (Traurig/Wütend/Besorgt/Neutral), einen spontanen kollegialen Witz und die 4-KI-Konsil-Abstimmung (UDO Clara, Eric, Marcus & Gratsiano). Wie kann unser Konsil Ihnen heute helfen?"
+              : "Greetings, Doctor Bongartz! Welcome to the UDO Control Center. I am your educational, highly informational, and witty AI consultant. Every response includes a case summary, sentiment check (sad/mad/anxious/neutral), a spontaneous joke for you, and a 4-AI research consensus vote (UDO Clara, Eric, Marcus & Gratsiano). How may our panel assist you today?",
             timestamp: prev[0].timestamp
           }
         ];
@@ -277,25 +277,25 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
 
     setRobotBubble(prev => {
       if (!prev) return prev;
-      if (prev.startsWith("Welcome! I am U.D.O.") || prev.startsWith("Willkommen! Ich bin U.D.O.")) {
+      if (prev.startsWith("Welcome! I am UDO") || prev.startsWith("Willkommen! Ich bin UDO")) {
         return language === "de"
-          ? "Willkommen! Ich bin U.D.O., Ihr medizinischer Experte. Nutzen Sie das System-Aktionsmenü oder wählen Sie ein Modul, um zu beginnen."
-          : "Welcome! I am U.D.O., your clinical assistant. Use the system action menu or select a module to begin.";
+          ? "Willkommen! Ich bin UDO, Ihr medizinischer Experte. Nutzen Sie das System-Aktionsmenü oder wählen Sie ein Modul, um zu beginnen."
+          : "Welcome! I am UDO, your clinical assistant. Use the system action menu or select a module to begin.";
       }
       if (prev.startsWith("Switching to:") || prev.startsWith("Wechsle zu:")) {
         const name = activeView === "video" ? (language === "de" ? "3D-Videobewegungsanalyse" : "3D Video Analysis") : 
                      activeView === "workflow" ? (language === "de" ? "6-Phasen-Workflow" : "6-Phase Workflow") : 
                      activeView === "upgrades" ? (language === "de" ? "Praxis-Upgrades" : "Practice Upgrades") : 
-                     activeView === "chat" ? (language === "de" ? "U.D.O. Konsiliardienst" : "U.D.O. Live Consultation") : 
+                     activeView === "chat" ? (language === "de" ? "UDO Konsiliardienst" : "UDO Live Consultation") : 
                      (language === "de" ? "Kennzahlen & ROI-Board" : "Analytics & ROI");
         return language === "de"
           ? `Wechsle zu: ${name}. Lassen Sie uns das überprüfen!`
           : `Switching to: ${name}. Let us review this!`;
       }
-      if (prev.startsWith("Welcome to the U.D.O. Central System!") || prev.startsWith("Willkommen im U.D.O. Zentralsystem!")) {
+      if (prev.startsWith("Welcome to the UDO Central System!") || prev.startsWith("Willkommen im UDO Zentralsystem!")) {
         return language === "de"
-          ? "Willkommen im U.D.O. Zentralsystem! Wählen Sie eine Aktion oder laden Sie Patientendaten hoch, um zu beginnen."
-          : "Welcome to the U.D.O. Central System! Select an action or upload patient data to begin.";
+          ? "Willkommen im UDO Zentralsystem! Wählen Sie eine Aktion oder laden Sie Patientendaten hoch, um zu beginnen."
+          : "Welcome to the UDO Central System! Select an action or upload patient data to begin.";
       }
       return prev;
     });
@@ -326,7 +326,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       const name = activeView === "video" ? (language === "de" ? "3D-Videobewegungsanalyse" : "3D Video Analysis") : 
                    activeView === "workflow" ? (language === "de" ? "6-Phasen-Workflow" : "6-Phase Workflow") : 
                    activeView === "upgrades" ? (language === "de" ? "Praxis-Upgrades" : "Practice Upgrades") : 
-                   activeView === "chat" ? (language === "de" ? "U.D.O. Konsiliardienst" : "U.D.O. Live Consultation") : 
+                   activeView === "chat" ? (language === "de" ? "UDO Konsiliardienst" : "UDO Live Consultation") : 
                    (language === "de" ? "Kennzahlen & ROI-Board" : "Analytics & ROI");
       setRobotBubble(
         language === "de" 
@@ -339,8 +339,8 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       setRobotState("IDLE");
       setRobotBubble(
         language === "de"
-          ? "Willkommen im U.D.O. Zentralsystem! Wählen Sie eine Aktion oder laden Sie Patientendaten hoch, um zu beginnen."
-          : "Welcome to the U.D.O. Central System! Select an action or upload patient data to begin."
+          ? "Willkommen im UDO Zentralsystem! Wählen Sie eine Aktion oder laden Sie Patientendaten hoch, um zu beginnen."
+          : "Welcome to the UDO Central System! Select an action or upload patient data to begin."
       );
     }
   }, [activeView, language]);
@@ -350,14 +350,14 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     en: [
       "\"Welcome, colleague! High-fidelity medical analysis requires absolute clinical precision and evidence-based standards.\"",
       "\"When evaluating L4/L5 herniation, always confirm the radiological correlation with dermatomal deficits.\"",
-      "\"U.D.O. is running on all cylinders. All consensus AI board members have agreed on the diagnostic path!\"",
+      "\"UDO is running on all cylinders. All consensus AI board members have agreed on the diagnostic path!\"",
       "\"A complete, guidelines-compliant expert opinion prevents future disputes. Let us make this perfectly secure.\"",
       "\"Remember, clear communication is half of the healing process. Let us make the report easily readable.\""
     ],
     de: [
       "\"Willkommen, Kollegin! Hochpräzise medizinische Analysen erfordern absolute klinische Präzision und evidenzbasierte Standards.\"",
       "\"Bestätigen Sie bei der Beurteilung eines L4/L5-Bandscheibenvorfalls immer die radiologische Korrelation mit dermatomalen Defiziten.\"",
-      "\"U.D.O. läuft auf allen Zylindern. Alle Konsens-KI-Fachärzte haben sich auf den diagnostischen Weg geeinigt!\"",
+      "\"UDO läuft auf allen Zylindern. Alle Konsens-KI-Fachärzte haben sich auf den diagnostischen Weg geeinigt!\"",
       "\"Ein vollständiges, richtlinienkonformes Gutachten verhindert zukünftige Streitigkeiten. Machen wir es absolut rechtssicher.\"",
       "\"Denken Sie daran: Klare Kommunikation ist die halbe Heilung. Gestalten wir das Gutachten leicht lesbar.\""
     ]

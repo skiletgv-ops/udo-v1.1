@@ -167,7 +167,7 @@ export const AlbisGdtBridgePanel: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                Dateibasierte GDT 2.1 Schnittstelle zwischen CGM ALBIS (lokal) & U.D.O. S2k Gutachten Platform (Qualitätsring Medizinische Software e.V.)
+                Dateibasierte GDT 2.1 Schnittstelle zwischen CGM ALBIS (lokal) & UDO S2k Gutachten Platform (Qualitätsring Medizinische Software e.V.)
               </p>
             </div>
           </div>

@@ -32,7 +32,7 @@ interface VideoAnalysePortalProps {
 
 const PRESET_VIDEOS = [
   {
-    name: "U.D.O. Cybernetic Walk (Default)",
+    name: "UDO Cybernetic Walk (Default)",
     url: "https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-robot-walking-in-a-futuristic-city-43187-large.mp4",
     desc: "3D-Gangbildanalyse zur Beurteilung segmentaler Instabilitäten der Lendenwirbelsäule (L4/L5).",
     category: "Gait Analysis"
@@ -49,7 +49,7 @@ export default function VideoAnalysePortal({ onRobotStateChange, activePatient, 
   const [videoUrl, setVideoUrl] = useState(() => {
     return localStorage.getItem("udo_bg_video_url") || PRESET_VIDEOS[0].url;
   });
-  const [videoName, setVideoName] = useState("U.D.O. Cybernetic Walk (Default)");
+  const [videoName, setVideoName] = useState("UDO Cybernetic Walk (Default)");
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isLocalFile, setIsLocalFile] = useState(false);
@@ -762,7 +762,7 @@ export default function VideoAnalysePortal({ onRobotStateChange, activePatient, 
               <span>Geringere Fehlerquote durch Kriterien</span>
             </div>
             <p className="text-slate-300 leading-relaxed font-sans">
-              Das Einspielen von klinischem Bild- oder Videomaterial in d'r Kölner Cloud ermöglicht U.D.O. einen automatischen Abgleich der Funktionsdefizite nach den <strong className="text-slate-200">AWMF Leitlinien für Begutachtung</strong>.
+              Das Einspielen von klinischem Bild- oder Videomaterial in d'r Kölner Cloud ermöglicht UDO einen automatischen Abgleich der Funktionsdefizite nach den <strong className="text-slate-200">AWMF Leitlinien für Begutachtung</strong>.
             </p>
           </div>
 

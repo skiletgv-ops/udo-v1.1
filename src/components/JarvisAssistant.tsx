@@ -843,7 +843,7 @@ export default function JarvisAssistant() {
                   <Grid size={18} className="text-teal-400" />
                   <div>
                     <span className="text-[10px] font-mono text-teal-400 font-extrabold uppercase tracking-widest block leading-none">CORE UTILITIES MODULE</span>
-                    <h2 className="text-lg font-black uppercase text-white mt-1 leading-none">U.D.O. System Command Deck</h2>
+                    <h2 className="text-lg font-black uppercase text-white mt-1 leading-none">UDO System Command Deck</h2>
                   </div>
                 </div>
                 <button onClick={() => setActiveRightMenu(null)} className="p-1.5 rounded-xl bg-white/5 text-slate-400 hover:text-white cursor-pointer">

@@ -118,7 +118,7 @@ export default function ApiKeysAdmin() {
             Admin Passcode Geschützt
           </h3>
           <p className="text-xs text-slate-400 leading-relaxed font-sans">
-            Geben Sie den System-Passcode ein, um Zugriff auf die U.D.O. AI-Schlüssel-Verwaltung & Model-Directory zu erhalten.
+            Geben Sie den System-Passcode ein, um Zugriff auf die UDO AI-Schlüssel-Verwaltung & Model-Directory zu erhalten.
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function ApiKeysAdmin() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-black text-teal-400 uppercase tracking-widest">
-                U.D.O. AI Model Vault & Key Registry
+                UDO AI Model Vault & Key Registry
               </span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -178,7 +178,7 @@ export default function ApiKeysAdmin() {
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              Verwalten und testen Sie die API-Schlüssel aller im U.D.O. Konsens-System integrierten KI-Modelle.
+              Verwalten und testen Sie die API-Schlüssel aller im UDO Konsens-System integrierten KI-Modelle.
             </p>
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function ApiKeysAdmin() {
           </div>
         </div>
 
-        {/* 3. DeepSeek */}
+        {/* 3. UDO Neural */}
         <div className="p-6 rounded-2xl bg-slate-950/60 border border-white/10 hover:border-indigo-500/30 transition-all space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
             <div className="flex items-center gap-3">
@@ -358,7 +358,7 @@ export default function ApiKeysAdmin() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white uppercase tracking-wide">
-                  DeepSeek R1 / V3 Engine (Voice Agent & Dr. Gratsiano)
+                  UDO R1 (Dr. Gratsiano) / V3 Engine (Voice Agent & Dr. Gratsiano)
                 </h4>
                 <span className="text-[10px] font-mono text-indigo-400 block">
                   UDO Voice Agent, Chain-of-Thought Kausalitätsanalyse & S2k-Leitlinien-Konsens
@@ -367,7 +367,7 @@ export default function ApiKeysAdmin() {
             </div>
 
             <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 self-start sm:self-auto">
-              DeepSeek API
+              UDO Neural Key
             </span>
           </div>
 

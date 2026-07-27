@@ -23,7 +23,7 @@ class VoiceService {
   public async playWelcomeGreetingIfNeeded(onStart?: () => void, onEnd?: () => void): Promise<boolean> {
     if (this.hasPlayedWelcomeThisSession) return false;
 
-    const welcomeText = "Willkommen im U.D.O. Konsultations-System der Praxis Dr. Bongartz. Ich begleite Sie heute als Ihr klinischer KI-Assistent. Wie kann ich Ihnen bei der Befundanalyse oder Gutachtenerstellung helfen?";
+    const welcomeText = "Willkommen im UDO Konsultations-System der Praxis Dr. Bongartz. Ich begleite Sie heute als Ihr klinischer KI-Assistent. Wie kann ich Ihnen bei der Befundanalyse oder Gutachtenerstellung helfen?";
 
     this.hasPlayedWelcomeThisSession = true;
     if (typeof window !== "undefined") {

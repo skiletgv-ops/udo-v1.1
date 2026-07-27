@@ -87,18 +87,18 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
       skip: "Booten überspringen",
       verifiedPartner: "Verifizierter Partner",
       fachärztin: "FACHÄRZTIN FÜR NEUROLOGIE & EXPERTIN",
-      verPartner: "Verifizierungspartner • U.D.O.",
+      verPartner: "Verifizierungspartner • UDO",
       guidelineCore: "Richtlinien-Modul",
       guidelineCoreDetail: "Deutscher S2k-Standard",
       guidelineSub: "Lendenwirbelsäule L4/L5 & L5/S1",
       consensusJury: "Konsens-Jury",
       consensusJuryDetail: "4 AI Neuro-Experten",
       consensusSub: "Gemeinsame forensische Abstimmung",
-      sphereTitle: "U.D.O. Sphäre",
+      sphereTitle: "UDO Sphäre",
       sphereDesc: "Whitepaper öffnen",
       enterPortal: "Enter portal",
       authNode: "Autorisierter medizinischer Zugangsknoten",
-      regulatory: "© 2026 U.D.O. PLATTFORM • SICHERER DSGVO-KNOTEN",
+      regulatory: "© 2026 UDO PLATTFORM • SICHERER DSGVO-KNOTEN",
       qesStatus: "QES-Signaturen Aktiv",
       hostedGerman: "In deutscher Cloud Run Registry gehostet",
       closeWhitepaper: "Whitepaper schließen",
@@ -110,18 +110,18 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
       skip: "Skip Loading",
       verifiedPartner: "Verified Partner",
       fachärztin: "NEUROLOGY EXPert SPECIALIST",
-      verPartner: "Verification Partner • U.D.O.",
+      verPartner: "Verification Partner • UDO",
       guidelineCore: "Guideline Core",
       guidelineCoreDetail: "S2k German Standard",
       guidelineSub: "Lumbar spine segments L4/L5 & L5/S1",
       consensusJury: "Consensus Jury",
       consensusJuryDetail: "4 AI Neuro Experts",
       consensusSub: "Joint forensic voting consensus",
-      sphereTitle: "U.D.O. Sphere",
+      sphereTitle: "UDO Sphere",
       sphereDesc: "Open Whitepaper",
       enterPortal: "Enter portal",
       authNode: "Authorized Medical Access Node",
-      regulatory: "© 2026 U.D.O. PLATFORM • SECURE GDPR NODE",
+      regulatory: "© 2026 UDO PLATFORM • SECURE GDPR NODE",
       qesStatus: "QES Signatures Active",
       hostedGerman: "Hosted in German Cloud Run Registry",
       closeWhitepaper: "Close Whitepaper",
@@ -673,7 +673,7 @@ export default function IntroPresentation({ onComplete }: IntroPresentationProps
  
                 </div>
  
-                {/* RIGHT SIDE: Interactive U.D.O. Robot & Main Action Trigger */}
+                {/* RIGHT SIDE: Interactive UDO Robot & Main Action Trigger */}
                 <div className="w-full max-w-lg lg:max-w-[400px] xl:max-w-[440px] flex flex-col items-center justify-center space-y-6 select-none pointer-events-auto shrink-0">
                   
                   {/* ROBOT MASCOT HEAD - Always tracking cursor */}

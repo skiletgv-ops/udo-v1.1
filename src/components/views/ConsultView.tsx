@@ -40,7 +40,7 @@ export const ConsultView: React.FC = () => {
         <div>
           <Badge variant="cyan" pulse>Live Neural Voice & Chat</Badge>
           <h1 className="text-xl font-extrabold text-white tracking-tight mt-1">
-            U.D.O. S2k Consultation Core
+            UDO S2k Consultation Core
           </h1>
         </div>
         <Button variant="ghost" size="sm" icon={<Volume2 className="w-4 h-4 text-cyan-400" />}>

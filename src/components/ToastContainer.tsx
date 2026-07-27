@@ -42,7 +42,7 @@ export const ToastContainer: React.FC = () => {
 
               <div className="text-xs font-sans font-medium leading-snug">
                 <div className="font-mono text-[10px] uppercase font-extrabold tracking-wider opacity-75 mb-0.5">
-                  U.D.O. S2k System Notification
+                  UDO S2k System Notification
                 </div>
                 {toast.message}
               </div>

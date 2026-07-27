@@ -396,7 +396,7 @@ export default function PracticeUpgrades() {
               <span className="text-[10px] uppercase font-mono text-indigo-400">Modul 4: Automatisierte Patientenkommunikation</span>
               <h4 className="text-sm font-bold text-white">Smarter Kommunikations-Sequenzer</h4>
               <p className="text-xs text-slate-300 leading-normal">
-                U.D.O. hält Patienten über jeden Zwischenstand (Dossier-Eingang, anstehende Termine, Gutachten-Finalisierung) via SMS und E-Mail vollautomatisiert auf dem Laufenden. Das entlastet die Anmeldung massiv.
+                UDO hält Patienten über jeden Zwischenstand (Dossier-Eingang, anstehende Termine, Gutachten-Finalisierung) via SMS und E-Mail vollautomatisiert auf dem Laufenden. Das entlastet die Anmeldung massiv.
               </p>
             </div>
 
@@ -646,7 +646,7 @@ export default function PracticeUpgrades() {
               <span className="text-[10px] uppercase font-mono text-indigo-400">Modul 9: Bestandsverwaltung & Meldebestand</span>
               <h4 className="text-sm font-bold text-white">Intelligente Praxis-Logistik</h4>
               <p className="text-xs text-slate-300 leading-normal">
-                Verhindert das unvorhergesehene Ausgehen wichtiger Praxis- oder Büromaterialien. Bei Erreichen des Meldebestands schlägt U.D.O. automatisch eine Nachbestellung vor.
+                Verhindert das unvorhergesehene Ausgehen wichtiger Praxis- oder Büromaterialien. Bei Erreichen des Meldebestands schlägt UDO automatisch eine Nachbestellung vor.
               </p>
             </div>
 

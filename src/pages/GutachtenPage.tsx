@@ -114,7 +114,7 @@ export const GutachtenPage: React.FC<GutachtenPageProps> = ({
           <div className="flex justify-between items-start">
             <div>
               <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest print:text-black">
-                U.D.O. S2k FORENSIC HUB • GERICHTS- & SOZIALVERSICHERUNGSGUTACHTEN
+                UDO S2k FORENSIC HUB • GERICHTS- & SOZIALVERSICHERUNGSGUTACHTEN
               </div>
               <h2 className="text-2xl font-extrabold tracking-tight mt-1 print:text-black">
                 FACHÄRZTLICHES S2k-GUTACHTEN

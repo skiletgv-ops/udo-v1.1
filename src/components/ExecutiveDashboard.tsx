@@ -109,7 +109,7 @@ export default function ExecutiveDashboard() {
                 <span>DYNAMIC PIPELINE TIME-SAVINGS MODULE</span>
               </span>
               <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mt-1">
-                Echtzeit-Vergleich: Manuelle Erstellung vs. U.D.O. KI-Pipeline
+                Echtzeit-Vergleich: Manuelle Erstellung vs. UDO KI-Pipeline
               </h2>
             </div>
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-mono font-bold self-start md:self-auto">
@@ -138,7 +138,7 @@ export default function ExecutiveDashboard() {
             <div className="p-5 bg-teal-500/10 border border-teal-500/30 rounded-2xl relative overflow-hidden">
               <span className="text-[10px] font-mono text-teal-300 uppercase block font-bold flex items-center gap-1">
                 <Sparkles size={12} className="text-teal-400" />
-                2. U.D.O. KI-Pipeline
+                2. UDO KI-Pipeline
               </span>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-3xl md:text-4xl font-black text-teal-300 font-mono">{aiDocHours} Std.</span>
@@ -301,7 +301,7 @@ export default function ExecutiveDashboard() {
 
                 <div className="space-y-1">
                   <div className="flex justify-between font-sans text-[11px]">
-                    <span className="text-slate-300">U.D.O. KI Dauer pro Fall:</span>
+                    <span className="text-slate-300">UDO KI Dauer pro Fall:</span>
                     <strong className="text-teal-300 font-mono">{aiDocHours} Std.</strong>
                   </div>
                   <input
@@ -348,7 +348,7 @@ export default function ExecutiveDashboard() {
       <div className="space-y-4 pt-4">
         <div className="text-center space-y-1">
           <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest font-bold">Abonnement &amp; Lizenzen</span>
-          <h3 className="text-base font-black text-white font-sans uppercase">U.D.O. Preismodelle &amp; Tiers</h3>
+          <h3 className="text-base font-black text-white font-sans uppercase">UDO Preismodelle &amp; Tiers</h3>
           <p className="text-xs text-slate-400 max-w-xl mx-auto">
             Flexible Lizenzen zugeschnitten auf Ihre Praxisgröße. Upgrade-Möglichkeit auf die Kleine Praxis Edition für v3.0 Features.
           </p>

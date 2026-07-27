@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { LayoutGrid, SlidersHorizontal, Sparkles, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { TopSystemBar } from './TopSystemBar';
 import { BottomDock } from './BottomDock';
-import { UdoModulePanel } from './UdoModulePanel';
-import { RightControlPanel } from './RightControlPanel';
 import { ParticleBackground } from './ParticleBackground';
 import { ActiveTab } from '../types';
 import { useWakeWord } from '../hooks/useWakeWord';
 import { VoiceChatPanel } from './VoiceChatPanel';
+import { SideDocsPanel } from './SideDocsPanel';
 
 interface NavigationShellProps {
   children: React.ReactNode;
@@ -28,9 +27,8 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
   onCloseDrBubble,
   onDrBubbleTrigger
 }) => {
-  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [voicePanelOpen, setVoicePanelOpen] = useState(false);
+  const [sideDocsOpen, setSideDocsOpen] = useState(false);
 
   const handleWakeWordDetected = useCallback(() => {
     setVoicePanelOpen(true);
@@ -56,67 +54,32 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
           setVoicePanelOpen(true);
           wakeWord.manualWakeTrigger();
         }}
+        onToggleSideDocs={() => setSideDocsOpen(!sideDocsOpen)}
+        onOpenSideDocsTab={() => setSideDocsOpen(true)}
+        sideDocsOpen={sideDocsOpen}
       />
 
-      {/* FLOATING LEFT TOGGLE BUTTON (WORKSPACE NAVIGATOR) */}
-      <button
-        onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-        className={`fixed left-3 top-18 z-[90] h-11 px-3.5 rounded-xl bg-[#111217]/95 backdrop-blur-2xl border border-cyan-500/40 text-slate-200 flex items-center gap-2 transition-all duration-200 cursor-pointer pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] ${
-          leftPanelOpen
-            ? 'bg-cyan-500/25 border-cyan-400 text-white shadow-[0_0_20px_rgba(0,212,170,0.4)] font-bold'
-            : 'hover:bg-cyan-500/20 hover:border-cyan-400 hover:text-white'
-        }`}
-        title="Workspace Menü öffnen"
-      >
-        <LayoutGrid className="w-5 h-5 text-cyan-400 shrink-0" />
-        <span className="text-xs font-sans font-bold uppercase tracking-wider hidden sm:inline">
-          Menü
-        </span>
-      </button>
-
-      {/* FLOATING RIGHT TOGGLE BUTTON (SYSTEM CONTROL) */}
-      <button
-        onClick={() => setRightPanelOpen(!rightPanelOpen)}
-        className={`fixed right-3 top-18 z-[90] h-11 px-3.5 rounded-xl bg-[#111217]/95 backdrop-blur-2xl border border-violet-500/40 text-slate-200 flex items-center gap-2 transition-all duration-200 cursor-pointer pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] ${
-          rightPanelOpen
-            ? 'bg-violet-500/25 border-violet-400 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] font-bold'
-            : 'hover:bg-violet-500/20 hover:border-violet-400 hover:text-white'
-        }`}
-        title="System Status & Telemetrie"
-      >
-        <SlidersHorizontal className="w-5 h-5 text-violet-400 shrink-0" />
-        <span className="text-xs font-sans font-bold uppercase tracking-wider hidden sm:inline">
-          Status
-        </span>
-      </button>
-
-      {/* LEFT SIDEBAR PANEL */}
-      {leftPanelOpen && (
-        <UdoModulePanel
-          activeTab={activeTab}
-          onSelectTab={(tab) => {
-            onSelectTab(tab);
-            setLeftPanelOpen(false);
-          }}
-          onClose={() => setLeftPanelOpen(false)}
-          onDrBubbleTrigger={onDrBubbleTrigger}
-        />
-      )}
-
-      {/* RIGHT SIDEBAR PANEL */}
-      {rightPanelOpen && (
-        <RightControlPanel onClose={() => setRightPanelOpen(false)} />
-      )}
+      {/* SIDE DOCS & QUICK FUNCTIONS PANEL */}
+      <SideDocsPanel
+        isOpen={sideDocsOpen}
+        onClose={() => setSideDocsOpen(false)}
+        onToggle={() => setSideDocsOpen(!sideDocsOpen)}
+        onTriggerDrBubble={onDrBubbleTrigger}
+        onOpenVoicePanel={() => {
+          setVoicePanelOpen(true);
+          wakeWord.manualWakeTrigger();
+        }}
+      />
 
       {/* DR. BUBBLE ASSISTANT NOTIFICATION POPUP */}
       {drBubbleMessage && (
-        <div className="fixed bottom-20 right-6 z-[110] max-w-sm bg-[#111217]/95 backdrop-blur-2xl border border-cyan-500/40 rounded-2xl p-4 shadow-[0_0_30px_rgba(0,212,170,0.3)] animate-fade-in flex items-start gap-3">
+        <div className="fixed bottom-24 right-6 z-[110] max-w-sm bg-[#111217]/95 backdrop-blur-2xl border border-cyan-500/40 rounded-2xl p-4 shadow-[0_0_30px_rgba(0,212,170,0.3)] animate-fade-in flex items-start gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,212,170,0.5)]">
             <Sparkles className="w-4 h-4 text-slate-950 animate-pulse" />
           </div>
           <div className="flex-1 text-xs text-slate-200 font-sans leading-relaxed">
             <div className="font-mono text-[10px] text-cyan-400 font-extrabold uppercase tracking-wider mb-0.5">
-              U.D.O. Forensic Assistant
+              UDO Forensic Assistant
             </div>
             {drBubbleMessage}
           </div>
@@ -130,7 +93,7 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
       )}
 
       {/* MAIN CONTENT WORKSPACE */}
-      <main className="flex-1 pt-16 pb-20 relative z-10 min-h-[calc(100vh-8rem)]">
+      <main className="flex-1 pt-16 pb-24 relative z-10 min-h-[calc(100vh-8rem)]">
         {children}
       </main>
 

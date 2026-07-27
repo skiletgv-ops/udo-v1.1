@@ -268,7 +268,7 @@ export default function RobotMascot({
             state === "HAPPY" || state === "SUCCESS" ? "bg-teal-300 animate-pulse" :
             "bg-teal-500"
           }`} />
-          U.D.O. Modus: <strong className="text-teal-300 font-semibold">{state}</strong>
+          UDO Modus: <strong className="text-teal-300 font-semibold">{state}</strong>
         </div>
       )}
     </div>

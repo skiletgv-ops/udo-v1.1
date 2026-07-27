@@ -267,7 +267,7 @@ export default function FunctionDetailPage({ cardId, onBack }: FunctionPagesProp
             </div>
           </div>
 
-          {/* Dr. Altenberg / U.D.O. Advisor Note */}
+          {/* Dr. Altenberg / UDO Advisor Note */}
           <div className="bg-gradient-to-br from-teal-900 to-slate-950 text-white rounded-3xl p-5 text-left relative overflow-hidden shadow-lg">
             <div className="absolute top-2 right-2 text-teal-500/20 font-black text-6xl">U.D.O</div>
             <p className="text-[9px] font-mono text-teal-400 tracking-widest uppercase font-extrabold mb-1">DR. ALTENBERGS EXPERTEN-RATING</p>
@@ -278,7 +278,7 @@ export default function FunctionDetailPage({ cardId, onBack }: FunctionPagesProp
               <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 border border-teal-500/30">
                 <Sparkles size={11} />
               </div>
-              <p className="text-[9px] font-mono text-slate-300 font-bold uppercase">U.D.O. INTELLIGENCE ENGINE v2.0</p>
+              <p className="text-[9px] font-mono text-slate-300 font-bold uppercase">UDO INTELLIGENCE ENGINE v2.0</p>
             </div>
           </div>
         </div>
