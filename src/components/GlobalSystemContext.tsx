@@ -247,7 +247,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
     {
       id: "init-1",
       sender: "doctor",
-      text: "Guten Tag, liebe Frau Doctor Bongartz! Willkommen im UDO Kontrollzentrum. Ich bin Ihr lehrreicher, hochinformativer und humorvoller KI-Konsiliardienst. Ich liefere Ihnen zu jeder Anfrage eine Fall-Zusammenfassung, Stimmungs-Analyse (Traurig/Wütend/Besorgt/Neutral), einen spontanen kollegialen Witz und die 4-KI-Konsil-Abstimmung (UDO Clara, Eric, Marcus & Gratsiano). Wie kann unser Konsil Ihnen heute helfen?",
+      text: "Guten Tag, Frau Doctor Bongartz. Willkommen im UDO Kontrollzentrum. Ich bin Ihr KI-Konsiliardienst für Neurologie, Psychiatrie und Forensik. Wie kann unser Konsil Ihnen heute helfen?",
       timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
     }
   ]);
@@ -266,8 +266,8 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
             id: "init-1",
             sender: "doctor",
             text: language === "de"
-              ? "Guten Tag, liebe Frau Doctor Bongartz! Willkommen im UDO Kontrollzentrum. Ich bin Ihr lehrreicher, hochinformativer und humorvoller KI-Konsiliardienst. Ich liefere Ihnen zu jeder Anfrage eine Fall-Zusammenfassung, Stimmungs-Analyse (Traurig/Wütend/Besorgt/Neutral), einen spontanen kollegialen Witz und die 4-KI-Konsil-Abstimmung (UDO Clara, Eric, Marcus & Gratsiano). Wie kann unser Konsil Ihnen heute helfen?"
-              : "Greetings, Doctor Bongartz! Welcome to the UDO Control Center. I am your educational, highly informational, and witty AI consultant. Every response includes a case summary, sentiment check (sad/mad/anxious/neutral), a spontaneous joke for you, and a 4-AI research consensus vote (UDO Clara, Eric, Marcus & Gratsiano). How may our panel assist you today?",
+              ? "Guten Tag, Frau Doctor Bongartz. Willkommen im UDO Kontrollzentrum. Ich bin Ihr KI-Konsiliardienst für Neurologie, Psychiatrie und Forensik. Wie kann unser Konsil Ihnen heute helfen?"
+              : "Greetings, Doctor Bongartz. Welcome to the UDO Control Center. I am your AI clinical consultant for neurology, psychiatry, and forensics. How may our panel assist you today?",
             timestamp: prev[0].timestamp
           }
         ];

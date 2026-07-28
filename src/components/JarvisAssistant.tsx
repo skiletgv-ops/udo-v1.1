@@ -1046,7 +1046,7 @@ export default function JarvisAssistant() {
 
       {/* RE-CONSOLIDATED BOTTOM RIGHT AI ORB */}
       <div 
-        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[30] pointer-events-auto"
+        className="fixed bottom-20 right-2 sm:right-3 z-[30] pointer-events-auto"
         id="jarvis-assistant-orb"
       >
         <div className="relative">

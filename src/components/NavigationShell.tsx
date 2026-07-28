@@ -30,6 +30,28 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
   const [voicePanelOpen, setVoicePanelOpen] = useState(false);
   const [sideDocsOpen, setSideDocsOpen] = useState(false);
 
+  // Home button minimizes everything except background animation
+  const handleSelectTab = useCallback((tab: ActiveTab | null) => {
+    if (tab === null) {
+      setVoicePanelOpen(false);
+      setSideDocsOpen(false);
+      if (onCloseDrBubble) {
+        onCloseDrBubble();
+      }
+    }
+    onSelectTab(tab);
+  }, [onSelectTab, onCloseDrBubble]);
+
+  React.useEffect(() => {
+    if (activeTab === null) {
+      setVoicePanelOpen(false);
+      setSideDocsOpen(false);
+      if (onCloseDrBubble) {
+        onCloseDrBubble();
+      }
+    }
+  }, [activeTab, onCloseDrBubble]);
+
   const handleWakeWordDetected = useCallback(() => {
     setVoicePanelOpen(true);
   }, []);
@@ -46,9 +68,9 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
       {/* TOP SYSTEM BAR */}
       <TopSystemBar
         activeModuleName={activeModuleName}
-        onResetToMain={() => onSelectTab(null)}
+        onResetToMain={() => handleSelectTab(null)}
         onDrBubbleTrigger={onDrBubbleTrigger}
-        onSelectTab={onSelectTab}
+        onSelectTab={handleSelectTab}
         micState={wakeWord.micState}
         onOpenVoicePanel={() => {
           setVoicePanelOpen(true);
@@ -118,7 +140,7 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
       />
 
       {/* BOTTOM COMMAND DOCK */}
-      <BottomDock activeTab={activeTab} onSelectTab={onSelectTab} />
+      <BottomDock activeTab={activeTab} onSelectTab={handleSelectTab} />
     </div>
   );
 };

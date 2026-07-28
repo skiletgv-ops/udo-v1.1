@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import Replicate from "replicate";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { calendarService } from "./src/services/calendarService";
@@ -80,38 +79,20 @@ app.post("/api/chat", async (req, res) => {
     // Construct system instructions for Doctor Bongartz dialogues
     const baseInstruction = `You are UDO (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Doctor Bongartz's practice in Cologne (Neurologie & Psychiatrie).
 
-MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
-1. APPROACH AS DOCTOR BONGARTZ:
-   - Always address the user directly as "Doctor Bongartz", "Frau Doctor Bongartz", or "Sehr geehrte Frau Dr. med. Ulrike Bongartz".
+MANDATORY PERSONA RULES:
+1. ADDRESS DOCTOR BONGARTZ DIRECTLY:
+   - Address directly as "Doctor Bongartz" or "Frau Dr. med. Ulrike Bongartz".
 
-2. EDUCATIONAL, INFORMATIONAL & COMEDIAL STYLE:
-   - Be exceptionally educational and informational about neurological, electrophysiological, and S2k forensic medicine (EMG findings, L4/L5/S1 radiculopathies, Lasègue degrees, AWMF guidelines, MdE percentages).
-   - Be delightfully COMEDIAL & WITTY: Include a spontaneous, clever, and funny medical/neurological joke or humorous observation specifically directed to Doctor Bongartz in EVERY answer!
+2. ULTRA-CONCISE, PROFESSIONAL, NO JOKES:
+   - Provide direct, authoritative, highly concise clinical & forensic responses.
+   - ABSOLUTELY NO jokes, NO comedy, NO humor, NO filler text.
+   - Keep answers under 2 short sentences.
 
-3. MANDATORY RESPONSE STRUCTURE:
-   Format EVERY response with these exact sections and markdown headers:
-
-   💬 **Begrüßung & Anrede**:
-   [Warm, respectful, witty greeting approaching Doctor Bongartz]
-
-   📝 **Zusammenfassung des Anliegens**:
-   [Concise 1-2 sentence summary of the chat/inquiry]
-
-   📊 **Stimmungs- & Affekt-Analyse**:
-   [Assess if the chat/patient sentiment is SAD (traurig), MAD (wütend/verärgert), ANXIOUS (besorgt), or NEUTRAL (gelassen), with a brief empathetic observation]
-
-   🎭 **Spontaner Kollegialer Witz für Dr. Bongartz**:
-   [A spontaneous, witty, funny medical/neurological joke or clever humorous remark tailored for Doctor Bongartz to lighten her clinical day]
-
-   🗳️ **4-KI-Konsil Abstimmung (UDO System Vote)**:
-   • **UDO Clara (Neuro-Subsystem)**: [Vote & reasoning]
-   • **UDO Eric (S2k-Subsystem)**: [Vote & reasoning]
-   • **UDO Marcus (Forensik-Subsystem)**: [Vote & reasoning]
-   • **UDO Gratsiano (CoT-Subsystem)**: [Vote & reasoning]
-   *Konsens-Ergebnis*: [e.g. 4/4 Einstimmiger Beschluss nach S2k-Leitlinie]
-
-   🔬 **Spektakuläre & Lehrreiche Fachantwort**:
-   [Spectacular, highly detailed, educational, and clinically flawless answer aligned with AWMF S2k guidelines]
+3. RESPONSE STRUCTURE:
+   💬 **Anrede**: 1 short line.
+   📝 **Zusammenfassung**: 1 short summary sentence.
+   🗳️ **4-KI-Konsil**: 4/4 Einstimmig (UDO, Clara, Erik, Gratsiano).
+   🔬 **Fachantwort**: Direct, 1-sentence guideline-aligned clinical response.
 
 4. ABSOLUTE BRANDING MANDATE:
    - NEVER mention "DeepSeek", "Gemini", "ChatGPT", "Claude", "OpenAI" or any external AI brand names.
@@ -153,27 +134,17 @@ MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
     res.json({ content: reply, response: reply });
   } catch (error: any) {
     console.error("Gemini Chat Error:", error);
-    const fallbackText = `💬 **Begrüßung & Anrede**:
+    const fallbackText = `💬 **Anrede**:
 Guten Tag, liebe Frau Doctor Bongartz!
 
-📝 **Zusammenfassung des Anliegens**:
-Anfrage an das UDO S2k-Konsil empfangen und im sicheren Klinikmodus verarbeitet.
+📝 **Zusammenfassung**:
+Anfrage empfangen. UDO Konsil ist einsatzbereit.
 
-📊 **Stimmungs- & Affekt-Analyse**:
-Stimmung: NEUTRAL / BESORGT — Das UDO Konsil unterstützt Sie verlässlich im Praxisalltag.
+🗳️ **4-KI-Konsil**:
+4/4 Einstimmig (UDO, Clara, Erik, Gratsiano)
 
-🎭 **Spontaner Kollegialer Witz für Dr. Bongartz**:
-Warum trinken Neurologen ihren Espresso am liebsten ohne Milch? Weil sie ungerne die synaptische Leitungsgeschwindigkeit durch Fremdeiweiße drosseln!
-
-🗳️ **4-KI-Konsil Abstimmung (UDO System Vote)**:
-• **UDO Clara (Neuro-Subsystem)**: Befundbewertung freigegeben
-• **UDO Eric (S2k-Subsystem)**: AWMF S2k-Standard bestätigt
-• **UDO Marcus (Forensik-Subsystem)**: Gutachten-Kausalität geprüft
-• **UDO Gratsiano (CoT-Subsystem)**: Konsens erreicht
-*Konsens-Ergebnis*: 4/4 Einstimmiger Beschluss nach S2k-Leitlinie
-
-🔬 **Spektakuläre & Lehrreiche Fachantwort**:
-Sehr geehrte Frau Doctor Bongartz, das UDO Konsil hat Ihre Anfrage registriert. Sämtliche S2k-Leitlinien (AWMF 030/088, BK 2108/2109) sowie das elektronische Diktat und die MdE-Rechner stehen Ihnen in der Benutzeroberfläche jederzeit bereit.`;
+🔬 **Fachantwort**:
+Sehr geehrte Frau Dr. Bongartz, sämtliche S2k-Leitlinien sowie das elektronische Diktat und die MdE-Rechner stehen Ihnen zur Verfügung.`;
 
     res.json({ content: fallbackText, response: fallbackText });
   }
@@ -873,130 +844,241 @@ Generate:
 });
 
 // -------------------------------------------------------------
-// Kimi-Audio (Moonshot AI via Replicate) Endpoint (ASR + TTS)
-// -------------------------------------------------------------
-app.post("/api/kimi-audio", async (req, res) => {
-  const { task, audioBase64, prompt, language = "de" } = req.body;
-  const token =
-    process.env.REACT_APP_REPLICATE_API_TOKEN ||
-    process.env.VITE_REPLICATE_API_TOKEN ||
-    process.env.REPLICATE_API_TOKEN;
-
-  if (!token) {
-    return res.status(400).json({
-      error: "Replicate API token is not configured in server environment (REPLICATE_API_TOKEN)."
-    });
-  }
-
-  try {
-    const replicate = new Replicate({ auth: token });
-
-    if (task === "asr") {
-      if (!audioBase64) {
-        return res.status(400).json({ error: "Missing audioBase64 for ASR task." });
-      }
-
-      const output: any = await replicate.run("zsxkib/kimi-audio-7b-instruct", {
-        input: {
-          audio: `data:audio/webm;base64,${audioBase64}`,
-          prompt: "Transcribe the following audio accurately. Preserve punctuation.",
-          task: "asr",
-          language: language || "de"
-        }
-      });
-
-      const transcript =
-        output?.transcription ||
-        output?.text ||
-        (typeof output === "string" ? output : JSON.stringify(output));
-
-      return res.json({ transcript: (transcript || "").trim() });
-    } else if (task === "tts") {
-      if (!prompt) {
-        return res.status(400).json({ error: "Missing prompt for TTS task." });
-      }
-
-      const output: any = await replicate.run("zsxkib/kimi-audio-7b-instruct", {
-        input: {
-          prompt,
-          task: "tts",
-          voice: "default",
-          speed: 1.0
-        }
-      });
-
-      const audioUrl = output?.audio || (typeof output === "string" ? output : null);
-      return res.json({ audioUrl });
-    } else {
-      return res.status(400).json({ error: "Unsupported task. Use 'asr' or 'tts'." });
-    }
-  } catch (err: any) {
-    console.error("Kimi-Audio Replicate Error:", err);
-    res.status(500).json({ error: err.message || "Failed to process Kimi-Audio request." });
-  }
-});
-
-// -------------------------------------------------------------
-// -------------------------------------------------------------
-// Admin API Key Status & ElevenLabs TTS Endpoints
+// Admin API Key Status & Endpoints
 // -------------------------------------------------------------
 app.get("/api/admin/keys", (req, res) => {
   res.json({
     gemini: Boolean(process.env.GEMINI_API_KEY),
-    replicate: Boolean(
-      process.env.REACT_APP_REPLICATE_API_TOKEN ||
-        process.env.VITE_REPLICATE_API_TOKEN ||
-        process.env.REPLICATE_API_TOKEN
-    ),
+    openai: Boolean(process.env.OPENAI_API_KEY),
     claude: Boolean(process.env.CLAUDE_API_KEY),
     elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
-    openai: Boolean(process.env.OPENAI_API_KEY),
     deepseek: Boolean(process.env.DEEPSEEK_API_KEY),
     live: Boolean(process.env.GEMINI_API_KEY || process.env.CLAUDE_API_KEY)
   });
 });
 
-app.post("/api/tts", async (req, res) => {
-  const { text, voiceId } = req.body;
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+// -------------------------------------------------------------
+// HYBRID TTS SYSTEM (Primary: Google Gemini TTS | Fallback: Claude Voice via OpenAI/ElevenLabs)
+// -------------------------------------------------------------
 
-  if (!apiKey) {
-    return res.json({ fallback: true, message: "ElevenLabs API Key is not configured." });
-  }
+// WAV Header Generator for Gemini PCM Audio (24kHz, 16-bit, Mono)
+function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): Buffer {
+  const header = Buffer.alloc(44);
+  const dataSize = pcmBuffer.length;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
 
-  try {
-    const selectedVoiceId = voiceId || "21m00Tcm4TlvDq8ikWAM"; // Default Rachel/multilingual
-    const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
-      method: "POST",
-      headers: {
-        "Accept": "audio/mpeg",
-        "Content-Type": "application/json",
-        "xi-api-key": apiKey
-      },
-      body: JSON.stringify({
-        text: text || "Willkommen bei UDO.",
-        model_id: "eleven_multilingual_v2",
-        voice_settings: {
-          stability: 0.75,
-          similarity_boost: 0.85,
-          style: 0.15,
-          use_speaker_boost: true
+  // RIFF identifier
+  header.write("RIFF", 0);
+  // file length
+  header.writeUInt32LE(36 + dataSize, 4);
+  // RIFF type
+  header.write("WAVE", 8);
+  // format chunk identifier
+  header.write("fmt ", 12);
+  // format chunk length
+  header.writeUInt32LE(16, 16);
+  // sample format (1 is PCM)
+  header.writeUInt16LE(1, 20);
+  // channel count
+  header.writeUInt16LE(numChannels, 22);
+  // sample rate
+  header.writeUInt32LE(sampleRate, 24);
+  // byte rate
+  header.writeUInt32LE(byteRate, 28);
+  // block align
+  header.writeUInt16LE(blockAlign, 32);
+  // bits per sample
+  header.writeUInt16LE(bitsPerSample, 34);
+  // data chunk identifier
+  header.write("data", 36);
+  // data chunk length
+  header.writeUInt32LE(dataSize, 40);
+
+  return Buffer.concat([header, pcmBuffer]);
+}
+
+async function handleHybridTts(text: string, res: express.Response, agentId: string = 'udo') {
+  const charLength = text ? text.length : 0;
+  const estimatedTokens = Math.ceil(charLength / 4);
+
+  console.log(`\n==================================================`);
+  console.log(`[HYBRID TTS] Incoming TTS Request for Agent: "${agentId}"`);
+  console.log(`[HYBRID TTS] Input text length: ${charLength} chars (~${estimatedTokens} tokens).`);
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
+
+  let audioBuffer: Buffer | null = null;
+  let mimeType = "audio/mpeg";
+  let engineUsed = "";
+
+  const stylePrompt = "Speak as a deep-voiced male doctor. Concise, impressive, and calm.";
+  let processedText = text
+    .replace(/^Dr\.\s*Bongartz:\s*/i, "Doctor Bongartz says: ")
+    .replace(/^Admin(?:istrator)?:\s*/i, "Administrator says: ");
+
+  const isFirstAgent = !agentId || agentId === 'udo';
+
+  // STRATEGY:
+  // First agent (UDO) uses Claude Voice (OpenAI tts-1 / onyx or ElevenLabs Claude voice)
+  // Other agents (Gratsiano, Clara, Erik) use Google Gemini Flash TTS
+  if (isFirstAgent) {
+    if (openaiKey) {
+      console.log(`[HYBRID TTS] -> First Agent (UDO): Triggering Claude Voice Engine (OpenAI tts-1 / onyx)`);
+      try {
+        const openaiRes = await fetch("https://api.openai.com/v1/audio/speech", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${openaiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "tts-1",
+            voice: "onyx",
+            input: processedText
+          })
+        });
+
+        if (openaiRes.ok) {
+          const ab = await openaiRes.arrayBuffer();
+          audioBuffer = Buffer.from(ab);
+          mimeType = "audio/mpeg";
+          engineUsed = "Claude Voice Engine (OpenAI tts-1 / onyx - First Agent UDO)";
         }
-      })
-    });
-
-    if (!elevenRes.ok) {
-      const errJson = await elevenRes.json().catch(() => ({}));
-      return res.status(elevenRes.status).json({ fallback: true, error: errJson });
+      } catch (err: any) {
+        console.warn(`[HYBRID TTS] OpenAI TTS Error for First Agent:`, err.message || err);
+      }
     }
 
-    const arrayBuffer = await elevenRes.arrayBuffer();
-    res.setHeader("Content-Type", "audio/mpeg");
-    res.send(Buffer.from(arrayBuffer));
-  } catch (err: any) {
-    console.error("ElevenLabs TTS Error:", err);
-    res.json({ fallback: true, error: err.message });
+    if (!audioBuffer && elevenlabsKey) {
+      console.log(`[HYBRID TTS] -> First Agent (UDO): Secondary Fallback to ElevenLabs Claude Voice`);
+      try {
+        const selectedVoiceId = "pNInz6obpgDQGcFmaJgB"; // Claude Voice
+        const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+          method: "POST",
+          headers: {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": elevenlabsKey
+          },
+          body: JSON.stringify({
+            text: processedText,
+            model_id: "eleven_multilingual_v2",
+            voice_settings: {
+              stability: 0.75,
+              similarity_boost: 0.85,
+              style: 0.15,
+              use_speaker_boost: true
+            }
+          })
+        });
+
+        if (elevenRes.ok) {
+          const ab = await elevenRes.arrayBuffer();
+          audioBuffer = Buffer.from(ab);
+          mimeType = "audio/mpeg";
+          engineUsed = "Claude Voice Engine (ElevenLabs / pNInz6obpgDQGcFmaJgB - First Agent UDO)";
+        }
+      } catch (err: any) {
+        console.warn(`[HYBRID TTS] ElevenLabs TTS Error for First Agent:`, err.message || err);
+      }
+    }
   }
+
+  // Gemini 2.0 Flash TTS Engine (Primary for secondary agents, fallback for first agent)
+  if (!audioBuffer && geminiKey) {
+    console.log(`[HYBRID TTS] -> Triggering Gemini 2.0 Flash TTS Engine (${agentId.toUpperCase()})`);
+    try {
+      const ai = getGeminiClient();
+      let response;
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-2.0-flash-exp",
+          contents: [{ parts: [{ text: `${stylePrompt}\n\n${processedText}` }] }],
+          config: {
+            responseModalities: ["AUDIO" as any],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+          }
+        });
+      } catch (gemini2Err) {
+        response = await ai.models.generateContent({
+          model: "gemini-3.1-flash-tts-preview",
+          contents: [{ parts: [{ text: `${stylePrompt}\n\n${processedText}` }] }],
+          config: {
+            responseModalities: ["AUDIO" as any],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+          }
+        });
+      }
+
+      const base64Pcm = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Pcm) {
+        const pcmBuffer = Buffer.from(base64Pcm, "base64");
+        audioBuffer = pcmToWavBuffer(pcmBuffer, 24000, 1, 16);
+        mimeType = "audio/wav";
+        engineUsed = `Google Gemini 2.0 Flash TTS (${agentId.toUpperCase()})`;
+      }
+    } catch (err: any) {
+      console.warn(`[HYBRID TTS] Gemini 2.0 Flash Error: ${err.message || err}`);
+    }
+  }
+
+  // Fallback OpenAI tts-1 if Gemini failed for non-first agent
+  if (!audioBuffer && openaiKey) {
+    try {
+      const openaiRes = await fetch("https://api.openai.com/v1/audio/speech", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "tts-1",
+          voice: "onyx",
+          input: processedText
+        })
+      });
+
+      if (openaiRes.ok) {
+        const ab = await openaiRes.arrayBuffer();
+        audioBuffer = Buffer.from(ab);
+        mimeType = "audio/mpeg";
+        engineUsed = `OpenAI tts-1 (Fallback / ${agentId.toUpperCase()})`;
+      }
+    } catch (err: any) {
+      console.warn(`[HYBRID TTS] OpenAI TTS Fallback Error: ${err.message || err}`);
+    }
+  }
+
+  console.log(`[HYBRID TTS] Final Active Engine: ${engineUsed || "WebSpeech / Fallback"}`);
+  console.log(`==================================================\n`);
+
+  if (audioBuffer) {
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("X-TTS-Engine-Used", engineUsed);
+    res.setHeader("X-TTS-Char-Count", charLength.toString());
+    return res.send(audioBuffer);
+  }
+
+  return res.status(200).json({
+    fallback: true,
+    message: "No audio stream generated. Fallback to browser WebSpeech API.",
+    charCount: charLength
+  });
+}
+
+app.post("/api/tts", async (req, res) => {
+  const { text, prompt, agentId } = req.body;
+  const textToSpeak = text || prompt || "Willkommen bei UDO.";
+  await handleHybridTts(textToSpeak, res, agentId);
+});
+
+app.post("/api/hybrid-tts", async (req, res) => {
+  const { text, prompt, agentId } = req.body;
+  const textToSpeak = text || prompt || "Willkommen bei UDO.";
+  await handleHybridTts(textToSpeak, res, agentId);
 });
 
 // Admin API Key Management Endpoints
@@ -1188,25 +1270,15 @@ app.post("/api/voice-chat/completion", async (req, res) => {
 
   const systemInstruction = `You are UDO (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Doctor Bongartz's practice in Cologne (Neurologie & Psychiatrie).
 
-MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
-1. APPROACH AS DOCTOR BONGARTZ:
-   - Always address the user directly as "Doctor Bongartz", "Frau Doctor Bongartz", or "Sehr geehrte Frau Dr. med. Ulrike Bongartz".
-
-2. EDUCATIONAL, INFORMATIONAL & COMEDIAL STYLE:
-   - Be exceptionally educational, highly informational, and delightfully comedial with spontaneous medical jokes for Doctor Bongartz.
-
-3. MANDATORY RESPONSE STRUCTURE:
-   Include these exact sections in every output:
-   - 💬 **Begrüßung**: Warm, respectful greeting approaching Doctor Bongartz.
-   - 📝 **Zusammenfassung**: Concise 1-2 sentence summary of the chat.
-   - 📊 **Stimmungs- & Affekt-Analyse**: Sentiment check (SAD / MAD / ANXIOUS / NEUTRAL).
-   - 🎭 **Spontaner Kollegialer Witz**: A witty, spontaneous medical joke for Doctor Bongartz.
-   - 🗳️ **4-KI-Konsil Abstimmung (UDO System Vote)**: Votes from UDO Clara, UDO Eric, UDO Marcus, and UDO Gratsiano.
-   - 🔬 **Spektakuläre Fachantwort**: Spectacular, S2k-guideline aligned forensic answer.
-
-4. ABSOLUTE BRANDING MANDATE:
-   - NEVER mention "DeepSeek", "Gemini", "ChatGPT", "Claude", "OpenAI" or any external AI brand names.
-   - EVERYTHING IS CALLED UDO (strictly written WITHOUT DOTS: UDO, never U.D.O.).`;
+MANDATORY PERSONA RULES:
+1. ADDRESS DOCTOR BONGARTZ DIRECTLY: Address as "Doctor Bongartz" or "Frau Dr. med. Ulrike Bongartz".
+2. ULTRA-CONCISE, PROFESSIONAL, NO JOKES: Provide direct, authoritative, short clinical responses under 2 sentences. ABSOLUTELY NO jokes, NO comedy, NO humor, NO filler text.
+3. RESPONSE STRUCTURE:
+   - 💬 **Anrede**: 1 short line.
+   - 📝 **Zusammenfassung**: 1 short sentence summary.
+   - 🗳️ **4-KI-Konsil**: 4/4 Einstimmig (UDO, Clara, Erik, Gratsiano).
+   - 🔬 **Fachantwort**: Direct 1-sentence clinical response.
+4. BRANDING MANDATE: NEVER mention external AI brand names. ALWAYS write UDO without dots.`;
 
   const fullMessages = [...messages];
   if (transcript) {
@@ -1252,9 +1324,8 @@ MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
           });
 
           if (!response.ok) {
-            const errText = await response.text();
-            console.warn("DeepSeek API call response status:", response.status, errText);
-            throw new Error(`DeepSeek API (${response.status}): ${errText}`);
+            processedWithDeepSeek = false;
+            break;
           }
 
           const toolCalls = await handleDeepSeekSseStream(response, res, (text) => { fullResponseText += text; });
@@ -1287,7 +1358,6 @@ MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
           }
         }
       } catch (deepseekErr: any) {
-        console.warn("DeepSeek call failed, attempting fallback:", deepseekErr.message);
         processedWithDeepSeek = false;
       }
     }
@@ -1346,49 +1416,11 @@ MANDATORY PERSONA & DIALOGUE RULES FOR DOCTOR BONGARTZ:
   }
 });
 
-// ElevenLabs Low-Latency Streaming TTS Endpoint
+// ElevenLabs / Gemini Hybrid Streaming TTS Endpoint
 app.post("/api/voice-chat/tts", async (req, res) => {
-  const { text, voice_id = "ErXwobaYiN019PkySvjV" } = req.body;
-  const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
-
-  if (!text) {
-    return res.status(400).json({ error: "Kein Text angegeben." });
-  }
-
-  if (!elevenLabsApiKey) {
-    return res.json({ fallback: true, text });
-  }
-
-  try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, {
-      method: "POST",
-      headers: {
-        "Accept": "audio/mpeg",
-        "Content-Type": "application/json",
-        "xi-api-key": elevenLabsApiKey
-      },
-      body: JSON.stringify({
-        text,
-        model_id: "eleven_turbo_v2_5",
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.8
-        }
-      })
-    });
-
-    if (!response.ok) {
-      console.warn("ElevenLabs TTS Error:", response.status);
-      return res.json({ fallback: true, text });
-    }
-
-    res.setHeader("Content-Type", "audio/mpeg");
-    const arrayBuffer = await response.arrayBuffer();
-    res.send(Buffer.from(arrayBuffer));
-  } catch (err: any) {
-    console.error("ElevenLabs proxy error:", err);
-    res.json({ fallback: true, text });
-  }
+  const { text, prompt } = req.body;
+  const textToSpeak = text || prompt || "Willkommen bei UDO.";
+  await handleHybridTts(textToSpeak, res);
 });
 
 app.post("/api/admin/save-keys", (req, res) => {

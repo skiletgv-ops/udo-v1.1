@@ -20,3 +20,17 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
+
+export function cleanTextForSpeech(text: string): string {
+  if (!text) return '';
+  return text
+    // Remove markdown bold, italic, code formatting
+    .replace(/[*_#~`]/g, '')
+    // Remove emojis
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
+    // Replace bullets and special symbols with clean space
+    .replace(/[•\-\[\]\(\)]/g, ' ')
+    // Normalize spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}

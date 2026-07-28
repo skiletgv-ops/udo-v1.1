@@ -17,6 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { MicState } from '../hooks/useWakeWord';
+import { cleanTextForSpeech } from '../lib/utils';
 
 interface VoiceChatPanelProps {
   isOpen: boolean;
@@ -80,12 +81,28 @@ export const VoiceChatPanel: React.FC<VoiceChatPanelProps> = ({
   }, []);
 
   const fallbackWebSpeech = useCallback((text: string) => {
+    const cleaned = cleanTextForSpeech(text);
+    if (!cleaned) {
+      isPlayingAudioRef.current = false;
+      playNextSentence();
+      return;
+    }
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(cleaned);
       utterance.lang = 'de-DE';
-      utterance.rate = 1.0;
-      utterance.pitch = 0.95;
+      utterance.rate = 0.95;
+      utterance.pitch = 0.88; // Deep calm male pitch
+
+      const voices = window.speechSynthesis.getVoices();
+      const femaleNames = ["marlene", "vicki", "anna", "petra", "hedda", "zira", "hazel", "samantha", "victoria"];
+      const maleDeVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        return v.lang.startsWith("de") && !femaleNames.some(f => name.includes(f)) && (name.includes("stefan") || name.includes("markus") || name.includes("daniel") || name.includes("male") || name.includes("george") || name.includes("david") || name.includes("google deutsch"));
+      }) || voices.find(v => v.lang.startsWith("de") && !femaleNames.some(f => v.name.toLowerCase().includes(f)));
+
+      if (maleDeVoice) utterance.voice = maleDeVoice;
 
       utterance.onend = () => {
         isPlayingAudioRef.current = false;
@@ -344,7 +361,7 @@ export const VoiceChatPanel: React.FC<VoiceChatPanelProps> = ({
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-20 right-6 z-[120]">
+      <div className="fixed bottom-20 right-2 sm:right-3 z-[120]">
         <button
           onClick={manualWakeTrigger}
           className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#0a0a0f]/90 backdrop-blur-xl border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(0,212,170,0.25)] hover:shadow-[0_0_25px_rgba(0,212,170,0.45)] hover:border-cyan-400 transition-all cursor-pointer group"

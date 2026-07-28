@@ -166,10 +166,10 @@ export const SideDocsPanel: React.FC<SideDocsPanelProps> = ({
 
   return (
     <div className="fixed top-14 right-0 bottom-16 z-[95] pointer-events-none flex">
-      {/* SIDE PEEK PULL HANDLE WHEN CLOSED */}
+      {/* SIDE PEEK PULL HANDLE WHEN CLOSED - ATTACHED TO RIGHT EDGE WALL */}
       <button
         onClick={onToggle}
-        className={`pointer-events-auto h-24 my-auto w-4 sm:w-5 bg-[#0a0a0f]/95 border-l border-y border-cyan-500/40 rounded-l-xl backdrop-blur-2xl flex flex-col items-center justify-center gap-1 shadow-[-4px_0_20px_rgba(0,212,170,0.25)] hover:bg-cyan-500/20 hover:border-cyan-400 cursor-pointer transition-all duration-300 group ${
+        className={`pointer-events-auto fixed top-28 right-0 z-[96] h-28 w-5 sm:w-6 bg-[#0a0a0f]/95 border-l border-y border-cyan-500/40 rounded-l-xl backdrop-blur-2xl flex flex-col items-center justify-center gap-1 shadow-[-4px_0_20px_rgba(0,212,170,0.25)] hover:bg-cyan-500/20 hover:border-cyan-400 cursor-pointer transition-all duration-300 group ${
           isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         title="S2k Dokumentation & Quick Functions (Seitenpanel)"

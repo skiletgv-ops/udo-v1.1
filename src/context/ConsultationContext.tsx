@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import { cleanTextForSpeech } from "../lib/utils";
 
 export interface PatientData {
   first_name: string;
@@ -95,11 +96,28 @@ export const ConsultationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
+    const cleanedText = cleanTextForSpeech(text);
+    if (!cleanedText) {
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.lang = "de-DE";
     utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    utterance.pitch = 0.88; // Calm male voice pitch
+
+    const voices = window.speechSynthesis.getVoices();
+    const femaleNames = ["marlene", "vicki", "anna", "petra", "hedda", "zira", "hazel", "samantha", "victoria"];
+    const maleDeVoice = voices.find(v => {
+      const name = v.name.toLowerCase();
+      const isFemale = femaleNames.some(f => name.includes(f));
+      if (isFemale) return false;
+      return v.lang.startsWith("de") && (name.includes("stefan") || name.includes("markus") || name.includes("daniel") || name.includes("male") || name.includes("george") || name.includes("david") || name.includes("google deutsch"));
+    }) || voices.find(v => v.lang.startsWith("de") && !femaleNames.some(f => v.name.toLowerCase().includes(f)));
+
+    if (maleDeVoice) utterance.voice = maleDeVoice;
 
     utterance.onstart = () => {
       setOrbState("speaking");

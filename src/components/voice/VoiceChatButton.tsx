@@ -7,12 +7,11 @@ interface VoiceChatButtonProps {
   onNewMessage?: (msg: { role: string; text: string; sender?: 'user' | 'doctor'; id?: string; timestamp?: string }) => void;
   disabled?: boolean;
   language?: string;
-  replicateToken?: string;
   className?: string;
 }
 
 /**
- * Voice chat button component powered by Kimi-Audio (ASR + TTS) + Gemini
+ * Voice chat button component powered by UDO 4-Agent Orchestrator + Hybrid Male Doctor TTS
  * Place this inside your existing chat input area or toolbar
  */
 export default function VoiceChatButton({
@@ -20,7 +19,6 @@ export default function VoiceChatButton({
   onNewMessage,
   disabled,
   language = 'de',
-  replicateToken,
   className = ''
 }: VoiceChatButtonProps) {
   const {
@@ -30,7 +28,7 @@ export default function VoiceChatButton({
     isListening,
     isSpeaking,
     isProcessing
-  } = useVoiceChat(geminiApiKey, onNewMessage, { language, replicateToken });
+  } = useVoiceChat(geminiApiKey, onNewMessage, { language });
 
   const isActive = isListening || isSpeaking || isProcessing;
 
@@ -46,15 +44,15 @@ export default function VoiceChatButton({
         onTouchEnd={stopListening}
         disabled={disabled || isSpeaking || isProcessing}
         className={`voice-btn ${isListening ? 'listening' : ''} ${isSpeaking ? 'speaking' : ''} ${isProcessing ? 'processing' : ''}`}
-        aria-label={isListening ? 'Listening...' : 'Hold to talk (Kimi-Audio)'}
+        aria-label={isListening ? 'Listening...' : 'Hold to talk with UDO Voice'}
         title={
           isListening
             ? 'Release to Send'
             : isSpeaking
-            ? 'Kimi Voice Output Active'
+            ? 'UDO Male Doctor Voice Output Active'
             : isProcessing
             ? 'Processing Voice Pipeline'
-            : 'Hold to talk with Kimi-Audio Voice'
+            : 'Hold to talk with UDO Doctor Voice'
         }
       >
         {isListening && <span className="pulse-ring" />}
