@@ -144,7 +144,7 @@ export function useVoiceChat(
     };
   };
 
-  // ─── STEP 4: Hybrid TTS (Claude Voice for First Agent / UDO, Gemini TTS for Others) ───
+  // ─── STEP 4: Hybrid TTS (UDO Primary ElevenLabs / Gemini TTS) ───
   const speakHybridAudio = async (text: string, agentId: string = 'udo'): Promise<void> => {
     setIsSpeaking(true);
     const cleanedText = cleanTextForSpeech(text);
@@ -243,7 +243,7 @@ export function useVoiceChat(
         });
       }
 
-      // 3. Play audio via Hybrid Male Doctor TTS Engine (Claude Voice for Agent 1 / UDO, Gemini Flash for others)
+      // 3. Play audio via Hybrid TTS Engine (ElevenLabs Primary / Gemini Secondary)
       await speakHybridAudio(agentReply.text, agentReply.agentId);
     } catch (err: any) {
       if (err.name === 'AbortError') {

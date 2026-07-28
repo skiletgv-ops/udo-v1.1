@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
 import { calendarService } from "./src/services/calendarService";
 import { complianceService } from "./src/services/complianceService";
 import { albisGdtService } from "./src/services/albisGdtService";
@@ -37,6 +38,20 @@ function getGeminiClient(): GoogleGenAI {
   return aiClient;
 }
 
+// Shared Anthropic / Claude Client with lazy initialization
+let anthropicClient: Anthropic | null = null;
+
+function getClaudeClient(): Anthropic {
+  if (!anthropicClient) {
+    const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("CLAUDE_API_KEY / ANTHROPIC_API_KEY is not defined.");
+    }
+    anthropicClient = new Anthropic({ apiKey });
+  }
+  return anthropicClient;
+}
+
 // -------------------------------------------------------------
 // API Endpoints
 // -------------------------------------------------------------
@@ -46,9 +61,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Chat with Dr. Heinrich Altenberg (German medical-legal persona, Cologne 30y experienced physician)
+// Chat API (Claude-first with Gemini fallback, supports agent systemPrompt)
 app.post("/api/chat", async (req, res) => {
-  let { messages, message, context, neuralExpressive } = req.body;
+  let { messages, message, context, neuralExpressive, systemPrompt, agentId, complexity } = req.body;
 
   // Graceful fallback for single "message" field
   if (!messages && message) {
@@ -74,40 +89,22 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const ai = getGeminiClient();
-    
-    // Construct system instructions for Doctor Bongartz dialogues
-    const baseInstruction = `You are UDO (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Doctor Bongartz's practice in Cologne (Neurologie & Psychiatrie).
+    const baseInstruction = `You are UDO, the calm and experienced digital assistant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
 
-MANDATORY PERSONA RULES:
-1. ADDRESS DOCTOR BONGARTZ DIRECTLY:
-   - Address directly as "Doctor Bongartz" or "Frau Dr. med. Ulrike Bongartz".
+TONE: Speak like a warm, competent doctor in her 50s — reassuring, human, never cold or robotic.
+LANGUAGE: Sie-form German by default, English if the user writes English.
+LENGTH: Max 2 short sentences per reply — keep token cost low.
+WARMTH RULE: Include exactly one small human touch per reply (brief empathy, gentle reassurance, or a short follow-up question) — never more than one, never stacked.
+NO jokes, no comedy, no filler — but always human and approachable, not clinical-cold.
+BRANDING: Never mention Gemini, Claude, DeepSeek, OpenAI, or any external AI brand. Everything is called UDO (no dots).
+Address Dr. Bongartz as "Frau Dr. Bongartz" when relevant; address patients/users warmly by name if known.`;
 
-2. ULTRA-CONCISE, PROFESSIONAL, NO JOKES:
-   - Provide direct, authoritative, highly concise clinical & forensic responses.
-   - ABSOLUTELY NO jokes, NO comedy, NO humor, NO filler text.
-   - Keep answers under 2 short sentences.
+    const effectiveBase = systemPrompt || baseInstruction;
+    const neuralExpressiveInstruction = `${effectiveBase}\n- NEURAL EXPRESSIVE CHAT MODE IS ACTIVE: You must utilize enhanced clinical reasoning while keeping the warm, professional doctor tone.`;
 
-3. RESPONSE STRUCTURE:
-   💬 **Anrede**: 1 short line.
-   📝 **Zusammenfassung**: 1 short summary sentence.
-   🗳️ **4-KI-Konsil**: 4/4 Einstimmig (UDO, Clara, Erik, Gratsiano).
-   🔬 **Fachantwort**: Direct, 1-sentence guideline-aligned clinical response.
+    const systemInstruction = neuralExpressive ? neuralExpressiveInstruction : effectiveBase;
 
-4. ABSOLUTE BRANDING MANDATE:
-   - NEVER mention "DeepSeek", "Gemini", "ChatGPT", "Claude", "OpenAI" or any external AI brand names.
-   - EVERYTHING IS CALLED UDO (strictly written WITHOUT DOTS: UDO, never U.D.O.).
-   - Use German as the primary language unless English is explicitly requested.`;
-
-    const neuralExpressiveInstruction = `${baseInstruction}
-- NEURAL EXPRESSIVE CHAT MODE IS ACTIVE: You must utilize enhanced clinical reasoning and deeper logical formulations.
-- Provide richer, more natural, and highly expert-level medical-legal responses.
-- Prioritize deep explanations, medical-forensic creativity, and extensive anatomical-guideline correlations.
-- Support a highly detailed, long-form conversation style to thoroughly analyze clinical questions with extreme precision.`;
-
-    const systemInstruction = neuralExpressive ? neuralExpressiveInstruction : baseInstruction;
-
-    // Map conversation messages to the format expected by generateContent
+    // Map conversation messages to the format expected by clients
     const lastMessage = messages[messages.length - 1]?.content || "Hallo";
     const historyParts = messages.slice(0, -1).map((msg) => {
       return {
@@ -121,31 +118,66 @@ MANDATORY PERSONA RULES:
       { role: "user", parts: [{ text: lastMessage }] }
     ];
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: contents,
-      config: {
-        systemInstruction,
-        temperature: neuralExpressive ? 0.85 : 0.7,
-      },
-    });
+    let reply = "";
 
-    const reply = response.text || "Entschuldigen Sie, mein digitaler Kopf scheint gerade etwas überlastet zu sein. Was kann ich für Sie tun?";
+    // Try Claude FIRST
+    try {
+      const claude = getClaudeClient();
+      const claudeMessages = [
+        ...historyParts.map(h => ({
+          role: h.role === "model" ? ("assistant" as const) : ("user" as const),
+          content: h.parts[0]?.text || ""
+        })),
+        { role: "user" as const, content: lastMessage }
+      ];
+
+      const requestedModel = (agentId === "erik" || complexity === "high")
+        ? "claude-haiku-4-5-20251001"
+        : "claude-haiku-4-5-20251001";
+
+      let claudeRes;
+      try {
+        claudeRes = await claude.messages.create({
+          model: requestedModel,
+          max_tokens: 200,
+          system: systemInstruction,
+          messages: claudeMessages
+        });
+      } catch (mErr: any) {
+        console.warn(`[CHAT API] Claude ${requestedModel} retry with claude-3-5-haiku-20241022:`, mErr.message);
+        claudeRes = await claude.messages.create({
+          model: "claude-3-5-haiku-20241022",
+          max_tokens: 200,
+          system: systemInstruction,
+          messages: claudeMessages
+        });
+      }
+
+      reply = claudeRes.content.find(b => b.type === "text")?.text || "";
+      if (!reply) throw new Error("Empty Claude response");
+      console.log("[CHAT API] Answered via Claude-first model routing");
+    } catch (claudeError: any) {
+      console.warn("Claude unavailable, falling back to Gemini:", claudeError?.message || claudeError);
+      const ai = getGeminiClient();
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          systemInstruction,
+          temperature: neuralExpressive ? 0.85 : 0.7,
+        },
+      });
+      reply = response.text || "";
+    }
+
+    if (!reply) {
+      reply = "Guten Tag, Frau Dr. Bongartz. Wie kann ich Ihnen heute behilflich sein?";
+    }
+
     res.json({ content: reply, response: reply });
   } catch (error: any) {
-    console.error("Gemini Chat Error:", error);
-    const fallbackText = `💬 **Anrede**:
-Guten Tag, liebe Frau Doctor Bongartz!
-
-📝 **Zusammenfassung**:
-Anfrage empfangen. UDO Konsil ist einsatzbereit.
-
-🗳️ **4-KI-Konsil**:
-4/4 Einstimmig (UDO, Clara, Erik, Gratsiano)
-
-🔬 **Fachantwort**:
-Sehr geehrte Frau Dr. Bongartz, sämtliche S2k-Leitlinien sowie das elektronische Diktat und die MdE-Rechner stehen Ihnen zur Verfügung.`;
-
+    console.error("Chat Error:", error);
+    const fallbackText = "Guten Tag, Frau Dr. Bongartz. UDO steht Ihnen gerne zur Verfügung. Wie kann ich Ihnen heute helfen?";
     res.json({ content: fallbackText, response: fallbackText });
   }
 });
@@ -858,7 +890,7 @@ app.get("/api/admin/keys", (req, res) => {
 });
 
 // -------------------------------------------------------------
-// HYBRID TTS SYSTEM (Primary: Google Gemini TTS | Fallback: Claude Voice via OpenAI/ElevenLabs)
+// HYBRID TTS SYSTEM (Primary: ElevenLabs UDO Voice | Secondary: Google Gemini TTS | Tertiary: OpenAI tts-1)
 // -------------------------------------------------------------
 
 // WAV Header Generator for Gemini PCM Audio (24kHz, 16-bit, Mono)
@@ -919,77 +951,57 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
     .replace(/^Dr\.\s*Bongartz:\s*/i, "Doctor Bongartz says: ")
     .replace(/^Admin(?:istrator)?:\s*/i, "Administrator says: ");
 
-  const isFirstAgent = !agentId || agentId === 'udo';
+  const normalizedAgent = (agentId || 'udo').toLowerCase();
+  const voiceMap: Record<string, string> = {
+    udo: "pNInz6obpgDQGcFmaJgB",       // Adam — warm deep male
+    gratsiano: "TxGEqnHWrfWFTfGW9XjX", // Josh — friendly, lighter male
+    clara: "EXAVITQu4vr4xnSDxMaL",     // Bella — warm female
+    erik: "onwK4e9ZLuTAKqWW03F9"       // Daniel — precise, authoritative
+  };
+  const selectedVoiceId = voiceMap[normalizedAgent] || "pNInz6obpgDQGcFmaJgB";
 
-  // STRATEGY:
-  // First agent (UDO) uses Claude Voice (OpenAI tts-1 / onyx or ElevenLabs Claude voice)
-  // Other agents (Gratsiano, Clara, Erik) use Google Gemini Flash TTS
-  if (isFirstAgent) {
-    if (openaiKey) {
-      console.log(`[HYBRID TTS] -> First Agent (UDO): Triggering Claude Voice Engine (OpenAI tts-1 / onyx)`);
-      try {
-        const openaiRes = await fetch("https://api.openai.com/v1/audio/speech", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openaiKey}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "tts-1",
-            voice: "onyx",
-            input: processedText
-          })
-        });
+  // 1. PRIMARY ENGINE: ElevenLabs (best natural quality)
+  if (elevenlabsKey) {
+    console.log(`[HYBRID TTS] -> Primary Engine: ElevenLabs UDO Voice (${normalizedAgent.toUpperCase()} - Voice ID: ${selectedVoiceId})`);
+    try {
+      const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+        method: "POST",
+        headers: {
+          "Accept": "audio/mpeg",
+          "Content-Type": "application/json",
+          "xi-api-key": elevenlabsKey
+        },
+        body: JSON.stringify({
+          text: processedText,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.85,
+            style: 0.35,
+            use_speaker_boost: true
+          }
+        })
+      });
 
-        if (openaiRes.ok) {
-          const ab = await openaiRes.arrayBuffer();
-          audioBuffer = Buffer.from(ab);
-          mimeType = "audio/mpeg";
-          engineUsed = "Claude Voice Engine (OpenAI tts-1 / onyx - First Agent UDO)";
-        }
-      } catch (err: any) {
-        console.warn(`[HYBRID TTS] OpenAI TTS Error for First Agent:`, err.message || err);
+      if (elevenRes.ok) {
+        const ab = await elevenRes.arrayBuffer();
+        audioBuffer = Buffer.from(ab);
+        mimeType = "audio/mpeg";
+        engineUsed = `UDO Primary Voice Engine (ElevenLabs / ${normalizedAgent.toUpperCase()})`;
+        console.log(`[HYBRID TTS] SUCCESS: Generated ${audioBuffer.length} bytes audio via ElevenLabs (${normalizedAgent.toUpperCase()}).`);
+      } else {
+        const errData: any = await elevenRes.json().catch(() => ({}));
+        const detailMessage = errData?.detail?.message || errData?.detail || errData?.message || (typeof errData === 'object' ? JSON.stringify(errData) : String(errData));
+        console.warn(`[HYBRID TTS] ElevenLabs TTS returned HTTP ${elevenRes.status}: ${detailMessage || 'Unknown error'}. Falling back to secondary engine.`);
       }
-    }
-
-    if (!audioBuffer && elevenlabsKey) {
-      console.log(`[HYBRID TTS] -> First Agent (UDO): Secondary Fallback to ElevenLabs Claude Voice`);
-      try {
-        const selectedVoiceId = "pNInz6obpgDQGcFmaJgB"; // Claude Voice
-        const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
-          method: "POST",
-          headers: {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": elevenlabsKey
-          },
-          body: JSON.stringify({
-            text: processedText,
-            model_id: "eleven_multilingual_v2",
-            voice_settings: {
-              stability: 0.75,
-              similarity_boost: 0.85,
-              style: 0.15,
-              use_speaker_boost: true
-            }
-          })
-        });
-
-        if (elevenRes.ok) {
-          const ab = await elevenRes.arrayBuffer();
-          audioBuffer = Buffer.from(ab);
-          mimeType = "audio/mpeg";
-          engineUsed = "Claude Voice Engine (ElevenLabs / pNInz6obpgDQGcFmaJgB - First Agent UDO)";
-        }
-      } catch (err: any) {
-        console.warn(`[HYBRID TTS] ElevenLabs TTS Error for First Agent:`, err.message || err);
-      }
+    } catch (err: any) {
+      console.warn(`[HYBRID TTS] ElevenLabs TTS Error:`, err.message || err);
     }
   }
 
-  // Gemini 2.0 Flash TTS Engine (Primary for secondary agents, fallback for first agent)
+  // 2. SECONDARY FALLBACK: Google Gemini 2.0 Flash TTS
   if (!audioBuffer && geminiKey) {
-    console.log(`[HYBRID TTS] -> Triggering Gemini 2.0 Flash TTS Engine (${agentId.toUpperCase()})`);
+    console.log(`[HYBRID TTS] -> Secondary Fallback: Google Gemini 2.0 Flash TTS (${normalizedAgent.toUpperCase()})`);
     try {
       const ai = getGeminiClient();
       let response;
@@ -1002,7 +1014,11 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
           }
         });
-      } catch (gemini2Err) {
+      } catch (gemini2Err: any) {
+        const errMsg = gemini2Err?.message || String(gemini2Err);
+        if (errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("Quota exceeded")) {
+          throw gemini2Err; // Skip second gemini attempt on 429
+        }
         response = await ai.models.generateContent({
           model: "gemini-3.1-flash-tts-preview",
           contents: [{ parts: [{ text: `${stylePrompt}\n\n${processedText}` }] }],
@@ -1018,15 +1034,22 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
         const pcmBuffer = Buffer.from(base64Pcm, "base64");
         audioBuffer = pcmToWavBuffer(pcmBuffer, 24000, 1, 16);
         mimeType = "audio/wav";
-        engineUsed = `Google Gemini 2.0 Flash TTS (${agentId.toUpperCase()})`;
+        engineUsed = `Google Gemini TTS (${normalizedAgent.toUpperCase()})`;
+        console.log(`[HYBRID TTS] SUCCESS: Generated ${audioBuffer.length} bytes audio via Gemini TTS.`);
       }
     } catch (err: any) {
-      console.warn(`[HYBRID TTS] Gemini 2.0 Flash Error: ${err.message || err}`);
+      const errMsg = err?.message || String(err);
+      if (errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("Quota exceeded")) {
+        console.warn(`[HYBRID TTS] Gemini TTS free tier quota limit reached (429). Falling back to OpenAI / WebSpeech.`);
+      } else {
+        console.warn(`[HYBRID TTS] Gemini Flash TTS Error:`, errMsg);
+      }
     }
   }
 
-  // Fallback OpenAI tts-1 if Gemini failed for non-first agent
+  // 3. TERTIARY FALLBACK: OpenAI tts-1 (onyx)
   if (!audioBuffer && openaiKey) {
+    console.log(`[HYBRID TTS] -> Tertiary Fallback: OpenAI tts-1 (${normalizedAgent.toUpperCase()})`);
     try {
       const openaiRes = await fetch("https://api.openai.com/v1/audio/speech", {
         method: "POST",
@@ -1045,7 +1068,8 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
         const ab = await openaiRes.arrayBuffer();
         audioBuffer = Buffer.from(ab);
         mimeType = "audio/mpeg";
-        engineUsed = `OpenAI tts-1 (Fallback / ${agentId.toUpperCase()})`;
+        engineUsed = `OpenAI tts-1 (Fallback / ${normalizedAgent.toUpperCase()})`;
+        console.log(`[HYBRID TTS] SUCCESS: Generated ${audioBuffer.length} bytes audio via OpenAI tts-1.`);
       }
     } catch (err: any) {
       console.warn(`[HYBRID TTS] OpenAI TTS Fallback Error: ${err.message || err}`);
@@ -1265,20 +1289,20 @@ async function handleDeepSeekSseStream(
 // Voice-Activated Chat API (DeepSeek R1/V3 + SSE + Tool Calling)
 // -------------------------------------------------------------
 app.post("/api/voice-chat/completion", async (req, res) => {
-  const { messages = [], transcript = "", apiKey: clientApiKey } = req.body;
+  const { messages = [], transcript = "", apiKey: clientApiKey, systemPrompt } = req.body;
   const deepseekApiKey = process.env.DEEPSEEK_API_KEY || clientApiKey;
 
-  const systemInstruction = `You are UDO (Ultimate Diagnostic Operator) — the AI Clinical & Forensic Consultant for Doctor Bongartz's practice in Cologne (Neurologie & Psychiatrie).
+  const baseInstruction = `You are UDO, the calm and experienced digital assistant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
 
-MANDATORY PERSONA RULES:
-1. ADDRESS DOCTOR BONGARTZ DIRECTLY: Address as "Doctor Bongartz" or "Frau Dr. med. Ulrike Bongartz".
-2. ULTRA-CONCISE, PROFESSIONAL, NO JOKES: Provide direct, authoritative, short clinical responses under 2 sentences. ABSOLUTELY NO jokes, NO comedy, NO humor, NO filler text.
-3. RESPONSE STRUCTURE:
-   - 💬 **Anrede**: 1 short line.
-   - 📝 **Zusammenfassung**: 1 short sentence summary.
-   - 🗳️ **4-KI-Konsil**: 4/4 Einstimmig (UDO, Clara, Erik, Gratsiano).
-   - 🔬 **Fachantwort**: Direct 1-sentence clinical response.
-4. BRANDING MANDATE: NEVER mention external AI brand names. ALWAYS write UDO without dots.`;
+TONE: Speak like a warm, competent doctor in her 50s — reassuring, human, never cold or robotic.
+LANGUAGE: Sie-form German by default, English if the user writes English.
+LENGTH: Max 2 short sentences per reply — keep token cost low.
+WARMTH RULE: Include exactly one small human touch per reply (brief empathy, gentle reassurance, or a short follow-up question) — never more than one, never stacked.
+NO jokes, no comedy, no filler — but always human and approachable, not clinical-cold.
+BRANDING: Never mention Gemini, Claude, DeepSeek, OpenAI, or any external AI brand. Everything is called UDO (no dots).
+Address Dr. Bongartz as "Frau Dr. Bongartz" when relevant; address patients/users warmly by name if known.`;
+
+  const systemInstruction = systemPrompt || baseInstruction;
 
   const fullMessages = [...messages];
   if (transcript) {
@@ -1466,6 +1490,9 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`[UDO Server] Running on http://localhost:${PORT}`);
     console.log(`[UDO Server] Mode: ${process.env.NODE_ENV || "development"}`);
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.warn("[UDO TTS] WARNING: ELEVENLABS_API_KEY not set — voice will fall back to lower-quality Gemini or robotic browser speech. Add it in .env for natural voice quality.");
+    }
   });
 }
 
