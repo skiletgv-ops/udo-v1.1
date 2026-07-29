@@ -7,6 +7,7 @@ import { ActiveTab } from '../types';
 import { useWakeWord } from '../hooks/useWakeWord';
 import { VoiceChatPanel } from './VoiceChatPanel';
 import { SideDocsPanel } from './SideDocsPanel';
+import { PatientOverview } from './PatientOverview';
 
 interface NavigationShellProps {
   children: React.ReactNode;
@@ -29,12 +30,14 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
 }) => {
   const [voicePanelOpen, setVoicePanelOpen] = useState(false);
   const [sideDocsOpen, setSideDocsOpen] = useState(false);
+  const [patientOverviewOpen, setPatientOverviewOpen] = useState(false);
 
   // Home button minimizes everything except background animation
   const handleSelectTab = useCallback((tab: ActiveTab | null) => {
     if (tab === null) {
       setVoicePanelOpen(false);
       setSideDocsOpen(false);
+      setPatientOverviewOpen(false);
       if (onCloseDrBubble) {
         onCloseDrBubble();
       }
@@ -46,6 +49,7 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
     if (activeTab === null) {
       setVoicePanelOpen(false);
       setSideDocsOpen(false);
+      setPatientOverviewOpen(false);
       if (onCloseDrBubble) {
         onCloseDrBubble();
       }
@@ -79,7 +83,25 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
         onToggleSideDocs={() => setSideDocsOpen(!sideDocsOpen)}
         onOpenSideDocsTab={() => setSideDocsOpen(true)}
         sideDocsOpen={sideDocsOpen}
+        onOpenPatientOverview={() => setPatientOverviewOpen(!patientOverviewOpen)}
+        patientOverviewOpen={patientOverviewOpen}
       />
+
+      {/* PATIENT OVERVIEW OVERLAY DRAWER */}
+      {patientOverviewOpen && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-md flex justify-end animate-fade-in">
+          <div className="w-full max-w-4xl h-full bg-[#0a0a0f] border-l border-cyan-500/30 p-6 overflow-y-auto shadow-2xl relative">
+            <PatientOverview
+              isModal={true}
+              onClose={() => setPatientOverviewOpen(false)}
+              onSelectTab={(tab) => {
+                setPatientOverviewOpen(false);
+                handleSelectTab(tab);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* SIDE DOCS & QUICK FUNCTIONS PANEL */}
       <SideDocsPanel

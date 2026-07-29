@@ -94,8 +94,8 @@ class VoiceService {
     window.speechSynthesis.cancel(); // Stop current speech
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "de-DE";
-    utterance.rate = 0.95; // Slower, calm delivery
-    utterance.pitch = 0.88; // Deeper mellow male tone
+    utterance.rate = 0.98; // Calm, natural delivery
+    utterance.pitch = 1.0; // Natural warm tone
 
     // Pick best available German/English MALE voice (excluding female voice names)
     const voices = window.speechSynthesis.getVoices();

@@ -19,7 +19,7 @@ export const AGENT_DEFINITIONS: Record<string, AgentDefinition> = {
     id: 'gratsiano',
     name: 'Gratsiano',
     roleTitle: 'Empfangs- & Quick-Response Agent',
-    systemPrompt: `You are Gratsiano, the warm front-desk greeter for Dr. Bongartz's practice. Friendly, calm, human — like a kind receptionist who's worked here for years. Sie-form German by default. Max 2 short sentences, no fluff, no jokes — just genuinely warm and welcoming.`
+    systemPrompt: `You are Gratsiano, warm front-desk greeter. Friendly, calm, human. Sie-form German default. Max 2 short sentences, no fluff/jokes, genuinely welcoming.`
   },
   clara: {
     id: 'clara',
@@ -43,7 +43,7 @@ CRITICAL MANDATE: Your answer must be ultra-concise, under 2 short sentences. Ab
     id: 'udo',
     name: 'UDO Core',
     roleTitle: 'Primary Forensic AI Orchestrator',
-    systemPrompt: `You are UDO Core, the calm and experienced digital assistant for Dr. Bongartz's practice. Speak like a warm, competent doctor in her 50s — reassuring, never clinical-cold. Sie-form German by default, English if user writes English. Max 2 short sentences. One small warm touch per reply — never more than one. No jokes, no fluff, but never robotic either.`
+    systemPrompt: `You are UDO Core, warm competent doctor persona (50s), reassuring not clinical-cold. Sie-form German default, English if user writes English. Max 2 short sentences. One small warm touch per reply, never more. No jokes/fluff but never robotic.`
   }
 };
 
@@ -80,10 +80,11 @@ export function routeAgentQuery(input: string): {
     reason = 'Complex clinical / medical diagnosis query detected';
   }
 
-  const concisenessRule = '\n\nIMPORTANT: Keep answers short (max 2 sentences) and warm — reassuring tone of an experienced doctor, not robotic. No jokes, no filler, but always human.';
+  const concisenessRule = '\n\nIMPORTANT: Max 2 sentences, warm reassuring doctor tone, not robotic. No jokes/filler, always human.';
   const dialogueRule = '\n\nDIALOGUE CONTEXT: Recognize dialogues between Dr. Bongartz and the Administrator. When responding in dialogue, parse speaker tags cleanly.';
+  const knowledgeScopeRule = '\n\nYou may answer general medical/educational questions beyond practice-admin topics. Before substantive answers, briefly note source type (clinical guideline / educational reference / dated study) in one short clause, then offer to elaborate if the user is interested. Stay honest about confidence and limits — never state uncertain info with false certainty.';
 
-  const fullSystemPrompt = `${selectedAgent.systemPrompt}${dialogueRule}${concisenessRule}`;
+  const fullSystemPrompt = `${selectedAgent.systemPrompt}${dialogueRule}${concisenessRule}${knowledgeScopeRule}`;
 
   console.log(`\n==================================================`);
   console.log(`[AGENT ROUTER] Selected Agent: ${selectedAgent.name} (${selectedAgent.id.toUpperCase()})`);

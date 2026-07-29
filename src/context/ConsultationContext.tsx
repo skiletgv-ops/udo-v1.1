@@ -91,7 +91,7 @@ export const ConsultationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Speak text helper
   const speakText = (text: string, onEndCallback?: () => void) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    if (typeof window === "undefined") {
       if (onEndCallback) onEndCallback();
       return;
     }
@@ -102,38 +102,77 @@ export const ConsultationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(cleanedText);
-    utterance.lang = "de-DE";
-    utterance.rate = 0.95;
-    utterance.pitch = 0.88; // Calm male voice pitch
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
 
-    const voices = window.speechSynthesis.getVoices();
-    const femaleNames = ["marlene", "vicki", "anna", "petra", "hedda", "zira", "hazel", "samantha", "victoria"];
-    const maleDeVoice = voices.find(v => {
-      const name = v.name.toLowerCase();
-      const isFemale = femaleNames.some(f => name.includes(f));
-      if (isFemale) return false;
-      return v.lang.startsWith("de") && (name.includes("stefan") || name.includes("markus") || name.includes("daniel") || name.includes("male") || name.includes("george") || name.includes("david") || name.includes("google deutsch"));
-    }) || voices.find(v => v.lang.startsWith("de") && !femaleNames.some(f => v.name.toLowerCase().includes(f)));
+    const runWebSpeechFallback = () => {
+      if (!("speechSynthesis" in window)) {
+        setOrbState(callComplete ? "success" : "idle");
+        if (onEndCallback) onEndCallback();
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanedText);
+      utterance.lang = "de-DE";
+      utterance.rate = 0.98;
+      utterance.pitch = 1.0;
 
-    if (maleDeVoice) utterance.voice = maleDeVoice;
+      const voices = window.speechSynthesis.getVoices();
+      const femaleNames = ["marlene", "vicki", "anna", "petra", "hedda", "zira", "hazel", "samantha", "victoria"];
+      const maleDeVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const isFemale = femaleNames.some(f => name.includes(f));
+        if (isFemale) return false;
+        return v.lang.startsWith("de") && (name.includes("stefan") || name.includes("markus") || name.includes("daniel") || name.includes("male") || name.includes("george") || name.includes("david") || name.includes("google deutsch"));
+      }) || voices.find(v => v.lang.startsWith("de") && !femaleNames.some(f => v.name.toLowerCase().includes(f)));
 
-    utterance.onstart = () => {
-      setOrbState("speaking");
+      if (maleDeVoice) utterance.voice = maleDeVoice;
+
+      utterance.onstart = () => {
+        setOrbState("speaking");
+      };
+
+      utterance.onend = () => {
+        setOrbState(callComplete ? "success" : "idle");
+        if (onEndCallback) onEndCallback();
+      };
+
+      utterance.onerror = () => {
+        setOrbState(callComplete ? "success" : "idle");
+        if (onEndCallback) onEndCallback();
+      };
+
+      window.speechSynthesis.speak(utterance);
     };
 
-    utterance.onend = () => {
-      setOrbState(callComplete ? "success" : "idle");
-      if (onEndCallback) onEndCallback();
-    };
+    setOrbState("speaking");
 
-    utterance.onerror = () => {
-      setOrbState(callComplete ? "success" : "idle");
-      if (onEndCallback) onEndCallback();
-    };
-
-    window.speechSynthesis.speak(utterance);
+    fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: cleanedText, agentId: "udo" })
+    })
+      .then(async (res) => {
+        if (res.ok && res.headers.get("Content-Type")?.includes("audio")) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => {
+            URL.revokeObjectURL(url);
+            setOrbState(callComplete ? "success" : "idle");
+            if (onEndCallback) onEndCallback();
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            runWebSpeechFallback();
+          };
+          audio.play().catch(() => runWebSpeechFallback());
+        } else {
+          runWebSpeechFallback();
+        }
+      })
+      .catch(() => runWebSpeechFallback());
   };
 
   // Core API communication

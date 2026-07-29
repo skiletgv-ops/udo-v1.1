@@ -408,7 +408,7 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
   const [isGlobalChatLoading, setIsGlobalChatLoading] = useState(false);
 
   const speakResponse = useCallback((text: string, forceLang?: "en" | "de") => {
-    if (isVoiceMuted || typeof window === "undefined" || !window.speechSynthesis) return;
+    if (isVoiceMuted || typeof window === "undefined") return;
     
     // Stop listening temporarily so we don't hear our own voice
     if (stopListeningRef.current) {
@@ -417,65 +417,84 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       } catch (err) {}
     }
 
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*#_\[\]\(\)]/g, ""); // strip markdown formatting for TTS
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    const targetLang = forceLang || language;
-    utterance.lang = targetLang === "de" ? "de-DE" : "en-US";
-    utterance.rate = speechRate; // Customizable speed (e.g. 1.0)
-    
-    // Try to find a high-quality native voice or custom-chosen voice
-    const voices = window.speechSynthesis.getVoices();
-    let selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
 
-    if (!selectedVoice) {
-      const targetLangPrefix = targetLang === "de" ? "de" : "en";
+    const cleanText = text.replace(/[*#_\[\]\(\)]/g, ""); // strip markdown formatting for TTS
+    if (!cleanText.trim()) return;
+
+    const targetLang = forceLang || language;
+
+    // Helper for fallback WebSpeech
+    const runWebSpeechFallback = () => {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = targetLang === "de" ? "de-DE" : "en-US";
+      utterance.rate = speechRate;
+      utterance.pitch = 1.0;
       
-      // Look for Hedda specifically first if German
-      if (targetLangPrefix === "de") {
-        selectedVoice = voices.find(v => 
-          v.lang.toLowerCase().startsWith("de") && 
-          v.name.toLowerCase().includes("hedda")
-        );
-      }
+      const voices = window.speechSynthesis.getVoices();
+      let selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
 
       if (!selectedVoice) {
+        const targetLangPrefix = targetLang === "de" ? "de" : "en";
         selectedVoice = voices.find(v => 
           v.lang.toLowerCase().startsWith(targetLangPrefix) && 
-          (v.name.toLowerCase().includes("hedda") ||
-           v.name.toLowerCase().includes("natural") || 
+          (v.name.toLowerCase().includes("natural") || 
            v.name.toLowerCase().includes("google") || 
-           v.name.toLowerCase().includes("katja") ||
            v.name.toLowerCase().includes("stefan") ||
-           v.name.toLowerCase().includes("zira") ||
-           v.name.toLowerCase().includes("samantha"))
-        );
+           v.name.toLowerCase().includes("daniel") ||
+           v.name.toLowerCase().includes("katja"))
+        ) || voices.find(v => v.lang.startsWith(targetLangPrefix));
       }
-      if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLangPrefix));
-      }
-    }
 
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
 
-    utterance.onend = () => {
-      if (startListeningRef.current) {
-        try {
-          startListeningRef.current();
-        } catch (err) {}
-      }
-    };
-    utterance.onerror = () => {
-      if (startListeningRef.current) {
-        try {
-          startListeningRef.current();
-        } catch (err) {}
-      }
+      utterance.onend = () => {
+        if (startListeningRef.current) {
+          try { startListeningRef.current(); } catch (err) {}
+        }
+      };
+      utterance.onerror = () => {
+        if (startListeningRef.current) {
+          try { startListeningRef.current(); } catch (err) {}
+        }
+      };
+
+      window.speechSynthesis.speak(utterance);
     };
 
-    window.speechSynthesis.speak(utterance);
+    // Primary: Call server /api/tts Neural Voice Engine
+    fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: cleanText, agentId: "udo" })
+    })
+      .then(async (res) => {
+        if (res.ok && res.headers.get("Content-Type")?.includes("audio")) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => {
+            URL.revokeObjectURL(url);
+            if (startListeningRef.current) {
+              try { startListeningRef.current(); } catch (err) {}
+            }
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            runWebSpeechFallback();
+          };
+          audio.play().catch(() => runWebSpeechFallback());
+        } else {
+          runWebSpeechFallback();
+        }
+      })
+      .catch(() => runWebSpeechFallback());
   }, [isVoiceMuted, language, selectedVoiceURI, speechRate]);
 
   const handleGlobalSendMessage = useCallback(async (textToSend: string, neuralExpressive?: boolean) => {

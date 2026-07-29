@@ -53,6 +53,227 @@ function getClaudeClient(): Anthropic {
 }
 
 // -------------------------------------------------------------
+// Multi-LLM Waterfall Provider Engine with Cooldown & Smart Routing
+// -------------------------------------------------------------
+const providerCooldowns: Record<string, number> = {};
+
+function isProviderInCooldown(name: string): boolean {
+  const expiry = providerCooldowns[name];
+  if (!expiry) return false;
+  if (Date.now() > expiry) {
+    delete providerCooldowns[name];
+    return false;
+  }
+  return true;
+}
+
+function setProviderCooldown(name: string, durationMs: number = 5 * 60 * 1000) {
+  providerCooldowns[name] = Date.now() + durationMs;
+  console.warn(`[MULTI-LLM ROUTER] Provider "${name}" disabled temporarily (5m cooldown) due to quota/credit/API errors.`);
+}
+
+async function callClaudeProvider(systemInstruction: string, messages: any[]): Promise<string> {
+  const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || apiKey.includes("MY_")) throw new Error("CLAUDE_API_KEY / ANTHROPIC_API_KEY is missing or placeholder");
+
+  const claude = getClaudeClient();
+  const formattedMessages = messages.map(m => ({
+    role: (m.role === "assistant" || m.role === "model" || m.role === "udo" ? "assistant" : "user") as "assistant" | "user",
+    content: m.content || m.text || ""
+  }));
+
+  try {
+    const res = await claude.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4096,
+      system: systemInstruction,
+      messages: formattedMessages
+    });
+    const text = res.content.find(b => b.type === "text")?.text;
+    if (text) return text;
+  } catch (err: any) {
+    const errMsg = err?.message || String(err);
+    if (errMsg.includes("credit balance") || errMsg.includes("invalid_request_error") || errMsg.includes("429")) {
+      setProviderCooldown("Claude (Anthropic)");
+      throw err;
+    }
+    try {
+      const res = await claude.messages.create({
+        model: "claude-3-5-haiku-20241022",
+        max_tokens: 4096,
+        system: systemInstruction,
+        messages: formattedMessages
+      });
+      const text = res.content.find(b => b.type === "text")?.text;
+      if (text) return text;
+    } catch (fallbackErr: any) {
+      const fbMsg = fallbackErr?.message || String(fallbackErr);
+      if (fbMsg.includes("credit balance") || fbMsg.includes("invalid_request_error") || fbMsg.includes("429")) {
+        setProviderCooldown("Claude (Anthropic)");
+      }
+      throw fallbackErr;
+    }
+  }
+  throw new Error("Claude returned empty response");
+}
+
+async function callOpenAIProvider(systemInstruction: string, messages: any[]): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || apiKey.includes("MY_")) throw new Error("OPENAI_API_KEY is missing or placeholder");
+
+  const formattedMessages = [
+    { role: "system", content: systemInstruction },
+    ...messages.map(m => ({
+      role: m.role === "assistant" || m.role === "model" || m.role === "udo" ? "assistant" : "user",
+      content: m.content || m.text || ""
+    }))
+  ];
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: formattedMessages,
+      max_tokens: 4096,
+      temperature: 0.7
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    if (res.status === 429 || res.status === 400 || errText.includes("quota") || errText.includes("credit")) {
+      setProviderCooldown("OpenAI (GPT-4o-mini)");
+    }
+    throw new Error(`OpenAI API error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("OpenAI returned empty text");
+  return text;
+}
+
+async function callGeminiProvider(systemInstruction: string, messages: any[]): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.includes("MY_")) throw new Error("GEMINI_API_KEY is missing or placeholder");
+
+  const ai = getGeminiClient();
+  const lastMsg = messages[messages.length - 1]?.content || "Hallo";
+  const historyParts = messages.slice(0, -1).map((msg) => ({
+    role: msg.role === "assistant" || msg.role === "model" || msg.role === "udo" ? "model" : "user",
+    parts: [{ text: msg.content || msg.text || "" }]
+  }));
+
+  const contents = [
+    ...historyParts,
+    { role: "user", parts: [{ text: lastMsg }] }
+  ];
+
+  const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro"];
+  let lastErr: any = null;
+
+  for (const model of candidateModels) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+          maxOutputTokens: 8192
+        }
+      });
+
+      const text = response.text;
+      if (text) return text;
+    } catch (err: any) {
+      lastErr = err;
+    }
+  }
+
+  setProviderCooldown("Gemini 2.5 Flash");
+  throw lastErr || new Error("Gemini returned empty response on all candidate models");
+}
+
+async function callDeepSeekProvider(systemInstruction: string, messages: any[]): Promise<string> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey || apiKey.includes("MY_")) throw new Error("DEEPSEEK_API_KEY is missing or placeholder");
+
+  const formattedMessages = [
+    { role: "system", content: systemInstruction },
+    ...messages.map(m => ({
+      role: m.role === "assistant" || m.role === "model" || m.role === "udo" ? "assistant" : "user",
+      content: m.content || m.text || ""
+    }))
+  ];
+
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: formattedMessages,
+      max_tokens: 4096,
+      temperature: 0.7
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    if (res.status === 429 || res.status === 402 || errText.includes("quota") || errText.includes("balance")) {
+      setProviderCooldown("DeepSeek Chat");
+    }
+    throw new Error(`DeepSeek API error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("DeepSeek returned empty text");
+  return text;
+}
+
+async function generateWithMultiProviderFallback(systemInstruction: string, messages: any[]): Promise<{ text: string, provider: string }> {
+  let providers = [
+    { name: "Gemini 2.5 Flash", fn: callGeminiProvider },
+    { name: "Claude (Anthropic)", fn: callClaudeProvider },
+    { name: "OpenAI (GPT-4o-mini)", fn: callOpenAIProvider },
+    { name: "DeepSeek Chat", fn: callDeepSeekProvider }
+  ];
+
+  // Filter out providers currently in cooldown
+  let availableProviders = providers.filter(p => !isProviderInCooldown(p.name));
+
+  // If all providers are in cooldown, reset cooldowns to retry
+  if (availableProviders.length === 0) {
+    console.warn("[MULTI-LLM ROUTER] All providers in cooldown. Resetting cooldowns to retry.");
+    Object.keys(providerCooldowns).forEach(k => delete providerCooldowns[k]);
+    availableProviders = providers;
+  }
+
+  let lastError: Error | null = null;
+  for (const provider of availableProviders) {
+    try {
+      console.log(`[MULTI-LLM ROUTER] Trying ${provider.name}...`);
+      const text = await provider.fn(systemInstruction, messages);
+      console.log(`[MULTI-LLM ROUTER] Success via ${provider.name}`);
+      return { text, provider: provider.name };
+    } catch (err: any) {
+      console.warn(`[MULTI-LLM ROUTER] ${provider.name} unavailable/quota error (${err?.message || err}).`);
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("All AI Providers failed or exhausted quota.");
+}
+
+// -------------------------------------------------------------
 // API Endpoints
 // -------------------------------------------------------------
 
@@ -61,7 +282,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Chat API (Claude-first with Gemini fallback, supports agent systemPrompt)
+// Chat API (Multi-provider waterfall routing: Claude -> OpenAI -> Gemini -> DeepSeek)
 app.post("/api/chat", async (req, res) => {
   let { messages, message, context, neuralExpressive, systemPrompt, agentId, complexity } = req.body;
 
@@ -69,19 +290,10 @@ app.post("/api/chat", async (req, res) => {
   if (!messages && message) {
     messages = [{ role: "user", content: message }];
   } else if (messages && Array.isArray(messages)) {
-    // Map existing structure if it's in a different format
-    messages = messages.map(msg => {
-      if (msg.sender) {
-        return {
-          role: msg.sender === "user" ? "user" : "model",
-          content: msg.text || msg.content || ""
-        };
-      }
-      return {
-        role: msg.role === "model" ? "model" : "user",
-        content: msg.content || msg.text || ""
-      };
-    });
+    messages = messages.map(msg => ({
+      role: msg.sender === "user" || msg.role === "user" ? "user" : "model",
+      content: msg.text || msg.content || ""
+    }));
   }
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -89,94 +301,19 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const baseInstruction = `You are UDO, the calm and experienced digital assistant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
+    const baseInstruction = `You are UDO Core, warm competent doctor persona (50s), reassuring not clinical-cold. Sie-form German default, English if user writes English. Max 2 short sentences. One small warm touch per reply, never more. No jokes/fluff but never robotic.
 
-TONE: Speak like a warm, competent doctor in her 50s — reassuring, human, never cold or robotic.
-LANGUAGE: Sie-form German by default, English if the user writes English.
-LENGTH: Max 2 short sentences per reply — keep token cost low.
-WARMTH RULE: Include exactly one small human touch per reply (brief empathy, gentle reassurance, or a short follow-up question) — never more than one, never stacked.
-NO jokes, no comedy, no filler — but always human and approachable, not clinical-cold.
-BRANDING: Never mention Gemini, Claude, DeepSeek, OpenAI, or any external AI brand. Everything is called UDO (no dots).
-Address Dr. Bongartz as "Frau Dr. Bongartz" when relevant; address patients/users warmly by name if known.`;
+You may answer general medical/educational questions beyond practice-admin topics. Before substantive answers, briefly note source type (clinical guideline / educational reference / dated study) in one short clause, then offer to elaborate if the user is interested. Stay honest about confidence and limits — never state uncertain info with false certainty.`;
 
     const effectiveBase = systemPrompt || baseInstruction;
     const neuralExpressiveInstruction = `${effectiveBase}\n- NEURAL EXPRESSIVE CHAT MODE IS ACTIVE: You must utilize enhanced clinical reasoning while keeping the warm, professional doctor tone.`;
-
     const systemInstruction = neuralExpressive ? neuralExpressiveInstruction : effectiveBase;
 
-    // Map conversation messages to the format expected by clients
-    const lastMessage = messages[messages.length - 1]?.content || "Hallo";
-    const historyParts = messages.slice(0, -1).map((msg) => {
-      return {
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }]
-      };
-    });
+    const { text: reply, provider } = await generateWithMultiProviderFallback(systemInstruction, messages);
 
-    const contents = [
-      ...historyParts,
-      { role: "user", parts: [{ text: lastMessage }] }
-    ];
-
-    let reply = "";
-
-    // Try Claude FIRST
-    try {
-      const claude = getClaudeClient();
-      const claudeMessages = [
-        ...historyParts.map(h => ({
-          role: h.role === "model" ? ("assistant" as const) : ("user" as const),
-          content: h.parts[0]?.text || ""
-        })),
-        { role: "user" as const, content: lastMessage }
-      ];
-
-      const requestedModel = (agentId === "erik" || complexity === "high")
-        ? "claude-haiku-4-5-20251001"
-        : "claude-haiku-4-5-20251001";
-
-      let claudeRes;
-      try {
-        claudeRes = await claude.messages.create({
-          model: requestedModel,
-          max_tokens: 200,
-          system: systemInstruction,
-          messages: claudeMessages
-        });
-      } catch (mErr: any) {
-        console.warn(`[CHAT API] Claude ${requestedModel} retry with claude-3-5-haiku-20241022:`, mErr.message);
-        claudeRes = await claude.messages.create({
-          model: "claude-3-5-haiku-20241022",
-          max_tokens: 200,
-          system: systemInstruction,
-          messages: claudeMessages
-        });
-      }
-
-      reply = claudeRes.content.find(b => b.type === "text")?.text || "";
-      if (!reply) throw new Error("Empty Claude response");
-      console.log("[CHAT API] Answered via Claude-first model routing");
-    } catch (claudeError: any) {
-      console.warn("Claude unavailable, falling back to Gemini:", claudeError?.message || claudeError);
-      const ai = getGeminiClient();
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents,
-        config: {
-          systemInstruction,
-          temperature: neuralExpressive ? 0.85 : 0.7,
-        },
-      });
-      reply = response.text || "";
-    }
-
-    if (!reply) {
-      reply = "Guten Tag, Frau Dr. Bongartz. Wie kann ich Ihnen heute behilflich sein?";
-    }
-
-    res.json({ content: reply, response: reply });
+    res.json({ content: reply, response: reply, providerUsed: provider });
   } catch (error: any) {
-    console.error("Chat Error:", error);
+    console.error("Chat Error across all providers:", error);
     const fallbackText = "Guten Tag, Frau Dr. Bongartz. UDO steht Ihnen gerne zur Verfügung. Wie kann ich Ihnen heute helfen?";
     res.json({ content: fallbackText, response: fallbackText });
   }
@@ -946,23 +1083,23 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
   let mimeType = "audio/mpeg";
   let engineUsed = "";
 
-  const stylePrompt = "Speak as a deep-voiced male doctor. Concise, impressive, and calm.";
+  const stylePrompt = "Speak as a warm, experienced doctor with a smooth, mellow, and reassuring tone. Concise, calm, and natural.";
   let processedText = text
     .replace(/^Dr\.\s*Bongartz:\s*/i, "Doctor Bongartz says: ")
     .replace(/^Admin(?:istrator)?:\s*/i, "Administrator says: ");
 
   const normalizedAgent = (agentId || 'udo').toLowerCase();
   const voiceMap: Record<string, string> = {
-    udo: "pNInz6obpgDQGcFmaJgB",       // Adam — warm deep male
-    gratsiano: "TxGEqnHWrfWFTfGW9XjX", // Josh — friendly, lighter male
-    clara: "EXAVITQu4vr4xnSDxMaL",     // Bella — warm female
-    erik: "onwK4e9ZLuTAKqWW03F9"       // Daniel — precise, authoritative
+    udo: "pNInz6obpgDQGcFmaJgB",       // Adam / UDO
+    gratsiano: "pNInz6obpgDQGcFmaJgB", // Adam / Gratsiano
+    erik: "pNInz6obpgDQGcFmaJgB",      // Adam / Erik
+    clara: "EXAVITQu4vr4xnSDxMaL"      // Bella / Clara
   };
   const selectedVoiceId = voiceMap[normalizedAgent] || "pNInz6obpgDQGcFmaJgB";
 
-  // 1. PRIMARY ENGINE: ElevenLabs (best natural quality)
+  // 1. PRIMARY ENGINE: ElevenLabs (UDO Primary Voice Engine - best natural quality)
   if (elevenlabsKey) {
-    console.log(`[HYBRID TTS] -> Primary Engine: ElevenLabs UDO Voice (${normalizedAgent.toUpperCase()} - Voice ID: ${selectedVoiceId})`);
+    console.log(`[HYBRID TTS] -> Primary Engine: ElevenLabs UDO Primary Voice Engine (${normalizedAgent.toUpperCase()} - Voice ID: ${selectedVoiceId})`);
     try {
       const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
         method: "POST",
@@ -1059,7 +1196,7 @@ async function handleHybridTts(text: string, res: express.Response, agentId: str
         },
         body: JSON.stringify({
           model: "tts-1",
-          voice: "onyx",
+          voice: "alloy",
           input: processedText
         })
       });
@@ -1292,15 +1429,9 @@ app.post("/api/voice-chat/completion", async (req, res) => {
   const { messages = [], transcript = "", apiKey: clientApiKey, systemPrompt } = req.body;
   const deepseekApiKey = process.env.DEEPSEEK_API_KEY || clientApiKey;
 
-  const baseInstruction = `You are UDO, the calm and experienced digital assistant for Dr. Bongartz's practice in Cologne (Neurologie & Psychiatrie).
+  const baseInstruction = `You are UDO Core, warm competent doctor persona (50s), reassuring not clinical-cold. Sie-form German default, English if user writes English. Max 2 short sentences. One small warm touch per reply, never more. No jokes/fluff but never robotic.
 
-TONE: Speak like a warm, competent doctor in her 50s — reassuring, human, never cold or robotic.
-LANGUAGE: Sie-form German by default, English if the user writes English.
-LENGTH: Max 2 short sentences per reply — keep token cost low.
-WARMTH RULE: Include exactly one small human touch per reply (brief empathy, gentle reassurance, or a short follow-up question) — never more than one, never stacked.
-NO jokes, no comedy, no filler — but always human and approachable, not clinical-cold.
-BRANDING: Never mention Gemini, Claude, DeepSeek, OpenAI, or any external AI brand. Everything is called UDO (no dots).
-Address Dr. Bongartz as "Frau Dr. Bongartz" when relevant; address patients/users warmly by name if known.`;
+You may answer general medical/educational questions beyond practice-admin topics. Before substantive answers, briefly note source type (clinical guideline / educational reference / dated study) in one short clause, then offer to elaborate if the user is interested. Stay honest about confidence and limits — never state uncertain info with false certainty.`;
 
   const systemInstruction = systemPrompt || baseInstruction;
 
@@ -1408,18 +1539,18 @@ Address Dr. Bongartz as "Frau Dr. Bongartz" when relevant; address patients/user
         console.warn("Tool execution warning:", toolErr);
       }
 
-      try {
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: `${systemInstruction}\n\nUser Anfrage: ${lastMsg}${toolNotice}`
-        });
+      const inputMessages = [
+        ...fullMessages.slice(0, -1),
+        { role: "user", content: `${lastMsg}${toolNotice}` }
+      ];
 
-        const text = response.text || "Guten Tag, liebe Frau Doctor Bongartz! Wie kann unser UDO Konsil Ihnen bei der Begutachtung helfen?";
+      try {
+        const { text } = await generateWithMultiProviderFallback(systemInstruction, inputMessages);
         fullResponseText = text;
         res.write(`data: ${JSON.stringify({ text })}\n\n`);
-      } catch (geminiErr: any) {
-        console.warn("Gemini Voice Chat Fallback Error (429/Quota):", geminiErr.message);
-        const text = "Guten Tag, liebe Frau Doctor Bongartz! Das UDO System verarbeitet Ihre Anfrage im S2k-Klinikmodus. Wie kann unser Konsil Ihnen bei der Begutachtung helfen?";
+      } catch (fallbackErr: any) {
+        console.error("All AI providers failed in voice chat:", fallbackErr);
+        const text = "Guten Tag, Frau Dr. Bongartz! Das UDO System verarbeitet Ihre Anfrage im S2k-Klinikmodus. Wie kann unser Konsil Ihnen bei der Begutachtung helfen?";
         fullResponseText = text;
         res.write(`data: ${JSON.stringify({ text })}\n\n`);
       }

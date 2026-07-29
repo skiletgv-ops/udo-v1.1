@@ -28,6 +28,9 @@ import PortalPage from './components/portal/PortalPage';
 import IntakePage from './components/intake/IntakePage';
 import SystemWhitepaper from './components/SystemWhitepaper';
 import PresentationSlideDeck from './components/PresentationSlideDeck';
+import WorkTableShell from './components/worktable/WorkTableShell';
+import WorkspaceShell from './components/workspace/WorkspaceShell';
+import WhitepaperPage from './components/WhitepaperPage';
 
 import { ActiveTab, Demographics, DocumentItem, Finding, AIAgent } from './types';
 import { DEFAULT_DEMOGRAPHICS, DEMO_DOCUMENTS, DEMO_FINDINGS, INITIAL_AGENTS } from './lib/agents';
@@ -174,7 +177,7 @@ function MainAppContent() {
 }
 
 function getInitialRoute(): string {
-  if (typeof window === 'undefined') return '/';
+  if (typeof window === 'undefined') return '/portal';
   const path = window.location.pathname;
   if (path === '/presentation' || path.startsWith('/presentation')) {
     return '/presentation';
@@ -182,10 +185,16 @@ function getInitialRoute(): string {
   if (path === '/whitepaper' || path.startsWith('/whitepaper')) {
     return '/whitepaper';
   }
-  if (path === '/portal' || path === '/app' || path.startsWith('/portal') || path.startsWith('/app')) {
-    return '/portal';
+  if (path === '/worktable' || path.startsWith('/worktable')) {
+    return '/worktable';
   }
-  return '/';
+  if (path === '/workspace' || path.startsWith('/workspace') || path.startsWith('/app/workspace')) {
+    return '/workspace';
+  }
+  if (path === '/app' || path.startsWith('/app')) {
+    return '/app';
+  }
+  return '/portal';
 }
 
 export function App() {
@@ -215,33 +224,19 @@ export function App() {
         {route === '/presentation' ? (
           <PresentationSlideDeck />
         ) : route === '/whitepaper' ? (
-          <div className="min-h-screen bg-[#0a0a0f] text-slate-100 font-sans relative overflow-x-hidden">
-            <header className="sticky top-0 z-50 h-14 bg-[#0a0a0f]/90 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-8 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-              <div className="flex items-center gap-3">
-                <a
-                  href="/"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-all text-xs font-mono"
-                >
-                  <span className="text-cyan-400 font-bold">&larr;</span>
-                  <span>Startseite</span>
-                </a>
-                <span className="h-4 w-[1px] bg-white/10 hidden sm:block" />
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="text-xs font-mono font-bold tracking-widest text-white uppercase">
-                    UDO System Whitepaper
-                  </span>
-                </div>
-              </div>
-            </header>
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
-              <SystemWhitepaper />
-            </div>
-          </div>
-        ) : route === '/' ? (
-          <IntroPresentation onComplete={() => navigateTo('/portal')} />
-        ) : (
+          <WhitepaperPage onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/worktable' ? (
+          <WorkTableShell onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/workspace' ? (
+          <WorkspaceShell onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/app' ? (
           <MainAppContent />
+        ) : (
+          <IntroPresentation
+            onComplete={() => navigateTo('/app')}
+            onOpenWhitepaper={() => navigateTo('/whitepaper')}
+            onOpenWorkspace={() => navigateTo('/workspace')}
+          />
         )}
       </PrescriptionProvider>
     </RoleProvider>

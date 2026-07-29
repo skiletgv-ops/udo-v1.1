@@ -14,6 +14,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Finding } from '../types';
+import { ExecutiveSummaryPanel } from '../components/review/ExecutiveSummaryPanel';
 
 interface ReviewPageProps {
   findings: Finding[];
@@ -90,6 +91,9 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({
           S2k-GUTACHTEN GENERIEREN ({confirmedCount} Bestätigt)
         </Button>
       </div>
+
+      {/* EXECUTIVE SUMMARY FOR THE DOCTOR */}
+      <ExecutiveSummaryPanel findings={findings} />
 
       {/* FILTER BUTTONS */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">

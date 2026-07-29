@@ -191,8 +191,8 @@ export function useVoiceChat(
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(cleanedText);
         utterance.lang = options.language === 'en' ? 'en-US' : 'de-DE';
-        utterance.pitch = 0.82;
-        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        utterance.rate = 0.98;
 
         const voices = window.speechSynthesis.getVoices();
         const maleVoice = voices.find(v => {

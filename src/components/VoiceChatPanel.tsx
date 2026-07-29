@@ -92,8 +92,8 @@ export const VoiceChatPanel: React.FC<VoiceChatPanelProps> = ({
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(cleaned);
       utterance.lang = 'de-DE';
-      utterance.rate = 0.95;
-      utterance.pitch = 0.88; // Deep calm male pitch
+      utterance.rate = 0.98;
+      utterance.pitch = 1.0;
 
       const voices = window.speechSynthesis.getVoices();
       const femaleNames = ["marlene", "vicki", "anna", "petra", "hedda", "zira", "hazel", "samantha", "victoria"];

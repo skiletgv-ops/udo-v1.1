@@ -15,6 +15,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Demographics, Finding, GutachtenReport } from '../types';
 import { generateGutachtenReport, exportGutachtenAsText } from '../lib/gutachten-generator';
+import { exportGutachtenAsDguvPdf } from '../lib/dguvPdfExporter';
 
 interface GutachtenPageProps {
   demographics: Demographics;
@@ -29,6 +30,17 @@ export const GutachtenPage: React.FC<GutachtenPageProps> = ({
     generateGutachtenReport(demographics, findings)
   );
   const [copied, setCopied] = useState(false);
+  const [pdfSuccess, setPdfSuccess] = useState(false);
+
+  const handleExportDguvPdf = () => {
+    try {
+      exportGutachtenAsDguvPdf(report);
+      setPdfSuccess(true);
+      setTimeout(() => setPdfSuccess(false), 4000);
+    } catch (err) {
+      console.error('Failed to generate DGUV PDF', err);
+    }
+  };
 
   const handleExportText = () => {
     const textContent = exportGutachtenAsText(report);
@@ -94,12 +106,22 @@ export const GutachtenPage: React.FC<GutachtenPageProps> = ({
           </Button>
 
           <Button
-            variant="primary"
+            variant="ghost"
             size="md"
-            icon={<Download className="w-4 h-4" />}
+            icon={<Download className="w-4 h-4 text-cyan-400" />}
             onClick={handleExportText}
           >
             Export TXT
+          </Button>
+
+          <Button
+            variant="primary"
+            size="md"
+            icon={pdfSuccess ? <Check className="w-4 h-4 text-emerald-300" /> : <ShieldCheck className="w-4 h-4 text-emerald-300" />}
+            onClick={handleExportDguvPdf}
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+          >
+            {pdfSuccess ? 'DGUV-PDF Erstellt!' : 'DGUV-PDF Export'}
           </Button>
         </div>
       </div>

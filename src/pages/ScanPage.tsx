@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import { triggerAudioCue } from '../services/audioFeedbackService';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -35,14 +36,32 @@ export const ScanPage: React.FC<ScanPageProps> = ({
 
   const isScanning = agents.some((a) => a.progress < 100);
 
+  const hasTriggeredAudioRef = React.useRef(false);
+
+  useEffect(() => {
+    // Check if scan just completed
+    if (agents.length > 0 && agents.every((a) => a.progress === 100) && !hasTriggeredAudioRef.current) {
+      hasTriggeredAudioRef.current = true;
+      triggerAudioCue(
+        'scan-complete',
+        '4-KI-Agenten Scan Abgeschlossen',
+        'Die S2k-Analysen aller 4 KI-Fachärzte wurden vollständig abgeschlossen.'
+      );
+    }
+  }, [agents]);
+
   useEffect(() => {
     // Simulate parallel scan progression for all 4 agents
     const interval = setInterval(() => {
       setAgents((prevAgents) => {
-        let anyIncomplete = false;
-        const updated = prevAgents.map((agent) => {
+        const anyIncomplete = prevAgents.some((a) => a.progress < 100);
+        if (!anyIncomplete) {
+          clearInterval(interval);
+          return prevAgents;
+        }
+
+        return prevAgents.map((agent) => {
           if (agent.progress < 100) {
-            anyIncomplete = true;
             const inc = Math.floor(Math.random() * 15) + 10;
             const nextProg = Math.min(100, agent.progress + inc);
             return {
@@ -53,12 +72,6 @@ export const ScanPage: React.FC<ScanPageProps> = ({
           }
           return agent;
         });
-
-        if (!anyIncomplete) {
-          clearInterval(interval);
-        }
-
-        return updated;
       });
     }, 400);
 

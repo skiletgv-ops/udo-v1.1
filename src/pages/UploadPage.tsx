@@ -16,6 +16,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Demographics, DocumentItem } from '../types';
 import { PrescriptionList } from '../components/PrescriptionList';
+import { triggerAudioCue } from '../services/audioFeedbackService';
 
 interface UploadPageProps {
   demographics: Demographics;
@@ -58,6 +59,11 @@ export const UploadPage: React.FC<UploadPageProps> = ({
         : 'Anamnese'
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
+    triggerAudioCue(
+      'audit-complete',
+      'Dokumente Erfasst',
+      `${newDocs.length} neue Akten wurden erfasst und stehen für den KI-Scan bereit.`
+    );
   };
 
   const removeDoc = (id: string) => {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { QuickStatsWidget } from '../dashboard/QuickStatsWidget';
 import {
   ShieldCheck,
   Zap,
@@ -173,6 +174,9 @@ export const DashboardView: React.FC = () => {
         </div>
 
       </div>
+
+      {/* QUICK-STATS WIDGET */}
+      <QuickStatsWidget />
 
       {/* ZONE 3 & ZONE 4: MIDDLE SECTION (12-COLUMN GRID) */}
       <div className="grid grid-cols-12 gap-6">

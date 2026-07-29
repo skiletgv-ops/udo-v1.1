@@ -17,13 +17,15 @@ import {
   Mic,
   BookOpen,
   Zap,
-  PanelRightOpen
+  PanelRightOpen,
+  FileText
 } from 'lucide-react';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
 import { useGlobalSystem } from './GlobalSystemContext';
 import { ActiveTab } from '../types';
 import { MicState } from '../hooks/useWakeWord';
+import { AudioFeedbackIndicator } from './AudioFeedbackIndicator';
 
 interface TopSystemBarProps {
   activeModuleName?: string;
@@ -35,6 +37,8 @@ interface TopSystemBarProps {
   onToggleSideDocs?: () => void;
   onOpenSideDocsTab?: (tab: 'docs' | 'functions' | 'voice_specs' | 'status_cases') => void;
   sideDocsOpen?: boolean;
+  onOpenPatientOverview?: () => void;
+  patientOverviewOpen?: boolean;
 }
 
 export const TopSystemBar: React.FC<TopSystemBarProps> = ({
@@ -46,7 +50,9 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
   onOpenVoicePanel,
   onToggleSideDocs,
   onOpenSideDocsTab,
-  sideDocsOpen = false
+  sideDocsOpen = false,
+  onOpenPatientOverview,
+  patientOverviewOpen = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -163,6 +169,25 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
 
         {/* TOP RIGHT: ICON BUTTONS & ROLE CHIP */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* PATIENT OVERVIEW MODAL/PANEL TRIGGER BUTTON */}
+          <button
+            onClick={onOpenPatientOverview}
+            className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              patientOverviewOpen
+                ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(0,212,170,0.5)]'
+                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300'
+            }`}
+            title="Patienten-Akte & KI-Scan Übersicht (Patient Overview)"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline uppercase text-[10px] tracking-wider">
+              Pat-Akte
+            </span>
+          </button>
+
+          {/* BARRIEREFREIES AUDIO FEEDBACK INDICATOR */}
+          <AudioFeedbackIndicator />
+
           {/* DEDICATED S2K DOCS & QUICK TOOLS SIDE PANEL TRIGGER */}
           <button
             onClick={onToggleSideDocs}

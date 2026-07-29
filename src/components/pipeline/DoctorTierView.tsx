@@ -14,6 +14,7 @@ import {
   Info
 } from 'lucide-react';
 import { ExtractedMedicalDocument } from '../../types/ingestionPipeline';
+import { triggerAudioCue } from '../../services/audioFeedbackService';
 import { DemoDataBadge } from './DemoDataBadge';
 import { auditLogger } from '../../services/auditLogger';
 
@@ -91,6 +92,12 @@ export const DoctorTierView: React.FC<DoctorTierViewProps> = ({
       action: 'DOCTOR_SIGNED_AND_BILLED',
       comment: 'Ärztliche Abnahme & Freigabe zur ALBIS Abrechnung (QES Signatur).'
     });
+
+    triggerAudioCue(
+      'audit-complete',
+      'Ärztliche Abnahme Erfolgreich',
+      `Dokument für ${selectedDoc.demographics.lastName.value} wurde freigegeben und zur ALBIS Abrechnung gezeichnet.`
+    );
 
     // Generate ALBIS-compatible GDT/BDT/CSV format string
     generateAlbisExportData(selectedDoc, 'GDT');
