@@ -30,6 +30,10 @@ import SystemWhitepaper from './components/SystemWhitepaper';
 import PresentationSlideDeck from './components/PresentationSlideDeck';
 import WorkTableShell from './components/worktable/WorkTableShell';
 import WorkspaceShell from './components/workspace/WorkspaceShell';
+import AlbisTestPage from './app/albis-test/page';
+import UdoV2Page from './app/udo-v2/page';
+import UdoV2DemoPage from './app/udo-v2-demo/page';
+import HelpPage from './app/help/page';
 import WhitepaperPage from './components/WhitepaperPage';
 
 import { ActiveTab, Demographics, DocumentItem, Finding, AIAgent } from './types';
@@ -188,6 +192,18 @@ function getInitialRoute(): string {
   if (path === '/worktable' || path.startsWith('/worktable')) {
     return '/worktable';
   }
+  if (path === '/albis-test' || path.startsWith('/albis-test')) {
+    return '/albis-test';
+  }
+  if (path === '/udo-v2-demo' || path.startsWith('/udo-v2-demo') || path.startsWith('/app/udo-v2-demo')) {
+    return '/udo-v2-demo';
+  }
+  if (path === '/udo-v2' || path.startsWith('/udo-v2') || path.startsWith('/app/udo-v2')) {
+    return '/udo-v2';
+  }
+  if (path === '/help' || path.startsWith('/help') || path.startsWith('/app/help')) {
+    return '/help';
+  }
   if (path === '/workspace' || path.startsWith('/workspace') || path.startsWith('/app/workspace')) {
     return '/workspace';
   }
@@ -229,6 +245,14 @@ export function App() {
           <WorkTableShell onNavigateToPortal={() => navigateTo('/portal')} />
         ) : route === '/workspace' ? (
           <WorkspaceShell onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/albis-test' ? (
+          <AlbisTestPage onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/udo-v2-demo' ? (
+          <UdoV2DemoPage onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/udo-v2' ? (
+          <UdoV2Page onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/help' ? (
+          <HelpPage onNavigateToPortal={() => navigateTo('/portal')} />
         ) : route === '/app' ? (
           <MainAppContent />
         ) : (
@@ -236,6 +260,8 @@ export function App() {
             onComplete={() => navigateTo('/app')}
             onOpenWhitepaper={() => navigateTo('/whitepaper')}
             onOpenWorkspace={() => navigateTo('/workspace')}
+            onOpenAlbisTest={() => navigateTo('/albis-test')}
+            onOpenUdoV2={() => navigateTo('/udo-v2')}
           />
         )}
       </PrescriptionProvider>

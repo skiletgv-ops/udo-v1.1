@@ -1,0 +1,107 @@
+{
+  "systemTitle": "UDO Medical OS v1.1 - The Future Clinic Upgrade",
+  "version": "1.1.0-STABLE",
+  "lastUpdated": "2026-07-29",
+  "summary": "Unified Medical OS integrating CGM ALBIS KTX Kassenarzt-scaffold, S2k AI-Gutachten Engine, Telematikinfrastruktur 2.0, Real-time Predictive Practice Analytics, and Proactive DSGVO Guardian.",
+  "phases": [
+    {
+      "phase": "Phase 1",
+      "id": "albis-live-bridge",
+      "name": "Data Unification & ALBIS KTX Live Bridge",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Bi-directional ALBIS KTX API data bridge simulating patient master records, ICD-10 diagnoses, and OCR lab values across 10 synthetic patient files."
+    },
+    {
+      "phase": "Phase 2",
+      "id": "unified-workspace",
+      "name": "Unified Workspace ('The One Window')",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Drag-and-drop waiting room check-in queue integrated with appointment calendar, side-by-side Gutachten canvas, and global instant search."
+    },
+    {
+      "phase": "Phase 3",
+      "id": "ai-gutachten-coding",
+      "name": "AI-Assisted Gutachten & Instant GOÄ Coding",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "AI-driven draft report synthesis with watermarking and instant regex mapping to GOÄ, EBM, and JVEG fee catalogs with 1-click billing acceptance."
+    },
+    {
+      "phase": "Phase 4",
+      "id": "predictive-cockpit",
+      "name": "Predictive Practice Cockpit (Analytics 2.0)",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Recharts revenue breakdown by service and LANR physician, 30-day linear regression predictive AI revenue forecasts, and anomaly drop alerts."
+    },
+    {
+      "phase": "Phase 5",
+      "id": "telematics-engine",
+      "name": "Autonomous Telematics Engine (TI 2.0)",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Automated batch generator for eRezept, eAU, eArztbrief, and ePA with animated secure gateway simulation, retry queue, and audit tracking."
+    },
+    {
+      "phase": "Phase 6",
+      "id": "mobile-scribe",
+      "name": "Voice-Driven Mobile Scribe",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Web Speech API voice transcription with LLM medical term cleanup and real-time cross-device sync to desktop report editor."
+    },
+    {
+      "phase": "Phase 7",
+      "id": "intelligent-triage",
+      "name": "Intelligent Patient Triage & Prior Auth Engine",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "NLP referral letter scanner identifying acute DGUV/emergency cases, priority badge queue, and automated Kostenübernahme PDF generator."
+    },
+    {
+      "phase": "Phase 8",
+      "id": "mvz-multi-practice",
+      "name": "MVZ & Multi-Practice Ecosystem",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "5-location practice switcher (Berlin, Munich, Hamburg, Cologne, Frankfurt) with aggregated MVZ master revenue charts and masked cross-location patient lookup."
+    },
+    {
+      "phase": "Phase 9",
+      "id": "proactive-gdpr-guardian",
+      "name": "Proactive GDPR 'Guardian' & Compliance System",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Proximity auto-lock simulation, unauthorized file access detection, Data Subject Rights JSON exporter, and downloadable DSGVO audit report PDF."
+    },
+    {
+      "phase": "Phase 10",
+      "id": "concierge-ai",
+      "name": "Future Clinic Concierge AI Assistant",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Floating FAB assistant chatbot with calendar SMS reminder automation, prescription inventory alerts, and automated workflow dispatching."
+    },
+    {
+      "phase": "Phase 11",
+      "id": "global-whitepaper",
+      "name": "Global Whitepaper & Investor Presentation Generator",
+      "status": "live",
+      "releaseVersion": "1.1.0",
+      "releaseDate": "2026-07-29",
+      "description": "Dynamic investor-ready presentation matrix, full-screen interactive slideshow mode, and automatic PDF whitepaper export."
+    }
+  ]
+}

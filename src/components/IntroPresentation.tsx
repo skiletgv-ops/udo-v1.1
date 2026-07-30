@@ -9,7 +9,9 @@ import {
   ArrowRight,
   ChevronRight,
   Info,
-  PanelsTopLeft
+  PanelsTopLeft,
+  FlaskConical,
+  HelpCircle
 } from "lucide-react";
 import SystemWhitepaper from "./SystemWhitepaper";
 import { useGlobalSystem } from "./GlobalSystemContext";
@@ -23,9 +25,11 @@ interface IntroPresentationProps {
   onComplete: () => void;
   onOpenWhitepaper?: () => void;
   onOpenWorkspace?: () => void;
+  onOpenAlbisTest?: () => void;
+  onOpenUdoV2?: () => void;
 }
 
-export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpenWorkspace }: IntroPresentationProps) {
+export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpenWorkspace, onOpenAlbisTest, onOpenUdoV2 }: IntroPresentationProps) {
   const [progress, setProgress] = useState(100);
   const [bootStage, setBootStage] = useState(5);
   const [isBooted, setIsBooted] = useState(true);
@@ -314,8 +318,8 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                   )}
                 </AnimatePresence>
 
-                {/* FLOATING WHITEPAPER BUTTON WITH RED NEON EDGE GLOW */}
-                <div className="absolute top-2 left-2 sm:top-4 sm:left-6 z-30 pointer-events-auto">
+                {/* FLOATING WHITEPAPER & TRON NEON UDO V2 BUTTONS */}
+                <div className="absolute top-2 left-2 sm:top-4 sm:left-6 z-30 pointer-events-auto flex flex-col gap-2.5">
                   <GradientButton
                     variant="whitepaper"
                     onClick={() => {
@@ -328,10 +332,87 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                     <span>UDO WHITEPAPER</span>
                     <BookOpen className="w-4 h-4" />
                   </GradientButton>
+
+                  {/* TRON NEON ENTRY BUTTON FOR /app/udo-v2/page.tsx - DOWN OF WHITEPAPER */}
+                  <button
+                    onClick={() => {
+                      playClickSound(true);
+                      if (onOpenUdoV2) {
+                        onOpenUdoV2();
+                      } else if (typeof window !== "undefined") {
+                        window.history.pushState({}, '', '/udo-v2');
+                        window.dispatchEvent(new Event('popstate'));
+                      }
+                    }}
+                    onMouseEnter={() => playClickSound(false)}
+                    className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-[11px] min-w-[132px] inline-flex items-center justify-center text-cyan-300 bg-slate-950/90 border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.6),inset_0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.95),inset_0_0_20px_rgba(6,182,212,0.5)] hover:border-cyan-300 hover:text-white transition-all active:scale-95"
+                  >
+                    <span>UDO V2 DASHBOARD</span>
+                    <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
+                  </button>
+
+                  {/* HELP BUTTON */}
+                  <button
+                    onClick={() => {
+                      playClickSound(true);
+                      if (typeof window !== "undefined") {
+                        window.history.pushState({}, '', '/help');
+                        window.dispatchEvent(new Event('popstate'));
+                      }
+                    }}
+                    onMouseEnter={() => playClickSound(false)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-300 transition-all backdrop-blur-sm hover:text-white hover:border-cyan-400/50 shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer uppercase font-mono font-bold"
+                  >
+                    <HelpCircle className="w-4 h-4 text-slate-400" />
+                    <span>HELP</span>
+                  </button>
                 </div>
 
-                {/* FIXED BOTTOM-LEFT WORKSPACE BUTTON */}
-                <div className="fixed bottom-6 left-6 z-30 pointer-events-auto">
+                {/* FIXED BOTTOM-LEFT RADIO BUTTON MODE SELECTOR (OPPOSITE OF WORKSPACE & ALBIS TEST ON THE RIGHT) */}
+                <div className="fixed bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-2 p-2.5 bg-slate-950/85 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl font-mono text-xs text-slate-300">
+                  <span className="text-[10px] text-teal-400 font-extrabold uppercase tracking-wider px-1.5 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+                    SELECT:
+                  </span>
+
+                  <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition-all active:scale-95">
+                    <input
+                      type="radio"
+                      name="system-mode-radio-left"
+                      value="workspace"
+                      onChange={() => {
+                        playClickSound(true);
+                        if (onOpenWorkspace) {
+                          onOpenWorkspace();
+                        }
+                      }}
+                      className="accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                    />
+                    <span className="font-bold text-indigo-300">Workspace</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-cyan-500/30 cursor-pointer transition-all active:scale-95">
+                    <input
+                      type="radio"
+                      name="system-mode-radio-left"
+                      value="albis"
+                      onChange={() => {
+                        playClickSound(true);
+                        if (onOpenAlbisTest) {
+                          onOpenAlbisTest();
+                        } else if (typeof window !== "undefined") {
+                          window.history.pushState({}, '', '/albis-test');
+                          window.dispatchEvent(new Event('popstate'));
+                        }
+                      }}
+                      className="accent-cyan-400 cursor-pointer w-3.5 h-3.5"
+                    />
+                    <span className="font-bold text-cyan-300">ALBIS Test</span>
+                  </label>
+                </div>
+
+                {/* FIXED BOTTOM-RIGHT WORKSPACE & ALBIS TEST BUTTON CLUSTER */}
+                <div className="fixed bottom-6 right-6 z-50 pointer-events-auto flex gap-3">
                   <GradientButton
                     variant="default"
                     onClick={() => {
@@ -344,6 +425,23 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                   >
                     <PanelsTopLeft className="w-3.5 h-3.5 text-indigo-400" />
                     <span>WORKSPACE</span>
+                  </GradientButton>
+
+                  <GradientButton
+                    variant="variant"
+                    onClick={() => {
+                      playClickSound(true);
+                      if (onOpenAlbisTest) {
+                        onOpenAlbisTest();
+                      } else if (typeof window !== "undefined") {
+                        window.history.pushState({}, '', '/albis-test');
+                        window.dispatchEvent(new Event('popstate'));
+                      }
+                    }}
+                    className="!min-w-0 !px-5 !py-2.5 text-sm gap-2 font-mono font-bold uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                  >
+                    <FlaskConical className="w-4 h-4 text-cyan-300" />
+                    <span>ALBIS TEST</span>
                   </GradientButton>
                 </div>
 

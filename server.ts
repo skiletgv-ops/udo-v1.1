@@ -9,6 +9,7 @@ import { complianceService } from "./src/services/complianceService";
 import { albisGdtService } from "./src/services/albisGdtService";
 import { parseGdt, writeGdt } from "./src/lib/gdt";
 import { UDO_DEEPSEEK_TOOLS, executeUdoTool } from "./src/services/udoVoiceTools";
+import { SYNTHETIC_PATIENTS, PRACTICE_LOCATIONS } from "./src/data/mockAlbisDB";
 
 dotenv.config();
 
@@ -499,6 +500,43 @@ app.post("/api/integrations/albis/parse-preview", (req, res) => {
   }
   const result = parseGdt(rawGdtText);
   res.json(result);
+});
+
+// Live CGM ALBIS KTX Bridge API (Phase 1 Data Unification)
+app.get("/api/albis-bridge", (req, res) => {
+  const patientId = req.query.patientId as string;
+  const locationId = req.query.locationId as string;
+
+  let patients = [...SYNTHETIC_PATIENTS];
+
+  if (locationId) {
+    patients = patients.filter((p) => p.locationId === locationId);
+  }
+
+  if (patientId) {
+    const single = patients.find((p) => p.id === patientId || p.caseId === patientId);
+    if (single) {
+      return res.json({
+        success: true,
+        source: "CGM ALBIS KTX Bridge (Simulated Mode)",
+        patient: single,
+        timestamp: new Date().toISOString()
+      });
+    }
+    return res.status(404).json({
+      success: false,
+      error: "Patient in ALBIS KTX DB nicht gefunden."
+    });
+  }
+
+  res.json({
+    success: true,
+    source: "CGM ALBIS KTX Bridge (Simulated Mode)",
+    count: patients.length,
+    patients,
+    locations: PRACTICE_LOCATIONS,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // UDO Welcome Consultant Triage Endpoint

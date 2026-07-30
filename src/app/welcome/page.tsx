@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Shield, BookOpen } from 'lucide-react';
+import { User, Shield, BookOpen, Cpu } from 'lucide-react';
 import { SplineBackground } from '../../components/SplineBackground';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { WhitepaperModal } from '../../components/WhitepaperModal';
@@ -135,16 +135,34 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
             </motion.button>
           </div>
 
-          {/* 3. WHITEPAPER BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsWhitepaperOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
-          >
-            <BookOpen className="w-4 h-4 text-[#00D4AA]" />
-            <span>WHITEPAPER LESEN</span>
-          </motion.button>
+          {/* 3. WHITEPAPER & UDO V2 BUTTONS */}
+          <div className="flex flex-col items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsWhitepaperOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4 text-[#00D4AA]" />
+              <span>WHITEPAPER LESEN</span>
+            </motion.button>
+
+            {/* TRON NEON ENTRY BUTTON FOR UDO V2 DASHBOARD */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.history.pushState({}, '', '/udo-v2');
+                  window.dispatchEvent(new Event('popstate'));
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-950/90 border-2 border-cyan-400 text-cyan-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.6),inset_0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.9)] transition-all cursor-pointer"
+            >
+              <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span>UDO V2 DASHBOARD</span>
+            </motion.button>
+          </div>
 
           {/* 4. FOOTER */}
           <footer className="pt-6 text-[10px] font-mono text-slate-600 uppercase tracking-widest">
