@@ -36,14 +36,24 @@ export const PortalPage: React.FC = () => {
             </p>
           </div>
 
-          <a
-            href="/portal/screening"
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            <ClipboardList size={16} />
-            <span>Digitalen Screening-Bogen Starten</span>
-            <ChevronRight size={14} />
-          </a>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <a
+              href="/dashboard"
+              className="px-5 py-3 rounded-2xl bg-slate-950 border border-cyan-500/50 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider hover:bg-cyan-950/80 shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <ExternalLink size={16} />
+              <span>UDO 2032 Core Command</span>
+            </a>
+
+            <a
+              href="/portal/screening"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <ClipboardList size={16} />
+              <span>Digitalen Screening-Bogen Starten</span>
+              <ChevronRight size={14} />
+            </a>
+          </div>
         </div>
 
         {/* APPOINTMENT & STATUS TRACKER */}

@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowLeft, BookOpen, Layers, HelpCircle, Mic, MicOff, RefreshCw, Cpu, ShieldCheck, DollarSign, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, BookOpen, Layers, HelpCircle, Mic, MicOff, RefreshCw, Cpu, ShieldCheck, DollarSign, Activity, Download, Presentation } from "lucide-react";
+import { UdoDraggableChatBubble } from "../../components/udo2032/UdoDraggableChatBubble";
+import { UdoPdfExportButton } from "../../components/udo2032/UdoPdfReportModal";
+import { UdoPresentationModal } from "../../components/udo2032/UdoPresentationModal";
 
 export interface UdoV2DemoPageProps {
   onNavigateToPortal?: () => void;
@@ -10,6 +14,7 @@ export interface UdoV2DemoPageProps {
 export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const [transcript, setTranscript] = useState<string>("");
   const [aiResponse, setAiResponse] = useState<string>("");
   const [recoveredAmount, setRecoveredAmount] = useState<number>(0);
@@ -188,18 +193,42 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
         {/* Top-Right Glassmorphism Buttons & Ticker Node */}
         <div className="flex items-center gap-3 flex-wrap">
           <button
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-200 bg-cyan-950/90 border-2 border-cyan-400 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.5),inset_0_0_10px_rgba(6,182,212,0.3)] transition-all"
+          >
+            <Layers size={14} className="text-cyan-300 animate-pulse" />
+            <span>UDO V2 (DEMO)</span>
+          </button>
+
+          {/* GREEN PRESENTATION BUTTON - BETWEEN DASHBOARD AND WHITEPAPER */}
+          <button
+            onClick={() => setIsPresentationOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-300 bg-slate-900/90 border-2 border-emerald-400 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.5),inset_0_0_10px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.8)] transition-all cursor-pointer"
+          >
+            <Presentation size={14} className="text-emerald-400 animate-pulse" />
+            <span>PRESENTATION</span>
+          </button>
+
+          <button
             onClick={handleOpenWhitepaper}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/80 border border-cyan-500/40 rounded-xl hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/80 border border-cyan-500/40 rounded-xl hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] cursor-pointer"
           >
             <BookOpen size={14} className="text-cyan-400" />
             <span>HOLO-SPEC</span>
           </button>
 
           <button
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-200 bg-cyan-950/90 border-2 border-cyan-400 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.5),inset_0_0_10px_rgba(6,182,212,0.3)] transition-all"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/api/download/udo-installer.exe';
+              link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/80 border border-cyan-500/40 rounded-xl hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] cursor-pointer"
           >
-            <Layers size={14} className="text-cyan-300 animate-pulse" />
-            <span>UDO V2 (DEMO)</span>
+            <Download size={14} className="text-emerald-400" />
+            <span>DOWNLOAD UDO APP (.EXE)</span>
           </button>
 
           <button
@@ -298,22 +327,65 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
           </div>
         )}
 
-        {/* Giant Central Button */}
-        <button
-          onClick={toggleListening}
-          className={`z-20 px-10 py-8 rounded-3xl font-black text-2xl md:text-3xl transition-all duration-500 flex items-center gap-4 cursor-pointer border-2 shadow-2xl active:scale-95 uppercase tracking-wider ${
-            isListening
-              ? "bg-red-950/90 text-red-200 border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.7),inset_0_0_20px_rgba(239,68,68,0.4)] animate-pulse"
-              : "bg-slate-900/90 hover:bg-slate-800 text-cyan-200 border-cyan-400 shadow-[0_0_45px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_70px_rgba(6,182,212,0.8),inset_0_0_30px_rgba(6,182,212,0.4)] hover:border-cyan-300 hover:text-white"
-          }`}
-        >
-          {isListening ? (
-            <MicOff className="w-8 h-8 text-red-400 animate-bounce" />
-          ) : (
-            <Mic className="w-8 h-8 text-cyan-400" />
+        {/* Giant Central Button with Framer Motion Audio Wave Animation */}
+        <div className="relative z-20 flex items-center justify-center">
+          {/* Outer Expanding Acoustic Ripple Rings when Listening */}
+          {isListening && (
+            <>
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0.8 }}
+                animate={{ scale: 1.4, opacity: 0 }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 rounded-3xl border-2 border-red-500 pointer-events-none"
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0.8 }}
+                animate={{ scale: 1.7, opacity: 0 }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+                className="absolute inset-0 rounded-3xl border-2 border-red-400/60 pointer-events-none"
+              />
+            </>
           )}
-          <span>{isListening ? "Listening Active..." : "🎤 Start Listening"}</span>
-        </button>
+
+          <button
+            onClick={toggleListening}
+            className={`px-8 md:px-10 py-7 md:py-8 rounded-3xl font-black text-2xl md:text-3xl transition-all duration-500 flex items-center gap-4 cursor-pointer border-2 shadow-2xl active:scale-95 uppercase tracking-wider relative z-10 ${
+              isListening
+                ? "bg-red-950/90 text-red-200 border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.7),inset_0_0_20px_rgba(239,68,68,0.4)]"
+                : "bg-slate-900/90 hover:bg-slate-800 text-cyan-200 border-cyan-400 shadow-[0_0_45px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_70px_rgba(6,182,212,0.8),inset_0_0_30px_rgba(6,182,212,0.4)] hover:border-cyan-300 hover:text-white"
+            }`}
+          >
+            {isListening ? (
+              <MicOff className="w-8 h-8 text-red-400 animate-bounce" />
+            ) : (
+              <Mic className="w-8 h-8 text-cyan-400" />
+            )}
+
+            {/* Visual Audio Wave Animation Bars */}
+            {isListening && (
+              <div className="flex items-center gap-1 px-1 h-8">
+                {[0.4, 0.9, 1.3, 0.6, 1.1, 0.5, 1.0, 0.7].map((delayFactor, idx) => (
+                  <motion.div
+                    key={idx}
+                    animate={{
+                      height: [6, 28, 10, 34, 14, 22, 8],
+                    }}
+                    transition={{
+                      duration: 0.7,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      delay: delayFactor * 0.12,
+                      ease: "easeInOut",
+                    }}
+                    className="w-1.5 rounded-full bg-red-400 shadow-[0_0_10px_#ef4444]"
+                  />
+                ))}
+              </div>
+            )}
+
+            <span>{isListening ? "Listening Active..." : "🎤 Start Listening"}</span>
+          </button>
+        </div>
       </main>
 
       {/* Spot 4: Bottom-Right Section - Triage Radar Circle with 3 Names (1 Glowing Red) */}
@@ -343,6 +415,18 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
           </div>
         </div>
       </footer>
+
+      {/* Floating Draggable Meta-Router Chat Bubble */}
+      <UdoDraggableChatBubble />
+
+      {/* Floating @react-pdf/renderer 8-Section PDF Export Button */}
+      <UdoPdfExportButton />
+
+      {/* UDO PRESENTATION MODAL */}
+      <UdoPresentationModal
+        isOpen={isPresentationOpen}
+        onClose={() => setIsPresentationOpen(false)}
+      />
     </div>
   );
 }

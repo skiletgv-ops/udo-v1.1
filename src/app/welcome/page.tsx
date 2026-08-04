@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Shield, BookOpen, Cpu } from 'lucide-react';
+import { User, Shield, BookOpen, Cpu, HelpCircle, Download, RefreshCw, Presentation } from 'lucide-react';
 import { SplineBackground } from '../../components/SplineBackground';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { WhitepaperModal } from '../../components/WhitepaperModal';
+import { UdoPresentationModal } from '../../components/udo2032/UdoPresentationModal';
 import { useRoleContext, ROLE_DEFINITIONS } from '../../context/RoleContext';
 
 export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void }) {
   const [isLoadingComplete, setIsLoadingComplete] = useState(false);
   const [isWhitepaperOpen, setIsWhitepaperOpen] = useState(false);
+  const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const { selectRole } = useRoleContext();
 
   const handleSelectRole = (role: 'main' | 'admin') => {
@@ -135,18 +137,8 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
             </motion.button>
           </div>
 
-          {/* 3. WHITEPAPER & UDO V2 BUTTONS */}
-          <div className="flex flex-col items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsWhitepaperOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4 text-[#00D4AA]" />
-              <span>WHITEPAPER LESEN</span>
-            </motion.button>
-
+          {/* 3. DASHBOARD, PRESENTATION, WHITEPAPER & DOWNLOAD UDO APP BUTTONS */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {/* TRON NEON ENTRY BUTTON FOR UDO V2 DASHBOARD */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -162,6 +154,72 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
               <span>UDO V2 DASHBOARD</span>
             </motion.button>
+
+            {/* GREEN PRESENTATION BUTTON - BETWEEN DASHBOARD AND WHITEPAPER */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsPresentationOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-950/90 border-2 border-emerald-400 text-emerald-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.6),inset_0_0_12px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.9)] transition-all cursor-pointer"
+            >
+              <Presentation className="w-4 h-4 text-emerald-400 animate-pulse" />
+              <span>PRESENTATION</span>
+            </motion.button>
+
+            {/* WHITEPAPER LESEN BUTTON */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsWhitepaperOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4 text-[#00D4AA]" />
+              <span>WHITEPAPER LESEN</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/api/download/udo-installer.exe';
+                link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-[#00D4AA]" />
+              <span>DOWNLOAD UDO APP (.EXE)</span>
+            </motion.button>
+
+            {/* BILINGUAL USER GUIDE HELP BUTTON */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.history.pushState({}, '', '/help');
+                  window.dispatchEvent(new Event('popstate'));
+                }
+              }}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white hover:border-cyan-400/50 backdrop-blur-sm font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all cursor-pointer"
+            >
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+              <span>HELP</span>
+            </motion.button>
+
+            {/* RESTART/SHOW LOADING SCREEN BUTTON */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsLoadingComplete(false)}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/50 text-cyan-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+              <span>SHOW LOADING SCREEN</span>
+            </motion.button>
           </div>
 
           {/* 4. FOOTER */}
@@ -175,6 +233,12 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
       <WhitepaperModal
         isOpen={isWhitepaperOpen}
         onClose={() => setIsWhitepaperOpen(false)}
+      />
+
+      {/* UDO PRESENTATION MODAL */}
+      <UdoPresentationModal
+        isOpen={isPresentationOpen}
+        onClose={() => setIsPresentationOpen(false)}
       />
     </div>
   );

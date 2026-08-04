@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, BookOpen, Layers, HelpCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, Layers, HelpCircle, Download, Presentation } from "lucide-react";
+import { UdoPresentationModal } from "../../components/udo2032/UdoPresentationModal";
 
 export interface UdoV2PageProps {
   onNavigateToPortal?: () => void;
@@ -9,6 +10,7 @@ export interface UdoV2PageProps {
 
 export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
   const [isListening, setIsListening] = useState(false);
+  const [isPresentationOpen, setIsPresentationOpen] = useState(false);
 
   const handleToggleListening = () => {
     setIsListening((prev) => !prev);
@@ -60,6 +62,23 @@ export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={handleNavigateUdoV2Demo}
+            className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/90 border-2 border-cyan-500/80 rounded-lg px-3.5 py-2 hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.4),inset_0_0_10px_rgba(6,182,212,0.2)] cursor-pointer"
+          >
+            <Layers size={14} className="text-cyan-400 animate-pulse" />
+            <span>UDO V2 (DEMO)</span>
+          </button>
+
+          {/* GREEN PRESENTATION BUTTON - BETWEEN DASHBOARD AND WHITEPAPER */}
+          <button
+            onClick={() => setIsPresentationOpen(true)}
+            className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-emerald-300 bg-slate-900/90 border-2 border-emerald-500/80 rounded-lg px-3.5 py-2 hover:bg-slate-800 hover:border-emerald-400 hover:text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.4),inset_0_0_10px_rgba(16,185,129,0.2)] cursor-pointer"
+          >
+            <Presentation size={14} className="text-emerald-400 animate-pulse" />
+            <span>PRESENTATION</span>
+          </button>
+
+          <button
             onClick={handleNavigateWhitepaper}
             className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-slate-300 bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-2 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm"
           >
@@ -68,11 +87,18 @@ export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
           </button>
 
           <button
-            onClick={handleNavigateUdoV2Demo}
-            className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/90 border-2 border-cyan-500/80 rounded-lg px-3.5 py-2 hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.4),inset_0_0_10px_rgba(6,182,212,0.2)] cursor-pointer"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/api/download/udo-installer.exe';
+              link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-slate-300 bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-2 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm cursor-pointer"
           >
-            <Layers size={14} className="text-cyan-400 animate-pulse" />
-            <span>UDO V2 (DEMO)</span>
+            <Download size={14} className="text-emerald-400" />
+            <span>DOWNLOAD UDO APP (.EXE)</span>
           </button>
 
           <button
@@ -150,6 +176,12 @@ export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
           </div>
         </div>
       </footer>
+
+      {/* UDO PRESENTATION MODAL */}
+      <UdoPresentationModal
+        isOpen={isPresentationOpen}
+        onClose={() => setIsPresentationOpen(false)}
+      />
     </div>
   );
 }

@@ -35,6 +35,7 @@ import UdoV2Page from './app/udo-v2/page';
 import UdoV2DemoPage from './app/udo-v2-demo/page';
 import HelpPage from './app/help/page';
 import WhitepaperPage from './components/WhitepaperPage';
+import { UdoDashboardShell } from './components/udo2032/UdoDashboardShell';
 
 import { ActiveTab, Demographics, DocumentItem, Finding, AIAgent } from './types';
 import { DEFAULT_DEMOGRAPHICS, DEMO_DOCUMENTS, DEMO_FINDINGS, INITIAL_AGENTS } from './lib/agents';
@@ -183,6 +184,9 @@ function MainAppContent() {
 function getInitialRoute(): string {
   if (typeof window === 'undefined') return '/portal';
   const path = window.location.pathname;
+  if (path === '/dashboard' || path.startsWith('/dashboard') || path.startsWith('/app/dashboard')) {
+    return '/dashboard';
+  }
   if (path === '/presentation' || path.startsWith('/presentation')) {
     return '/presentation';
   }
@@ -237,7 +241,9 @@ export function App() {
     <RoleProvider>
       <PrescriptionProvider>
         <ToastContainer />
-        {route === '/presentation' ? (
+        {route === '/dashboard' || route.startsWith('/dashboard') ? (
+          <UdoDashboardShell onNavigateToPortal={() => navigateTo('/portal')} />
+        ) : route === '/presentation' ? (
           <PresentationSlideDeck />
         ) : route === '/whitepaper' ? (
           <WhitepaperPage onNavigateToPortal={() => navigateTo('/portal')} />

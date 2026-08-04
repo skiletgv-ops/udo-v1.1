@@ -11,7 +11,9 @@ import {
   Info,
   PanelsTopLeft,
   FlaskConical,
-  HelpCircle
+  HelpCircle,
+  Download,
+  Presentation
 } from "lucide-react";
 import SystemWhitepaper from "./SystemWhitepaper";
 import { useGlobalSystem } from "./GlobalSystemContext";
@@ -20,6 +22,7 @@ import SplineBackground from "./SplineBackground";
 import RobotMascot from "./RobotMascot";
 import { StatusBar } from "./StatusBar";
 import { GradientButton } from "./ui/gradient-button";
+import { UdoPresentationModal } from "./udo2032/UdoPresentationModal";
 
 interface IntroPresentationProps {
   onComplete: () => void;
@@ -36,6 +39,7 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
   const [preLaunchActive, setPreLaunchActive] = useState(false);
   const [preLaunchProgress, setPreLaunchProgress] = useState(100);
   const [showWhitepaper, setShowWhitepaper] = useState(false);
+  const [showPresentationModal, setShowPresentationModal] = useState(false);
   const [showPartnerDetails, setShowPartnerDetails] = useState(false);
   const [typedReminder, setTypedReminder] = useState("");
   const [chatDismissed, setChatDismissed] = useState(false);
@@ -318,54 +322,89 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                   )}
                 </AnimatePresence>
 
-                {/* FLOATING WHITEPAPER & TRON NEON UDO V2 BUTTONS */}
+                {/* FLOATING DASHBOARD, PRESENTATION, WHITEPAPER & DOWNLOAD UDO APP BUTTONS */}
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-6 z-30 pointer-events-auto flex flex-col gap-2.5">
-                  <GradientButton
-                    variant="whitepaper"
-                    onClick={() => {
-                      playInnovationChime(true);
-                      handleOpenWhitepaperView();
-                    }}
-                    onMouseEnter={() => playClickSound(false)}
-                    className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
-                  >
-                    <span>UDO WHITEPAPER</span>
-                    <BookOpen className="w-4 h-4" />
-                  </GradientButton>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {/* 1. TRON NEON ENTRY BUTTON FOR DASHBOARD */}
+                    <button
+                      onClick={() => {
+                        playClickSound(true);
+                        if (onOpenUdoV2) {
+                          onOpenUdoV2();
+                        } else if (typeof window !== "undefined") {
+                          window.history.pushState({}, '', '/udo-v2');
+                          window.dispatchEvent(new Event('popstate'));
+                        }
+                      }}
+                      onMouseEnter={() => playClickSound(false)}
+                      className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-[11px] inline-flex items-center justify-center text-cyan-300 bg-slate-950/90 border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.6),inset_0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.95),inset_0_0_20px_rgba(6,182,212,0.5)] hover:border-cyan-300 hover:text-white transition-all active:scale-95"
+                    >
+                      <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
+                      <span>UDO V2 DASHBOARD</span>
+                    </button>
 
-                  {/* TRON NEON ENTRY BUTTON FOR /app/udo-v2/page.tsx - DOWN OF WHITEPAPER */}
-                  <button
-                    onClick={() => {
-                      playClickSound(true);
-                      if (onOpenUdoV2) {
-                        onOpenUdoV2();
-                      } else if (typeof window !== "undefined") {
-                        window.history.pushState({}, '', '/udo-v2');
-                        window.dispatchEvent(new Event('popstate'));
-                      }
-                    }}
-                    onMouseEnter={() => playClickSound(false)}
-                    className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-[11px] min-w-[132px] inline-flex items-center justify-center text-cyan-300 bg-slate-950/90 border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.6),inset_0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.95),inset_0_0_20px_rgba(6,182,212,0.5)] hover:border-cyan-300 hover:text-white transition-all active:scale-95"
-                  >
-                    <span>UDO V2 DASHBOARD</span>
-                    <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
-                  </button>
+                    {/* 2. GREEN PRESENTATION BUTTON - BETWEEN DASHBOARD AND WHITEPAPER */}
+                    <button
+                      onClick={() => {
+                        playInnovationChime(true);
+                        setShowPresentationModal(true);
+                      }}
+                      onMouseEnter={() => playClickSound(false)}
+                      className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-[11px] inline-flex items-center justify-center text-emerald-300 bg-slate-950/90 border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.6),inset_0_0_12px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.95),inset_0_0_20px_rgba(16,185,129,0.5)] hover:border-emerald-300 hover:text-white transition-all active:scale-95"
+                    >
+                      <Presentation className="w-4 h-4 text-emerald-400 animate-pulse" />
+                      <span>PRESENTATION</span>
+                    </button>
 
-                  {/* HELP BUTTON */}
-                  <button
-                    onClick={() => {
-                      playClickSound(true);
-                      if (typeof window !== "undefined") {
-                        window.history.pushState({}, '', '/help');
-                        window.dispatchEvent(new Event('popstate'));
-                      }
-                    }}
-                    onMouseEnter={() => playClickSound(false)}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-300 transition-all backdrop-blur-sm hover:text-white hover:border-cyan-400/50 shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer uppercase font-mono font-bold"
-                  >
-                    <HelpCircle className="w-4 h-4 text-slate-400" />
-                    <span>HELP</span>
-                  </button>
+                    {/* 3. UDO WHITEPAPER */}
+                    <GradientButton
+                      variant="whitepaper"
+                      onClick={() => {
+                        playInnovationChime(true);
+                        handleOpenWhitepaperView();
+                      }}
+                      onMouseEnter={() => playClickSound(false)}
+                      className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      <span>UDO WHITEPAPER</span>
+                      <BookOpen className="w-4 h-4" />
+                    </GradientButton>
+
+                    {/* 4. DOWNLOAD UDO APP */}
+                    <GradientButton
+                      variant="whitepaper"
+                      onClick={() => {
+                        playInnovationChime(true);
+                        const link = document.createElement('a');
+                        link.href = '/api/download/udo-installer.exe';
+                        link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      onMouseEnter={() => playClickSound(false)}
+                      className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      <span>DOWNLOAD UDO APP (.EXE)</span>
+                      <Download className="w-4 h-4 text-emerald-400" />
+                    </GradientButton>
+
+                    {/* 5. HELP BUTTON */}
+                    <button
+                      onClick={() => {
+                        playClickSound(true);
+                        if (typeof window !== "undefined") {
+                          window.history.pushState({}, '', '/help');
+                          window.dispatchEvent(new Event('popstate'));
+                        }
+                      }}
+                      onMouseEnter={() => playClickSound(false)}
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-300 transition-all backdrop-blur-sm hover:text-white hover:border-cyan-400/50 shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer uppercase font-mono font-bold"
+                    >
+                      <HelpCircle className="w-4 h-4 text-slate-400" />
+                      <span>HELP</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* FIXED BOTTOM-LEFT RADIO BUTTON MODE SELECTOR (OPPOSITE OF WORKSPACE & ALBIS TEST ON THE RIGHT) */}
@@ -593,6 +632,12 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* UDO PRESENTATION MODAL */}
+        <UdoPresentationModal
+          isOpen={showPresentationModal}
+          onClose={() => setShowPresentationModal(false)}
+        />
 
       </div>
     </SynapseBackground>
