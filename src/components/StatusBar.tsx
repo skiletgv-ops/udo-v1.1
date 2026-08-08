@@ -17,7 +17,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const { language, setLanguage } = useGlobalSystem();
 
   return (
-    <header className={`w-full max-w-6xl mx-auto flex justify-between items-center font-mono text-[11px] text-slate-300 tracking-[0.15em] uppercase py-3 border-b border-white/10 ${className}`}>
+    <header className={`w-full flex justify-between items-center font-mono text-[11px] text-slate-300 tracking-[0.15em] uppercase py-2 px-2 border-b border-white/10 ${className}`}>
       <div className="flex items-center gap-3">
         {onBack && (
           <button
@@ -33,7 +33,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
           </span>
           <span className="font-extrabold text-white">
-            {isBooted ? (language === 'de' ? "System sicher & bereit" : "SYSTEM SECURE & READY") : "SYSTEM BOOTING..."}
+            {isBooted ? (language === 'de' ? "UDO ONLINE" : "UDO ONLINE") : "SYSTEM BOOTING..."}
           </span>
         </div>
       </div>

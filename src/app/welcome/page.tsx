@@ -6,12 +6,16 @@ import { LoadingScreen } from '../../components/LoadingScreen';
 import { WhitepaperModal } from '../../components/WhitepaperModal';
 import { UdoPresentationModal } from '../../components/udo2032/UdoPresentationModal';
 import { useRoleContext, ROLE_DEFINITIONS } from '../../context/RoleContext';
+import RobotMascot from '../../components/RobotMascot';
+import { playSiteOpeningSound } from '../../services/audioFeedbackService';
+import { useGlobalSystem } from '../../components/GlobalSystemContext';
 
 export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void }) {
   const [isLoadingComplete, setIsLoadingComplete] = useState(false);
   const [isWhitepaperOpen, setIsWhitepaperOpen] = useState(false);
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const { selectRole } = useRoleContext();
+  const { language } = useGlobalSystem();
 
   const handleSelectRole = (role: 'main' | 'admin') => {
     selectRole(role);
@@ -28,6 +32,32 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
       {/* LAYER 2: LOADING SCREEN */}
       {!isLoadingComplete && (
         <LoadingScreen onComplete={() => setIsLoadingComplete(true)} />
+      )}
+
+      {/* BOTTOM-LEFT DRAGGABLE ROBOT MASCOT & GUIDE CHAT BUBBLE */}
+      {isLoadingComplete && (
+        <motion.div
+          drag
+          dragMomentum={false}
+          dragElastic={0.15}
+          whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
+          whileHover={{ scale: 1.05 }}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          onAnimationComplete={() => playSiteOpeningSound()}
+          className="fixed bottom-6 left-6 z-50 pointer-events-auto cursor-grab active:cursor-grabbing"
+        >
+          <RobotMascot
+            state="IDLE"
+            messageBubble={
+              language === "de"
+                ? "Willkommen im UDO Zentralsystem! Wählen Sie ein Konto oder starten Sie das UDO V2 Dashboard. Ziehen Sie mich an eine beliebige Stelle!"
+                : "Welcome to the UDO Central System! Select an account or launch UDO V2 Dashboard to begin. Drag me anywhere on your screen!"
+            }
+            size="md"
+          />
+        </motion.div>
       )}
 
       {/* LAYER 3: WELCOME UI */}
@@ -64,10 +94,10 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
 
             <div className="space-y-1">
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-                Willkommen im Forensic Hub
+                {language === "de" ? "Willkommen im Forensic Hub" : "Welcome to Forensic Hub"}
               </h1>
               <p className="text-xs md:text-sm text-slate-400 font-sans">
-                Medizinische KI-Begutachtung auf höchstem Niveau
+                {language === "de" ? "Medizinische KI-Begutachtung auf höchstem Niveau" : "Next-Level AI Clinical Consultation & Forensics"}
               </p>
             </div>
           </div>
@@ -90,7 +120,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               </div>
 
               <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold mb-1">
-                HAUPTACCOUNT
+                {language === "de" ? "HAUPTACCOUNT" : "PRIMARY ACCOUNT"}
               </span>
 
               <h3 className="text-lg font-bold text-white mb-1">
@@ -98,7 +128,9 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               </h3>
 
               <p className="text-xs text-slate-400 leading-relaxed">
-                Rezepte erstellen, Befunde bewerten & Berichte speichern
+                {language === "de" 
+                  ? "Rezepte erstellen, Befunde bewerten & Berichte speichern"
+                  : "Issue prescriptions, evaluate findings & archive reports"}
               </p>
             </motion.button>
 
@@ -124,7 +156,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               </div>
 
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#E8A87C] font-bold mb-1">
-                ADMINISTRATION
+                {language === "de" ? "ADMINISTRATION" : "ADMINISTRATION"}
               </span>
 
               <h3 className="text-lg font-bold text-white mb-1">
@@ -132,7 +164,9 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               </h3>
 
               <p className="text-xs text-slate-400 leading-relaxed">
-                Rezepte genehmigen, Praxis-Upgrades & Revisionsverwaltung
+                {language === "de"
+                  ? "Rezepte genehmigen, Praxis-Upgrades & Revisionsverwaltung"
+                  : "Approve prescriptions, practice upgrades & audit management"}
               </p>
             </motion.button>
           </div>
@@ -163,7 +197,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-950/90 border-2 border-emerald-400 text-emerald-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.6),inset_0_0_12px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.9)] transition-all cursor-pointer"
             >
               <Presentation className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>PRESENTATION</span>
+              <span>{language === "de" ? "PRÄSENTATION" : "PRESENTATION"}</span>
             </motion.button>
 
             {/* WHITEPAPER LESEN BUTTON */}
@@ -174,24 +208,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
             >
               <BookOpen className="w-4 h-4 text-[#00D4AA]" />
-              <span>WHITEPAPER LESEN</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/api/download/udo-installer.exe';
-                link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#B87333]/20 via-[#CD7F32]/30 to-[#B87333]/20 border border-[#B87333]/50 hover:border-[#B87333] text-[#E8A87C] hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(184,115,51,0.2)] transition-all cursor-pointer"
-            >
-              <Download className="w-4 h-4 text-[#00D4AA]" />
-              <span>DOWNLOAD UDO APP (.EXE)</span>
+              <span>{language === "de" ? "WHITEPAPER LESEN" : "READ WHITEPAPER"}</span>
             </motion.button>
 
             {/* BILINGUAL USER GUIDE HELP BUTTON */}
@@ -207,7 +224,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white hover:border-cyan-400/50 backdrop-blur-sm font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all cursor-pointer"
             >
               <HelpCircle className="w-4 h-4 text-slate-400" />
-              <span>HELP</span>
+              <span>{language === "de" ? "HILFE & HANDBUCH" : "HELP & MANUAL"}</span>
             </motion.button>
 
             {/* RESTART/SHOW LOADING SCREEN BUTTON */}
@@ -218,7 +235,7 @@ export function WelcomePage({ onNavigateToApp }: { onNavigateToApp?: () => void 
               className="flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/50 text-cyan-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer"
             >
               <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
-              <span>SHOW LOADING SCREEN</span>
+              <span>{language === "de" ? "BOOTSCREEN ZEIGEN" : "SHOW BOOT SCREEN"}</span>
             </motion.button>
           </div>
 

@@ -179,9 +179,6 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
                       <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-indigo-400 font-bold block">
                         UDO SYSTEM WORKSPACE
                       </span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono font-bold">
-                        SYSTEM READY
-                      </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
                       Workspace Utility & Function Suite
@@ -713,7 +710,7 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
         {/* FOOTER */}
         <footer className="w-full max-w-7xl mx-auto pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-mono text-slate-500 uppercase tracking-widest shrink-0">
           <span>UDO WORKSPACE ENGINE & UTILITIES</span>
-          <span>SYSTEM READY</span>
+          <span>UDO V2.1</span>
         </footer>
       </div>
     </SynapseBackground>

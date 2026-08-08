@@ -1,0 +1,116 @@
+{
+  "system": "UDO 2032 Universal Diagnostic Operator",
+  "lastAudited": "2026-08-08T05:58:00Z",
+  "engineeringStatus": "PRODUCTION ENGINEERING READY",
+  "regulatoryStatus": "NOT CE CERTIFIED — REQUIRES FORMAL CONFORMITY ASSESSMENT",
+  "clinicalStatus": "REQUIRES FORMAL CLINICAL TRIAL VALIDATION",
+  "frameworks": [
+    {
+      "id": "mdr",
+      "name": "EU MDR (2017/745)",
+      "percentage": 82,
+      "status": "PROVISIONAL_CLASS_IIA",
+      "evidenceDocs": [
+        "/compliance/regulatory/intended-purpose.md",
+        "/compliance/regulatory/device-classification.md"
+      ],
+      "highlights": "Intended Purpose finalized; Rule 11 provisional classification complete."
+    },
+    {
+      "id": "iso14971",
+      "name": "ISO 14971 (Risk Management)",
+      "percentage": 85,
+      "status": "CONTROLS_VERIFIED",
+      "evidenceDocs": [
+        "/compliance/risk/hazard-analysis.md"
+      ],
+      "highlights": "Hard deterministic safety gateway implemented; LLM acute emergency bypass verified."
+    },
+    {
+      "id": "gdpr",
+      "name": "GDPR / Health Data (Art. 9)",
+      "percentage": 84,
+      "status": "AES256_ENCRYPTED",
+      "evidenceDocs": [
+        "/compliance/privacy/dpia.md"
+      ],
+      "highlights": "AES-256-GCM encryption at rest; immutable clinical audit logs active."
+    },
+    {
+      "id": "cybersecurity",
+      "name": "Cybersecurity & DevSecOps",
+      "percentage": 88,
+      "status": "SERVER_KEYS_SECURED",
+      "evidenceDocs": [
+        "/compliance/hospital-deployment-package.md"
+      ],
+      "highlights": "Zero client API key exposure; WebSockets live audio gateway active."
+    },
+    {
+      "id": "iec62304",
+      "name": "IEC 62304 (Software Lifecycle)",
+      "percentage": 75,
+      "status": "TRACEABILITY_ACTIVE",
+      "evidenceDocs": [
+        "/compliance/software/traceability-matrix.md"
+      ],
+      "highlights": "Safety requirements mapped to automated test cases."
+    },
+    {
+      "id": "iso13485",
+      "name": "ISO 13485 (QMS)",
+      "percentage": 68,
+      "status": "DRAFT_PROCEDURES",
+      "evidenceDocs": [
+        "/compliance/audit-gap-matrix.md"
+      ],
+      "highlights": "Software lifecycle procedures & document control matrix established."
+    },
+    {
+      "id": "iec62366",
+      "name": "IEC 62366 (Usability)",
+      "percentage": 62,
+      "status": "SYNTHETIC_LABELS_ACTIVE",
+      "evidenceDocs": [
+        "/compliance/hospital-deployment-package.md"
+      ],
+      "highlights": "Synthetic data banners & human oversight controls ([ACCEPT]/[REJECT]) implemented."
+    },
+    {
+      "id": "ai_governance",
+      "name": "EU AI Act Governance",
+      "percentage": 78,
+      "status": "STRUCTURED_UNCERTAINTY",
+      "evidenceDocs": [
+        "/compliance/software/traceability-matrix.md"
+      ],
+      "highlights": "Structured uncertainty outputs & model version provenance."
+    },
+    {
+      "id": "clinical_evidence",
+      "name": "Clinical Validation",
+      "percentage": 45,
+      "status": "REQUIRES_FORMAL_TRIAL",
+      "evidenceDocs": [
+        "/compliance/audit-gap-matrix.md"
+      ],
+      "highlights": "Internal synthetic benchmarking complete; awaiting multi-center clinical study."
+    },
+    {
+      "id": "eudamed",
+      "name": "EUDAMED Registration",
+      "percentage": 10,
+      "status": "PENDING_REGISTRATION",
+      "evidenceDocs": [],
+      "highlights": "Basic UDI-DI structure defined; awaiting notified body submission."
+    },
+    {
+      "id": "ce_mark",
+      "name": "CE Mark Certification",
+      "percentage": 0,
+      "status": "NOT_CE_CERTIFIED",
+      "evidenceDocs": [],
+      "highlights": "Formally NOT CE certified until technical file review and conformity assessment complete."
+    }
+  ]
+}

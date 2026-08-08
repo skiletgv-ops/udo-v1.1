@@ -3,6 +3,7 @@ import { Sparkles, X } from 'lucide-react';
 import { TopSystemBar } from './TopSystemBar';
 import { BottomDock } from './BottomDock';
 import { ParticleBackground } from './ParticleBackground';
+import { SyntheticDataBanner } from './ui/SyntheticDataBanner';
 import { ActiveTab } from '../types';
 import { useWakeWord } from '../hooks/useWakeWord';
 import { VoiceChatPanel } from './VoiceChatPanel';
@@ -66,6 +67,9 @@ export const NavigationShell: React.FC<NavigationShellProps> = ({
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+      {/* SYNTHETIC DATA & REGULATORY STATUS BANNER */}
+      <SyntheticDataBanner />
+
       {/* 3D PARTICLE STARFIELD BACKGROUND */}
       <ParticleBackground />
 

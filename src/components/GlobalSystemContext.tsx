@@ -225,10 +225,14 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
       const voices = window.speechSynthesis.getVoices();
       setAvailableVoices(voices);
       
-      // Auto-select DE MS HEDDA if available
-      const hedda = voices.find(v => v.name.toLowerCase().includes("hedda") || v.voiceURI.toLowerCase().includes("hedda"));
-      if (hedda) {
-        setSelectedVoiceURI(hedda.voiceURI);
+      // Auto-select natural male consultant voice (JONAS / Conrad / Stefan / Daniel / Male)
+      const maleVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const isFemale = /hedda|katja|marlene|zira|eva|vicki|anna|petra|hazel|samantha|victoria|female/i.test(name);
+        return !isFemale && (name.includes("jonas") || name.includes("conrad") || name.includes("stefan") || name.includes("daniel") || name.includes("male") || name.includes("natural") || name.includes("guy"));
+      }) || voices.find(v => !/hedda|katja|marlene|zira|eva|vicki|anna|petra|hazel|samantha|victoria|female/i.test(v.name));
+      if (maleVoice) {
+        setSelectedVoiceURI(maleVoice.voiceURI);
       }
     };
 
@@ -440,14 +444,18 @@ export function GlobalSystemProvider({ children }: { children: React.ReactNode }
 
       if (!selectedVoice) {
         const targetLangPrefix = targetLang === "de" ? "de" : "en";
-        selectedVoice = voices.find(v => 
-          v.lang.toLowerCase().startsWith(targetLangPrefix) && 
-          (v.name.toLowerCase().includes("natural") || 
-           v.name.toLowerCase().includes("google") || 
+        const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLangPrefix));
+        const femaleRegex = /hedda|katja|marlene|zira|eva|vicki|anna|petra|hazel|samantha|victoria|female/i;
+        selectedVoice = langVoices.find(v => 
+          !femaleRegex.test(v.name) && 
+          (v.name.toLowerCase().includes("jonas") ||
+           v.name.toLowerCase().includes("conrad") || 
            v.name.toLowerCase().includes("stefan") ||
            v.name.toLowerCase().includes("daniel") ||
-           v.name.toLowerCase().includes("katja"))
-        ) || voices.find(v => v.lang.startsWith(targetLangPrefix));
+           v.name.toLowerCase().includes("natural") ||
+           v.name.toLowerCase().includes("guy") ||
+           v.name.toLowerCase().includes("male"))
+        ) || langVoices.find(v => !femaleRegex.test(v.name)) || langVoices[0] || voices[0];
       }
 
       if (selectedVoice) {

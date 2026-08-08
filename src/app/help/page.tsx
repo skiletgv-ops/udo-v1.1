@@ -1,14 +1,80 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, Cpu, BrainCircuit, Mic, Banknote, Radar, ShieldCheck, HelpCircle } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  Cpu,
+  BrainCircuit,
+  Mic,
+  Banknote,
+  Radar,
+  ShieldCheck,
+  HelpCircle,
+  ChevronDown,
+  Lock,
+  WifiOff,
+  Database,
+  Key
+} from "lucide-react";
 
 export interface HelpPageProps {
   onNavigateToPortal?: () => void;
 }
 
+interface FaqItem {
+  icon: React.ReactNode;
+  questionDe: string;
+  questionEn: string;
+  answerDe: string;
+  answerEn: string;
+}
+
 export default function HelpPage({ onNavigateToPortal }: HelpPageProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index);
+  };
+
+  const faqList: FaqItem[] = [
+    {
+      icon: <WifiOff className="w-4 h-4" />,
+      questionDe: "Wie funktioniert der Offline-Modus in UDO V2?",
+      questionEn: "How does Offline Mode work in UDO V2?",
+      answerDe: "UDO V2 nutzt lokale Browser-APIs (Web Speech API) sowie eine On-Device Meta-Cognitive Engine bzw. lokale Ollama (phi3)-Instanzen. Diktate, Gutachten-Synthesen und GOÄ-Analysen funktionieren zu 100% ohne aktive Internetverbindung.",
+      answerEn: "UDO V2 utilizes local browser APIs (Web Speech API) and an on-device Meta-Cognitive Engine or local Ollama (phi3) instances. Voice dictation, medical report synthesis, and GOÄ billing analysis function 100% offline without an active internet connection."
+    },
+    {
+      icon: <Lock className="w-4 h-4" />,
+      questionDe: "Wie garantiert UDO V2 Datenschutz und DSGVO-Konformität?",
+      questionEn: "How does UDO V2 guarantee data privacy and GDPR compliance?",
+      answerDe: "Sämtliche Patientendaten, Audioaufnahmen und klinische Berichte verbleiben ausschließlich im lokalen Speicher (Browser-LocalStorage) Ihres Endgeräts. Es werden keine Daten an externe Drittanbieter-Clouds gesendet oder für KI-Modelltraining verwendet.",
+      answerEn: "All patient records, audio clips, and clinical reports remain strictly within your device's browser LocalStorage. Zero data is transmitted to external cloud servers or used for AI training."
+    },
+    {
+      icon: <Cpu className="w-4 h-4" />,
+      questionDe: "Was passiert bei Ausfall von Online-KI-Diensten?",
+      questionEn: "What happens if cloud AI services are unreachable?",
+      answerDe: "UDO V2 schaltet bei Serverfehlern oder Quota-Limits automatisch und nahtlos auf den integrierten lokalen Meta-Router um. Ihre Begutachtungen und Diktate werden ohne Unterbrechung lokal fortgesetzt.",
+      answerEn: "In case of server errors or cloud quota limits, UDO V2 automatically and seamlessly switches to the built-in local Meta-Router. Your medical evaluations and dictations continue locally without interruption."
+    },
+    {
+      icon: <Key className="w-4 h-4" />,
+      questionDe: "Kann ich meinen eigenen Gemini API-Schlüssel nutzen?",
+      questionEn: "Can I use my own Gemini API key for online features?",
+      answerDe: "Ja! Sie können im UDO Chat oder in den Einstellungen Ihren eigenen Gemini API-Key hinterlegen. Dieser Schlüssel wird vertraulich im lokalen Speicher hinterlegt und ermöglicht direkte Cloud-Echtzeitsynthesen.",
+      answerEn: "Yes! You can enter your personal Gemini API key in the UDO Chat or Settings panel. The key is securely held in local storage and unlocks direct online real-time syntheses."
+    },
+    {
+      icon: <Database className="w-4 h-4" />,
+      questionDe: "Wie kann ich meine gespeicherten Daten exportieren oder löschen?",
+      questionEn: "How can I export or clear my saved data?",
+      answerDe: "Sie können über das Dashboard mit einem Klick vollständige PDF-Klinikberichte exportieren oder über die Einstellungen alle lokalen Daten (LocalStorage) mit einem Klick rückstandslos bereinigen.",
+      answerEn: "You can export full PDF clinical reports with one click from the dashboard or purge all local browser storage completely via the Settings panel."
+    }
+  ];
+
   const handleBackToCore = () => {
     if (onNavigateToPortal) {
       onNavigateToPortal();
@@ -256,6 +322,96 @@ export default function HelpPage({ onNavigateToPortal }: HelpPageProps) {
                 </div>
               </li>
             </ol>
+          </div>
+        </section>
+
+        {/* Section 4: Frequently Asked Questions (Collapsible FAQ) */}
+        <section className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-xl font-semibold text-cyan-300 tracking-wide font-mono">
+                Frequently Asked Questions (FAQ)
+              </h2>
+            </div>
+            <span className="text-[11px] font-mono text-cyan-400/80 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
+              Offline Mode & Data Privacy
+            </span>
+          </div>
+
+          <div className="space-y-3 font-sans">
+            {faqList.map((faq, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div
+                  key={index}
+                  className={`border rounded-2xl transition-all duration-200 overflow-hidden ${
+                    isOpen
+                      ? "bg-slate-950/90 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
+                      : "bg-slate-950/50 border-slate-800 hover:border-slate-700 hover:bg-slate-950/80"
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleFaq(index)}
+                    className="w-full p-4 md:p-5 flex items-center justify-between text-left focus:outline-none cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 pr-2">
+                      <div
+                        className={`p-2.5 rounded-xl border transition-colors shrink-0 ${
+                          isOpen
+                            ? "bg-cyan-950 border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                            : "bg-slate-900 border-slate-800 text-slate-400"
+                        }`}
+                      >
+                        {faq.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm md:text-base text-slate-100 flex items-center gap-2">
+                          {faq.questionDe}
+                        </h3>
+                        <p className="text-xs text-cyan-400/80 font-mono mt-0.5">
+                          {faq.questionEn}
+                        </p>
+                      </div>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: isOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-slate-400 shrink-0 ml-2"
+                    >
+                      <ChevronDown size={18} />
+                    </motion.div>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden border-t border-slate-800/80 bg-slate-900/40"
+                      >
+                        <div className="p-4 md:p-5 text-xs md:text-sm text-slate-300 space-y-3 leading-relaxed">
+                          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
+                            <span className="text-[10px] font-mono uppercase font-bold text-cyan-400 tracking-wider block">
+                              🇩🇪 DEUTSCH
+                            </span>
+                            <p>{faq.answerDe}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
+                            <span className="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-wider block">
+                              🇬🇧 ENGLISH
+                            </span>
+                            <p className="text-slate-300/90">{faq.answerEn}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </div>
         </section>
 

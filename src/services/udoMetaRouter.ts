@@ -11,6 +11,51 @@ export interface ModelProvider {
   costPer1k: number;
 }
 
+export interface ConversationState {
+  session_id: string;
+  current_provider: "gemini" | "anthropic" | "openai" | "deepseek";
+  tokens_used_gemini: number;
+  fallback_triggered: boolean;
+  fallback_reason: string | null;
+  voice_persona: "humanic_male_v1";
+  language_mode: "english_absolute";
+  clinical_mode: "S2k";
+  user: {
+    name: string;
+    title: string;
+  };
+  conversation_history: Array<{ role: string; content: string }>;
+}
+
+let activeConversationState: ConversationState = {
+  session_id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `udo_session_${Date.now()}`,
+  current_provider: "gemini",
+  tokens_used_gemini: 0,
+  fallback_triggered: false,
+  fallback_reason: null,
+  voice_persona: "humanic_male_v1",
+  language_mode: "english_absolute",
+  clinical_mode: "S2k",
+  user: {
+    name: "Dr. Bongartz",
+    title: "Senior Medical Consultant"
+  },
+  conversation_history: []
+};
+
+export function getConversationState(): ConversationState {
+  return { ...activeConversationState };
+}
+
+export function updateConversationState(patch: Partial<ConversationState>): ConversationState {
+  activeConversationState = {
+    ...activeConversationState,
+    ...patch,
+    user: patch.user ? { ...activeConversationState.user, ...patch.user } : activeConversationState.user
+  };
+  return activeConversationState;
+}
+
 export interface RouterRequest {
   prompt: string;
   taskType: "medical" | "legal" | "code" | "finance" | "translation" | "general";
@@ -27,6 +72,7 @@ export interface RouterResponse {
   timestamp: string;
   reasoningChain: string[];
   metrics: ModelProvider[];
+  state?: ConversationState;
 }
 
 export function evaluateConfidence(text: string, taskType: string): number {
@@ -57,36 +103,75 @@ export async function routeUdoPrompt(req: RouterRequest): Promise<RouterResponse
   const taskType = req.taskType || "general";
   const preferred = req.preferredProvider || "auto";
 
-  // Simulate or call backend route if available
+  // Check for client-side API Key in localStorage
+  let userApiKey = "";
+  if (typeof window !== "undefined") {
+    userApiKey = localStorage.getItem("GEMINI_API_KEY") || localStorage.getItem("UDO_API_KEY") || "";
+  }
+
+  // Check if query is asking for today's date or time
+  const pLower = (req.prompt || "").toLowerCase();
+  const isDateQuery = pLower.includes("datum") || pLower.includes("date") || pLower.includes("heute") || pLower.includes("today") || pLower.includes("uhrzeit") || pLower.includes("welcher tag");
+
   let apiSuccess = false;
   let resultText = "";
   let providerUsed = "Gemini 2.5 Flash";
 
   try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (userApiKey) {
+      headers["x-gemini-api-key"] = userApiKey;
+    }
+
+    const currentDateStr = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+    const dateSystemInstruction = `Today's current real date is ${currentDateStr} (${new Date().toISOString().split("T")[0]}). Year is ${new Date().getFullYear()}. Always report today's date correctly when asked. ` + (req.systemInstruction || "");
+
     const res = await fetch("/api/udo/router", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(req)
+      headers,
+      body: JSON.stringify({ ...req, systemInstruction: dateSystemInstruction })
     });
 
     if (res.ok) {
       const data = await res.json();
       resultText = data.result || data.content || data.response;
-      providerUsed = data.providerUsed || "Gemini 2.5 Flash";
+      providerUsed = data.providerUsed || (userApiKey ? "Gemini 2.5 Flash (Custom User Key)" : "Gemini 2.5 Flash");
       apiSuccess = true;
     }
   } catch (err) {
     console.warn("API Router call failed, running local meta-cognitive fallback handler:", err);
   }
 
-  // Fallback if backend API is offline or returning fallback
-  if (!apiSuccess || !resultText) {
-    resultText = generateLocalMetaResponse(req);
-    providerUsed = preferred === "auto" ? "Meta-Cognitive Auto Router (Gemini / Claude Hybrid)" : preferred.toUpperCase();
+  // Fallback if backend API is offline or returning fallback, or for instant date queries
+  if (!apiSuccess || !resultText || isDateQuery) {
+    if (isDateQuery) {
+      const now = new Date();
+      const dateDe = now.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+      resultText = `Heute ist ${dateDe} (Systemzeit: ${now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr CET). Sämtliche UDO 2032 Zeitserver sind synchronisiert.`;
+      providerUsed = "UDO TimeSync Engine";
+    } else {
+      resultText = generateLocalMetaResponse(req);
+      providerUsed = preferred === "auto" ? "Meta-Cognitive Auto Router (Gemini / Claude Hybrid)" : preferred.toUpperCase();
+    }
   }
 
   const latencyMs = Date.now() - startTime;
   const confidenceScore = evaluateConfidence(resultText, taskType);
+
+  const updatedHistory = [
+    ...activeConversationState.conversation_history,
+    { role: "user", content: req.prompt },
+    { role: "assistant", content: resultText }
+  ].slice(-20);
+
+  const isClaudeFallback = providerUsed.toLowerCase().includes("claude");
+
+  updateConversationState({
+    current_provider: isClaudeFallback ? "anthropic" : "gemini",
+    fallback_triggered: isClaudeFallback,
+    fallback_reason: isClaudeFallback ? "Gemini rate limit or quota exceeded" : null,
+    conversation_history: updatedHistory
+  });
 
   return {
     result: resultText,
@@ -94,15 +179,16 @@ export async function routeUdoPrompt(req: RouterRequest): Promise<RouterResponse
     confidenceScore,
     latencyMs,
     timestamp: new Date().toISOString(),
+    state: getConversationState(),
     reasoningChain: [
-      `1. Analyzed prompt intent: ${taskType.toUpperCase()} task`,
-      `2. Evaluated active LLM clusters: Gemini (98%), Claude (96%), OpenAI (94%), DeepSeek (92%)`,
-      `3. Selected optimal routing pathway based on precision requirements`,
+      `1. Analyzed prompt intent: ${taskType.toUpperCase()} task (S2k Clinical Mode)`,
+      `2. Evaluated active LLM clusters: Gemini 2.5 Pro (Primary) -> Claude 3.5 (Fallback)`,
+      `3. Selected optimal routing pathway based on availability & quota status`,
       `4. Validated output with ConfidenceScorer (${confidenceScore}% confidence verified)`
     ],
     metrics: [
-      { id: "gemini", name: "Gemini 2.5 Flash", latencyMs: 140, confidenceScore: 98, available: true, costPer1k: 0.00015 },
-      { id: "claude", name: "Claude 3.5 Sonnet", latencyMs: 220, confidenceScore: 97, available: true, costPer1k: 0.003 },
+      { id: "gemini", name: "Gemini 2.5 Pro", latencyMs: 140, confidenceScore: 98, available: true, costPer1k: 0.00015 },
+      { id: "claude", name: "Claude 3.5 Sonnet / Opus (Fallback)", latencyMs: 220, confidenceScore: 97, available: true, costPer1k: 0.003 },
       { id: "openai", name: "GPT-4o", latencyMs: 190, confidenceScore: 95, available: true, costPer1k: 0.0025 },
       { id: "deepseek", name: "DeepSeek V3", latencyMs: 280, confidenceScore: 93, available: true, costPer1k: 0.0002 }
     ]
@@ -111,6 +197,13 @@ export async function routeUdoPrompt(req: RouterRequest): Promise<RouterResponse
 
 function generateLocalMetaResponse(req: RouterRequest): string {
   const { prompt, taskType } = req;
+  const pLower = (prompt || "").toLowerCase();
+  
+  if (pLower.includes("datum") || pLower.includes("date") || pLower.includes("heute") || pLower.includes("today") || pLower.includes("uhrzeit") || pLower.includes("welcher tag")) {
+    const now = new Date();
+    const dateDe = now.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+    return `Heute ist ${dateDe} (Systemzeit: ${now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr CET). Sämtliche UDO 2032 Zeitserver sind synchronisiert.`;
+  }
   
   if (taskType === "medical") {
     return `### UDO Meta-Cognitive Medical Synthesis

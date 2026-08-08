@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, BookOpen, Layers, HelpCircle, Mic, MicOff, RefreshCw, Cpu, ShieldCheck, DollarSign, Activity, Download, Presentation } from "lucide-react";
+import { ArrowLeft, BookOpen, Layers, HelpCircle, Mic, MicOff, RefreshCw, Cpu, ShieldCheck, DollarSign, Activity, Presentation } from "lucide-react";
 import { UdoDraggableChatBubble } from "../../components/udo2032/UdoDraggableChatBubble";
 import { UdoPdfExportButton } from "../../components/udo2032/UdoPdfReportModal";
 import { UdoPresentationModal } from "../../components/udo2032/UdoPresentationModal";
+import RobotMascot from "../../components/RobotMascot";
 
 export interface UdoV2DemoPageProps {
   onNavigateToPortal?: () => void;
@@ -217,21 +218,6 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
           </button>
 
           <button
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = '/api/download/udo-installer.exe';
-              link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-300 bg-slate-900/80 border border-cyan-500/40 rounded-xl hover:bg-slate-800 hover:border-cyan-400 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] cursor-pointer"
-          >
-            <Download size={14} className="text-emerald-400" />
-            <span>DOWNLOAD UDO APP (.EXE)</span>
-          </button>
-
-          <button
             onClick={handleOpenHelp}
             className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-slate-300 transition-all backdrop-blur-sm hover:text-white hover:border-cyan-400/50 shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer"
           >
@@ -242,7 +228,7 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
       </header>
 
       {/* Top 2 Spot Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 z-10 items-center">
         {/* Spot 1: Top-Left: Green Glowing Dot + AI Brain Online */}
         <div className="flex items-center justify-between bg-slate-900/80 border border-emerald-500/40 rounded-2xl p-5 shadow-[0_0_25px_rgba(16,185,129,0.15)] backdrop-blur-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -275,25 +261,30 @@ export default function UdoV2DemoPage({ onNavigateToPortal }: UdoV2DemoPageProps
           </div>
         </div>
 
-        {/* Spot 2: Top-Right: CFO Node - Money Found: €0 */}
-        <div className="flex items-center justify-between bg-slate-900/80 border border-cyan-800/60 rounded-2xl p-5 shadow-[0_0_25px_rgba(6,182,212,0.15)] backdrop-blur-xl relative overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              <DollarSign className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xs text-slate-400 font-mono tracking-widest uppercase block">
-                CFO NODE RECOVERY TICKER
-              </span>
-              <span className="text-2xl md:text-3xl font-black text-cyan-200 tracking-tight drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
-                Money Found: €{recoveredAmount.toLocaleString('de-DE')}
-              </span>
-            </div>
+        {/* Spot 2: Top-Right: Draggable Robot Mascot with Chat Guide */}
+        <div className="flex items-center justify-between bg-slate-900/80 border border-cyan-800/60 rounded-2xl p-4 shadow-[0_0_25px_rgba(6,182,212,0.15)] backdrop-blur-xl relative overflow-hidden min-h-[110px]">
+          <div className="flex flex-col justify-center">
+            <span className="text-xs text-cyan-400 font-mono tracking-widest uppercase font-bold mb-1">
+              UDO Central Assistant
+            </span>
+            <span className="text-xs text-slate-300 leading-relaxed max-w-[220px]">
+              Drag UDO anywhere or click to start live voice consultation.
+            </span>
           </div>
-          <div className="text-right">
-            <span className="text-[10px] text-slate-500 font-mono uppercase block">Reports Total</span>
-            <span className="text-sm font-bold text-cyan-400 font-mono">{reportsCount} Files</span>
-          </div>
+          <motion.div
+            drag
+            dragMomentum={false}
+            dragElastic={0.15}
+            whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
+            whileHover={{ scale: 1.05 }}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <RobotMascot
+              state="IDLE"
+              messageBubble="Welcome to the UDO Central System! Click below to start listening or drag me anywhere!"
+              size="sm"
+            />
+          </motion.div>
         </div>
       </div>
 

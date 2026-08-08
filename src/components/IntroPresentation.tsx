@@ -23,6 +23,7 @@ import RobotMascot from "./RobotMascot";
 import { StatusBar } from "./StatusBar";
 import { GradientButton } from "./ui/gradient-button";
 import { UdoPresentationModal } from "./udo2032/UdoPresentationModal";
+import { playSiteOpeningSound } from "../services/audioFeedbackService";
 
 interface IntroPresentationProps {
   onComplete: () => void;
@@ -45,6 +46,11 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
   const [chatDismissed, setChatDismissed] = useState(false);
 
   const { language, setLanguage, robotState, robotBubble, handleRobotClick } = useGlobalSystem();
+
+  useEffect(() => {
+    // Trigger futuristic sound effect on opening site
+    playSiteOpeningSound();
+  }, []);
 
   useEffect(() => {
     if (!isBooted) return;
@@ -289,30 +295,38 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                 transition={{ duration: 0.6 }}
                 className="w-full h-full flex flex-col justify-between items-center pointer-events-none relative"
               >
-                {/* FLOATING ROBOT MASCOT (UPPER RIGHT / TOP-RIGHT FLOAT - DISMISSABLE ON CLICK) */}
+                {/* FLOATING ROBOT MASCOT (BOTTOM-LEFT / LEFT DOWN CORNER - DRAGGABLE & GUIDING USER) */}
                 <AnimatePresence>
                   {!chatDismissed && (
                     <motion.div
                       key="robot-mascot-unit"
-                      initial={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-2 right-2 sm:top-4 sm:right-6 z-30 pointer-events-auto"
+                      drag
+                      dragMomentum={false}
+                      dragElastic={0.15}
+                      whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
+                      whileHover={{ scale: 1.05 }}
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                      transition={{ duration: 0.4 }}
+                      className="fixed bottom-6 left-6 z-50 pointer-events-auto cursor-grab active:cursor-grabbing"
                     >
                       <div 
-                        className="hover:scale-105 transition-transform duration-300 cursor-pointer" 
                         onClick={() => {
                           handleRobotClick();
-                          setChatDismissed(true);
                         }}
-                        title="Klicken zum Schließen / Click to dismiss"
+                        title="Ziehen zum Verschieben / Drag to reposition"
                       >
                         <RobotMascot
                           state={robotState || "IDLE"}
-                          messageBubble={robotBubble}
+                          messageBubble={
+                            robotBubble || 
+                            (language === "de"
+                              ? "Willkommen im UDO Zentralsystem! Ich bin UDO, Ihr KI-Leitfaden. Klicken Sie auf UDO V2 Dashboard zum Starten oder ziehen Sie mich über den Bildschirm!"
+                              : "Welcome to the UDO Central System! I am UDO, your AI guide. Click UDO V2 Dashboard to launch, or drag me anywhere on your screen!")
+                          }
                           onBubbleClick={() => {
                             handleRobotClick();
-                            setChatDismissed(true);
                           }}
                           size="md"
                           showBadge={false}
@@ -322,7 +336,7 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                   )}
                 </AnimatePresence>
 
-                {/* FLOATING DASHBOARD, PRESENTATION, WHITEPAPER & DOWNLOAD UDO APP BUTTONS */}
+                {/* FLOATING DASHBOARD, PRESENTATION, WHITEPAPER & HELP BUTTONS */}
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-6 z-30 pointer-events-auto flex flex-col gap-2.5">
                   <div className="flex flex-wrap items-center gap-2.5">
                     {/* 1. TRON NEON ENTRY BUTTON FOR DASHBOARD */}
@@ -370,26 +384,7 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                       <BookOpen className="w-4 h-4" />
                     </GradientButton>
 
-                    {/* 4. DOWNLOAD UDO APP */}
-                    <GradientButton
-                      variant="whitepaper"
-                      onClick={() => {
-                        playInnovationChime(true);
-                        const link = document.createElement('a');
-                        link.href = '/api/download/udo-installer.exe';
-                        link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      }}
-                      onMouseEnter={() => playClickSound(false)}
-                      className="gap-2 px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
-                    >
-                      <span>DOWNLOAD UDO APP (.EXE)</span>
-                      <Download className="w-4 h-4 text-emerald-400" />
-                    </GradientButton>
-
-                    {/* 5. HELP BUTTON */}
+                    {/* 4. HELP BUTTON */}
                     <button
                       onClick={() => {
                         playClickSound(true);
@@ -405,49 +400,6 @@ export default function IntroPresentation({ onComplete, onOpenWhitepaper, onOpen
                       <span>HELP</span>
                     </button>
                   </div>
-                </div>
-
-                {/* FIXED BOTTOM-LEFT RADIO BUTTON MODE SELECTOR (OPPOSITE OF WORKSPACE & ALBIS TEST ON THE RIGHT) */}
-                <div className="fixed bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-2 p-2.5 bg-slate-950/85 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl font-mono text-xs text-slate-300">
-                  <span className="text-[10px] text-teal-400 font-extrabold uppercase tracking-wider px-1.5 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-                    SELECT:
-                  </span>
-
-                  <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition-all active:scale-95">
-                    <input
-                      type="radio"
-                      name="system-mode-radio-left"
-                      value="workspace"
-                      onChange={() => {
-                        playClickSound(true);
-                        if (onOpenWorkspace) {
-                          onOpenWorkspace();
-                        }
-                      }}
-                      className="accent-indigo-500 cursor-pointer w-3.5 h-3.5"
-                    />
-                    <span className="font-bold text-indigo-300">Workspace</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-cyan-500/30 cursor-pointer transition-all active:scale-95">
-                    <input
-                      type="radio"
-                      name="system-mode-radio-left"
-                      value="albis"
-                      onChange={() => {
-                        playClickSound(true);
-                        if (onOpenAlbisTest) {
-                          onOpenAlbisTest();
-                        } else if (typeof window !== "undefined") {
-                          window.history.pushState({}, '', '/albis-test');
-                          window.dispatchEvent(new Event('popstate'));
-                        }
-                      }}
-                      className="accent-cyan-400 cursor-pointer w-3.5 h-3.5"
-                    />
-                    <span className="font-bold text-cyan-300">ALBIS Test</span>
-                  </label>
                 </div>
 
                 {/* FIXED BOTTOM-RIGHT WORKSPACE & ALBIS TEST BUTTON CLUSTER */}

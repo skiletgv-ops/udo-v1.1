@@ -12,17 +12,21 @@ import {
   Clock,
   UserCheck,
   ShieldCheck,
+  ShieldAlert,
   LogOut,
   RefreshCw,
   Mic,
   BookOpen,
   Zap,
   PanelRightOpen,
-  FileText
+  FileText,
+  Layers
 } from 'lucide-react';
 import { useRoleContext } from '../context/RoleContext';
 import { usePrescriptionContext } from '../context/PrescriptionContext';
 import { useGlobalSystem } from './GlobalSystemContext';
+import { EmergencyTriageGateway } from './triage/EmergencyTriageGateway';
+import { S2kUpgradeRoadmapModal } from './roadmap/S2kUpgradeRoadmapModal';
 import { ActiveTab } from '../types';
 import { MicState } from '../hooks/useWakeWord';
 import { AudioFeedbackIndicator } from './AudioFeedbackIndicator';
@@ -58,6 +62,8 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const [triageOpen, setTriageOpen] = useState(false);
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
   const { language, setLanguage } = useGlobalSystem();
 
   const { role, user, isAdmin, selectRole, clearRole } = useRoleContext();
@@ -203,6 +209,34 @@ export const TopSystemBar: React.FC<TopSystemBarProps> = ({
               S2k Docs
             </span>
           </button>
+
+          {/* S2K 10-STEP UPGRADE ROADMAP TRIGGER */}
+          <button
+            onClick={() => setRoadmapOpen(true)}
+            className="px-2 sm:px-2.5 py-1 rounded-lg border border-cyan-500/40 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20 hover:border-cyan-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.2)]"
+            title={language === 'de' ? "10-Schritte UDO S2k Upgrade Roadmap" : "10-Step UDO S2k Upgrade Roadmap"}
+          >
+            <Layers className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span className="hidden md:inline uppercase text-[10px] tracking-wider font-bold">
+              {language === 'de' ? "S2k Roadmap" : "S2k Roadmap"}
+            </span>
+          </button>
+
+          <S2kUpgradeRoadmapModal isOpen={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
+
+          {/* S2K EMERGENCY TRIAGE GATEWAY TRIGGER */}
+          <button
+            onClick={() => setTriageOpen(true)}
+            className="px-2 sm:px-2.5 py-1 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+            title={language === 'de' ? "S2k Emergency Triage Gateway (Low Latency Shield)" : "Open S2k Emergency Triage Gateway"}
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+            <span className="hidden md:inline uppercase text-[10px] tracking-wider font-bold">
+              {language === 'de' ? "Emergency Shield" : "Triage Gateway"}
+            </span>
+          </button>
+
+          <EmergencyTriageGateway isOpen={triageOpen} onClose={() => setTriageOpen(false)} />
 
           {/* ALWAYS-VISIBLE VOICE WAKE-WORD MIC STATUS BADGE */}
           <button

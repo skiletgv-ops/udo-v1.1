@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Key, Shield, FolderSync, ShieldCheck, Lock, Activity } from 'lucide-react';
+import { Key, Shield, FolderSync, ShieldCheck, Lock, Activity, Award } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { AlbisGdtBridgePanel } from '../AlbisGdtBridgePanel';
 import CompliancePanel from '../CompliancePanel';
 import ApiKeysAdmin from '../ApiKeysAdmin';
+import { RegulatoryReadinessDashboard } from '../compliance/RegulatoryReadinessDashboard';
 
 export const AdminView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'albis' | 'compliance' | 'apikeys' | 'qes'>('albis');
+  const [activeTab, setActiveTab] = useState<'albis' | 'compliance' | 'apikeys' | 'qes' | 'readiness'>('readiness');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 animate-fade-in pb-16">
@@ -26,6 +27,18 @@ export const AdminView: React.FC = () => {
         {/* Tab Navigation Controls */}
         <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/10">
           <button
+            onClick={() => setActiveTab('readiness')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'readiness'
+                ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Award className="w-4 h-4 text-cyan-400" />
+            MDR Regulatory Readiness
+          </button>
+
+          <button
             onClick={() => setActiveTab('albis')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'albis'
@@ -41,11 +54,11 @@ export const AdminView: React.FC = () => {
             onClick={() => setActiveTab('compliance')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'compliance'
-                ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(0,212,170,0.2)]'
+                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
             DSGVO Compliance
           </button>
 
@@ -76,6 +89,8 @@ export const AdminView: React.FC = () => {
       </div>
 
       {/* Tab Panels */}
+      {activeTab === 'readiness' && <RegulatoryReadinessDashboard />}
+
       {activeTab === 'albis' && <AlbisGdtBridgePanel />}
 
       {activeTab === 'compliance' && <CompliancePanel />}

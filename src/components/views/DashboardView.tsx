@@ -66,7 +66,7 @@ export const DashboardView: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-80" />
               <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-400" />
             </span>
-            <span>SYSTEM SECURE</span>
+            <span>UDO S2K ACTIVE</span>
           </div>
           <div className="px-4 py-2 rounded-xl bg-violet-500/20 border-2 border-violet-400 text-violet-200 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider">
             PORTAL V2.1

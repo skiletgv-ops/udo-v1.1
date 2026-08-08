@@ -1,5 +1,5 @@
 {
-  "name": "U.D.O. - Ultimate Diagnostic Operator",
+  "name": "BETA TEST UDO",
   "description": "Eine umfassende medizinisch-rechtliche KI-Plattform zur Erstellung von Gutachten nach deutschem Sozial- und Unfallversicherungsrecht.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

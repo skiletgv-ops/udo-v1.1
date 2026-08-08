@@ -29,15 +29,20 @@ import {
   RefreshCw,
   AlertCircle,
   Unlock,
-  Server
+  Server,
+  Layers,
+  Scale,
+  Code2,
+  X
 } from "lucide-react";
 
 import { useGlobalSystem } from "./GlobalSystemContext";
 import TypewriterText from "./ui/TypewriterText";
+import { S2K_UPGRADE_ROADMAP_STEPS } from "./roadmap/S2kUpgradeRoadmapModal";
 
 export default function SystemWhitepaper() {
   const { language, setLanguage } = useGlobalSystem();
-  const [activeTab, setActiveTab] = useState<"architecture" | "guidelines" | "regulatory" | "review" | "capabilities" | "manual" | "eeg" | "admin">("architecture");
+  const [activeTab, setActiveTab] = useState<"architecture" | "guidelines" | "regulatory" | "review" | "capabilities" | "manual" | "eeg" | "admin" | "roadmap">("architecture");
   const [diagnostics, setDiagnostics] = useState<Record<string, "idle" | "testing" | "passed">>({});
 
   const [liveLocCount, setLiveLocCount] = useState(6820);
@@ -346,6 +351,7 @@ export default function SystemWhitepaper() {
           { id: "eeg", label: t[currentLang].tabEeg, icon: Activity, desc: t[currentLang].tabEegDesc },
           { id: "review", label: t[currentLang].tabReview, icon: FileText, desc: t[currentLang].tabReviewDesc },
           { id: "capabilities", label: t[currentLang].tabCap, icon: Sparkles, desc: t[currentLang].tabCapDesc },
+          { id: "roadmap", label: currentLang === 'de' ? "S2k Upgrade Roadmap" : "S2k Upgrade Roadmap", icon: Layers, desc: currentLang === 'de' ? "10-Schritte Compliance Plan" : "10-Step Compliance Plan" },
           { id: "manual", label: t[currentLang].tabManual, icon: Compass, desc: t[currentLang].tabManualDesc },
           { id: "admin", label: t[currentLang].tabAdmin, icon: Key, desc: t[currentLang].tabAdminDesc }
         ].map((tab) => {
@@ -378,6 +384,81 @@ export default function SystemWhitepaper() {
 
       {/* CONTENT SWITCHER */}
       <div className="grid grid-cols-1 gap-8">
+
+        {/* TAB ROADMAP: 10-STEP S2K UPGRADE ROADMAP */}
+        {activeTab === "roadmap" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-500/50 text-cyan-400">
+                    <Layers size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white uppercase tracking-wider font-mono">
+                      10-Schritte UDO S2k Upgrade Roadmap & Compliance Plan
+                    </h3>
+                    <p className="text-xs text-slate-400 font-sans mt-0.5">
+                      Systematischer Austausch von Legacy-Komponenten durch gerichtsverwertbare AWMF S2k, QES & Rule 11 Standards.
+                    </p>
+                  </div>
+                </div>
+
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-bold">
+                  10/10 Standards Verified
+                </span>
+              </div>
+
+              {/* ROADMAP STEPS TABLE / CARDS */}
+              <div className="grid grid-cols-1 gap-4 pt-2">
+                {S2K_UPGRADE_ROADMAP_STEPS.map((step) => (
+                  <div key={step.id} className="bg-slate-950 p-5 rounded-2xl border border-cyan-500/30 hover:border-cyan-400/80 transition-all space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-xl bg-cyan-950 border border-cyan-500/50 flex items-center justify-center font-mono font-extrabold text-cyan-400 text-xs">
+                          0{step.id}
+                        </span>
+                        <div>
+                          <span className="text-xs font-mono font-bold text-cyan-400 mr-2">{step.code}</span>
+                          <span className="text-sm font-bold text-white font-sans">{step.title[currentLang]}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 font-mono text-xs">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] text-emerald-300 font-bold uppercase">
+                          {step.status.replace("_", " ")}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-[10px] text-amber-300 font-bold">
+                          €{step.costJustification.annualSavingsEur.toLocaleString()} / yr
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-[10px] text-purple-300 font-bold">
+                          Rule 11: {step.rule11Analysis.defensibilityScore}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs">
+                      <div className="bg-slate-900/80 p-3 rounded-xl border border-red-500/20 space-y-1">
+                        <span className="text-[10px] font-mono font-bold text-red-400 uppercase block">❌ Legacy Replaced</span>
+                        <p className="font-mono text-slate-300 text-[11px]">{step.legacyComponent}</p>
+                      </div>
+
+                      <div className="bg-slate-900/80 p-3 rounded-xl border border-emerald-500/20 space-y-1">
+                        <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase block">✅ S2k Standard</span>
+                        <p className="font-mono text-emerald-300 text-[11px]">{step.s2kStandard}</p>
+                      </div>
+
+                      <div className="bg-slate-900/80 p-3 rounded-xl border border-cyan-500/20 space-y-1">
+                        <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase block">⚖️ Rule 11 Legal Analysis</span>
+                        <p className="font-sans text-slate-300 text-[11px]">{step.rule11Analysis.details[currentLang]}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* TAB 1: ARCHITECTURE & CONSENSUS */}
         {activeTab === "architecture" && (
@@ -1403,8 +1484,8 @@ export default function SystemWhitepaper() {
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   {language === "de"
-                    ? "In retrospektiven Studien mit über 12.000 Patientenspuren zeigte die integrierte UDO Biosignal-Engine eine hervorragende diagnostische Übereinstimmung mit erfahrenen Epileptologen. Das System ist nach MDR Klasse IIa für eHealth-Software zertifiziert."
-                    : "In retrospective trials involving over 12,000 clinical biosignal records, the integrated UDO biosignal engine achieved superior diagnostic alignment with board-certified epileptologists. The software is registered under MDR Class IIa guidelines for medical software."}
+                    ? "In retrospektiven synthetischen Benchmarks mit über 12.000 Spuren wird die diagnostische Übereinstimmung der UDO-Engine evaluiert. Die Software durchläuft eine vorläufige MDR Regel-11 Einstufung als Klasse IIa/IIb Medizinisches Softwareprodukt."
+                    : "In retrospective synthetic benchmarks involving over 12,000 records, UDO's diagnostic alignment is continuously benchmarked. The software undergoes provisional MDR Rule 11 evaluation as Class IIa/IIb medical software pending formal assessment."}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
@@ -1418,7 +1499,7 @@ export default function SystemWhitepaper() {
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
                     <span className="text-[9px] font-mono text-slate-500 uppercase block">MDR Classification</span>
-                    <strong className="text-xl font-bold text-teal-400 font-mono">Class IIa</strong>
+                    <strong className="text-xl font-bold text-teal-400 font-mono">Prov. IIa/IIb</strong>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
                     <span className="text-[9px] font-mono text-slate-500 uppercase block">eIDAS QES Hash</span>

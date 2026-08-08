@@ -58,6 +58,104 @@ class AudioFeedbackService {
     return this.audioCtx;
   }
 
+  public playOpeningSound() {
+    if (!this.soundEnabled) return;
+
+    try {
+      const ctx = this.getAudioContext();
+      if (ctx) {
+        const now = ctx.currentTime;
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(this.volume * 0.8, now);
+        masterGain.connect(ctx.destination);
+
+        // Futuristic 4-note ascending boot chime (C4 -> G4 -> C5 -> E5)
+        this.playTone(ctx, masterGain, 261.63, now, 0.15, 'sine');
+        this.playTone(ctx, masterGain, 392.00, now + 0.08, 0.15, 'sine');
+        this.playTone(ctx, masterGain, 523.25, now + 0.16, 0.20, 'triangle');
+        this.playTone(ctx, masterGain, 659.25, now + 0.26, 0.35, 'sine');
+      }
+    } catch (err) {
+      console.warn('Site opening sound warning:', err);
+    }
+  }
+
+  private radioInterval: any = null;
+  private isRadioActive: boolean = false;
+
+  public toggleRadio(station: string, onFreqNote?: (msg: string) => void): boolean {
+    if (this.isRadioActive) {
+      this.stopRadio();
+      return false;
+    } else {
+      this.startRadio(station, onFreqNote);
+      return true;
+    }
+  }
+
+  public startRadio(station: string, onFreqNote?: (msg: string) => void) {
+    this.stopRadio();
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    this.isRadioActive = true;
+
+    // Frequencies tailored for medical lounge relaxation (Hz)
+    const freqs = station.includes('DGKN') || station.includes('EEG')
+      ? [261.63, 329.63, 392.00, 523.25, 659.25] // C maj / Alpha 10Hz resonance
+      : station.includes('GOÄ') || station.includes('Jazz')
+      ? [220.00, 277.18, 329.63, 392.00, 440.00] // Smooth Jazz A minor 7
+      : [293.66, 369.99, 440.00, 554.37, 659.25]; // Cyber Synth
+
+    let step = 0;
+    this.radioInterval = setInterval(() => {
+      if (!this.isRadioActive) return;
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(this.volume * 0.25, now);
+      masterGain.connect(ctx.destination);
+
+      const f = freqs[step % freqs.length];
+      this.playTone(ctx, masterGain, f, now, 0.35, 'sine');
+      if (onFreqNote) {
+        onFreqNote(`🎵 ${station} [${Math.round(f)} Hz]`);
+      }
+      step++;
+    }, 400);
+  }
+
+  public stopRadio() {
+    this.isRadioActive = false;
+    if (this.radioInterval) {
+      clearInterval(this.radioInterval);
+      this.radioInterval = null;
+    }
+  }
+
+  public playJokeChime() {
+    if (!this.soundEnabled) return;
+    try {
+      const ctx = this.getAudioContext();
+      if (ctx) {
+        const now = ctx.currentTime;
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(this.volume * 0.7, now);
+        masterGain.connect(ctx.destination);
+
+        // Comedy / Doctor laughter synth chord (G4 -> B4 -> D5 -> G5)
+        this.playTone(ctx, masterGain, 392.00, now, 0.1, 'triangle');
+        this.playTone(ctx, masterGain, 493.88, now + 0.08, 0.1, 'triangle');
+        this.playTone(ctx, masterGain, 587.33, now + 0.16, 0.12, 'sine');
+        this.playTone(ctx, masterGain, 783.99, now + 0.24, 0.25, 'sine');
+      }
+    } catch (err) {
+      console.warn('Joke chime warning:', err);
+    }
+  }
+
+  public isRadioPlaying(): boolean {
+    return this.isRadioActive;
+  }
+
   public playCue(type: AudioCueType, title?: string, message?: string) {
     if (!this.soundEnabled) return;
 
@@ -125,6 +223,10 @@ class AudioFeedbackService {
 }
 
 export const audioService = new AudioFeedbackService();
+
+export function playSiteOpeningSound() {
+  audioService.playOpeningSound();
+}
 
 export function triggerAudioCue(type: AudioCueType, title?: string, message?: string) {
   audioService.playCue(type, title, message);

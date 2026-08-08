@@ -12,9 +12,14 @@ import {
   Cpu,
   Sparkles,
   Zap,
-  CheckCircle2
+  Key,
+  Check,
+  Globe,
+  Lock,
+  Play
 } from 'lucide-react';
 import { routeUdoPrompt } from '../../services/udoMetaRouter';
+import { speakWithJonasVoice, stopJonasVoice, findJonasHumanoidVoice } from '../../utils/udoVoiceSynth';
 
 export function UdoFloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +29,15 @@ export function UdoFloatingChat() {
   const [selectedModel, setSelectedModel] = useState<'auto' | 'gemini' | 'claude' | 'openai' | 'deepseek'>('auto');
   const [taskType, setTaskType] = useState<'general' | 'medical' | 'legal' | 'code' | 'finance'>('general');
   const [isListening, setIsListening] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+
+  // API Key & Realtime Mode State
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [geminiKey, setGeminiKey] = useState('');
+  const [keySaved, setKeySaved] = useState(false);
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
+  const [testingKey, setTestingKey] = useState(false);
+  const [testSuccess, setTestSuccess] = useState<boolean | null>(null);
 
   const [messages, setMessages] = useState<Array<{
     sender: 'user' | 'udo';
@@ -44,9 +57,68 @@ export function UdoFloatingChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedKey = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('UDO_API_KEY') || '';
+      if (storedKey) {
+        setGeminiKey(storedKey);
+        setKeySaved(true);
+        setIsOnlineMode(true);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleSaveApiKey = () => {
+    if (typeof window !== 'undefined') {
+      if (geminiKey.trim()) {
+        localStorage.setItem('GEMINI_API_KEY', geminiKey.trim());
+        localStorage.setItem('UDO_API_KEY', geminiKey.trim());
+        setKeySaved(true);
+        setIsOnlineMode(true);
+        setTestSuccess(true);
+      } else {
+        localStorage.removeItem('GEMINI_API_KEY');
+        localStorage.removeItem('UDO_API_KEY');
+        setKeySaved(false);
+        setIsOnlineMode(false);
+        setTestSuccess(null);
+      }
+    }
+  };
+
+  const handleTestKey = async () => {
+    if (!geminiKey.trim()) return;
+    setTestingKey(true);
+    setTestSuccess(null);
+
+    try {
+      const res = await fetch('/api/udo/router', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-gemini-api-key': geminiKey.trim()
+        },
+        body: JSON.stringify({ prompt: 'Ping API Test Connection', taskType: 'general' })
+      });
+
+      if (res.ok) {
+        setTestSuccess(true);
+        handleSaveApiKey();
+      } else {
+        setTestSuccess(false);
+      }
+    } catch (err) {
+      console.error('API key test error:', err);
+      setTestSuccess(false);
+    } finally {
+      setTestingKey(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!prompt.trim() || loading) return;
@@ -80,10 +152,13 @@ export function UdoFloatingChat() {
         }
       ]);
 
-      if (ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(response.result.replace(/#/g, ''));
-        utterance.lang = 'de-DE';
-        window.speechSynthesis.speak(utterance);
+      // Speak using Jonas Humanoid Voice Engine
+      if (ttsEnabled) {
+        speakWithJonasVoice(response.result, {
+          lang: 'de',
+          pitch: 0.95,
+          rate: 0.96
+        });
       }
     } catch (err) {
       console.error('Floating Chat Error:', err);
@@ -132,7 +207,7 @@ export function UdoFloatingChat() {
           </div>
           <span>UDO 2032 AI CHAT</span>
           <span className="text-[10px] bg-slate-950/60 border border-cyan-400/40 px-2 py-0.5 rounded-full text-cyan-300">
-            AUTO
+            {isOnlineMode ? 'ONLINE' : 'JONAS'}
           </span>
         </button>
       )}
@@ -152,23 +227,46 @@ export function UdoFloatingChat() {
               <div>
                 <h3 className="text-xs font-bold font-mono text-cyan-300 tracking-wider flex items-center gap-2">
                   UDO META-ROUTER AI
-                  <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono">
-                    LIVE
-                  </span>
+                  {isOnlineMode ? (
+                    <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono flex items-center gap-1">
+                      <Globe size={10} /> LIVE API
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.2 rounded font-mono">
+                      JONAS VOICE
+                    </span>
+                  )}
                 </h3>
-                <p className="text-[10px] font-mono text-slate-400">Gemini • Claude • OpenAI • DeepSeek</p>
+                <p className="text-[10px] font-mono text-slate-400">German Jonas Voice • Gemini 2.5</p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
+              {/* API Key Modal Toggle */}
               <button
-                onClick={() => setTtsEnabled(!ttsEnabled)}
+                onClick={() => setShowApiKeyModal(!showApiKeyModal)}
+                className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                  showApiKeyModal || keySaved
+                    ? 'bg-amber-950/60 border-amber-500/50 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+                title="API Key Settings / Realtime Mode"
+              >
+                <Key size={14} />
+              </button>
+
+              <button
+                onClick={() => {
+                  const nextState = !ttsEnabled;
+                  setTtsEnabled(nextState);
+                  if (!nextState) stopJonasVoice();
+                }}
                 className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                   ttsEnabled
                     ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
-                title="Toggle Voice Speech Output"
+                title={ttsEnabled ? 'Humanoid JONAS Voice: Active' : 'Voice Output Muted'}
               >
                 {ttsEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
               </button>
@@ -191,6 +289,66 @@ export function UdoFloatingChat() {
 
           {!isMinimized && (
             <>
+              {/* API Key Config Modal / Drawer */}
+              {showApiKeyModal && (
+                <div className="p-4 bg-slate-900 border-b border-cyan-500/30 text-xs space-y-3 font-mono animate-fadeIn">
+                  <div className="flex items-center justify-between text-amber-300 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Key size={14} /> API Key & Live Online Agent Setup
+                    </span>
+                    <span className="text-[10px] text-slate-400">Gemini 2.5 Realtime</span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
+                    Fügen Sie Ihren eigenen <strong>Gemini API-Schlüssel</strong> ein, um Echtzeit-Dialoge und KI-Stimmgenerierung online zu aktivieren.
+                  </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase">Gemini API Key</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={geminiKey}
+                        onChange={(e) => {
+                          setGeminiKey(e.target.value);
+                          setTestSuccess(null);
+                        }}
+                        placeholder="AIzaSy..."
+                        className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400"
+                      />
+                      <button
+                        onClick={handleSaveApiKey}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-1 cursor-pointer"
+                      >
+                        <Check size={12} /> Speichern
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-800">
+                    <button
+                      onClick={handleTestKey}
+                      disabled={testingKey || !geminiKey.trim()}
+                      className="text-[10px] bg-cyan-950 border border-cyan-500/40 hover:bg-cyan-900 text-cyan-300 px-2.5 py-1 rounded flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                      {testingKey ? <Zap size={10} className="animate-spin" /> : <Play size={10} />}
+                      <span>Verbindung testen</span>
+                    </button>
+
+                    {testSuccess === true && (
+                      <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                        ✓ API Key Aktiv & Verbunden
+                      </span>
+                    )}
+                    {testSuccess === false && (
+                      <span className="text-[10px] text-rose-400 font-bold">
+                        ✗ Schlüssel ungültig oder Offline
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Settings / Category Selector Bar */}
               <div className="px-3 py-2 bg-slate-900/40 border-b border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
                 <div className="flex items-center gap-1">
@@ -253,6 +411,15 @@ export function UdoFloatingChat() {
                           {msg.confidence}% Conf
                         </span>
                       )}
+                      {msg.sender === 'udo' && (
+                        <button
+                          onClick={() => speakWithJonasVoice(msg.text, { lang: 'de', pitch: 0.95, rate: 0.96 })}
+                          className="hover:text-cyan-300 text-slate-400 transition-colors ml-1 cursor-pointer"
+                          title="Play Voice"
+                        >
+                          <Volume2 size={11} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -286,7 +453,7 @@ export function UdoFloatingChat() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask UDO 2032 anything..."
+                  placeholder="Frag UDO 2032 etwas (z.B. Welches Datum ist heute?)..."
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/80 font-mono"
                 />
 
@@ -305,3 +472,4 @@ export function UdoFloatingChat() {
     </div>
   );
 }
+

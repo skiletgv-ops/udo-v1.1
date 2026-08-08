@@ -13,9 +13,17 @@ import {
   User,
   ShieldCheck,
   Minimize2,
-  Maximize2
+  Maximize2,
+  Volume2,
+  VolumeX,
+  Key,
+  Check,
+  Play,
+  Zap,
+  Globe
 } from 'lucide-react';
 import { routeUdoPrompt, RouterRequest } from '../../services/udoMetaRouter';
+import { speakWithJonasVoice, stopJonasVoice } from '../../utils/udoVoiceSynth';
 
 export interface ChatMessage {
   id: string;
@@ -35,25 +43,38 @@ export function UdoDraggableChatBubble() {
   const [taskType, setTaskType] = useState<RouterRequest['taskType']>('medical');
   const [loading, setLoading] = useState(false);
   const [expandedReasoning, setExpandedReasoning] = useState<string | null>(null);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+
+  // API Key & Realtime Online Mode
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [geminiKey, setGeminiKey] = useState('');
+  const [keySaved, setKeySaved] = useState(false);
+  const [testingKey, setTestingKey] = useState(false);
+  const [testSuccess, setTestSuccess] = useState<boolean | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load chat messages and open state from localStorage
+  // Load chat messages and API key from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedKey = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('UDO_API_KEY') || '';
+        if (storedKey) {
+          setGeminiKey(storedKey);
+          setKeySaved(true);
+        }
+
         const stored = localStorage.getItem('udo_v2_chat_messages');
         if (stored) {
           setMessages(JSON.parse(stored));
         } else {
-          // Default initial greeting message
           setMessages([
             {
               id: 'init-1',
               sender: 'ai',
-              text: 'Hallo! Ich bin der UDO Meta-Cognition Router. Frag mich nach medizinischen Befunden, GOÄ Abrechnungen, Rechtsgutachten oder Code-Heilungen.',
+              text: 'Hallo! Ich bin der UDO Meta-Cognition Router mit Jonas Sprachsystem. Frag mich nach medizinischen Befunden, GOÄ Abrechnungen, Rechtsgutachten oder dem heutigen Datum.',
               timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-              providerUsed: 'Meta-Router Auto (Gemini 2.5 / Claude 3.5)',
+              providerUsed: 'Meta-Router Auto (Jonas Voice / Gemini 2.5)',
               confidenceScore: 99,
               latencyMs: 120
             }
@@ -64,6 +85,51 @@ export function UdoDraggableChatBubble() {
       }
     }
   }, []);
+
+  const handleSaveApiKey = () => {
+    if (typeof window !== 'undefined') {
+      if (geminiKey.trim()) {
+        localStorage.setItem('GEMINI_API_KEY', geminiKey.trim());
+        localStorage.setItem('UDO_API_KEY', geminiKey.trim());
+        setKeySaved(true);
+        setTestSuccess(true);
+      } else {
+        localStorage.removeItem('GEMINI_API_KEY');
+        localStorage.removeItem('UDO_API_KEY');
+        setKeySaved(false);
+        setTestSuccess(null);
+      }
+    }
+  };
+
+  const handleTestKey = async () => {
+    if (!geminiKey.trim()) return;
+    setTestingKey(true);
+    setTestSuccess(null);
+
+    try {
+      const res = await fetch('/api/udo/router', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-gemini-api-key': geminiKey.trim()
+        },
+        body: JSON.stringify({ prompt: 'Ping API Test', taskType: 'general' })
+      });
+
+      if (res.ok) {
+        setTestSuccess(true);
+        handleSaveApiKey();
+      } else {
+        setTestSuccess(false);
+      }
+    } catch (err) {
+      console.error('API key test error:', err);
+      setTestSuccess(false);
+    } finally {
+      setTestingKey(false);
+    }
+  };
 
   // Save chat messages to localStorage
   useEffect(() => {
@@ -118,6 +184,10 @@ export function UdoDraggableChatBubble() {
       };
 
       setMessages((prev) => [...prev, aiMsg]);
+
+      if (ttsEnabled) {
+        speakWithJonasVoice(response.result, { lang: 'de', pitch: 0.95, rate: 0.96 });
+      }
     } catch (err) {
       console.error('Meta-Router Error:', err);
       const errorMsg: ChatMessage = {
@@ -136,6 +206,7 @@ export function UdoDraggableChatBubble() {
   };
 
   const handleClearHistory = () => {
+    stopJonasVoice();
     const initMsg: ChatMessage = {
       id: `init-${Date.now()}`,
       sender: 'ai',
@@ -175,26 +246,93 @@ export function UdoDraggableChatBubble() {
               <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
               <span className="font-bold text-cyan-300 tracking-wider">META-ROUTER CHAT</span>
               <span className="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800 px-1.5 py-0.5 rounded">
-                MULTI-LLM
+                JONAS VOICE
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowApiKeyModal(!showApiKeyModal)}
+                className={`p-1 rounded border transition-colors ${
+                  showApiKeyModal || keySaved
+                    ? 'bg-amber-950 border-amber-500 text-amber-300'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+                title="API Key Settings"
+              >
+                <Key size={13} />
+              </button>
+              <button
+                onClick={() => {
+                  const nextState = !ttsEnabled;
+                  setTtsEnabled(nextState);
+                  if (!nextState) stopJonasVoice();
+                }}
+                className={`p-1 rounded border transition-colors ${
+                  ttsEnabled
+                    ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+                title={ttsEnabled ? 'Humanoid Jonas Voice Active' : 'Voice Muted'}
+              >
+                {ttsEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
+              </button>
               <button
                 onClick={handleClearHistory}
                 title="Clear Chat History"
                 className="text-slate-400 hover:text-red-400 transition-colors p-1"
               >
-                <RefreshCw size={14} />
+                <RefreshCw size={13} />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-slate-400 hover:text-white transition-colors p-1"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
           </div>
+
+          {/* API Key Drawer */}
+          {showApiKeyModal && (
+            <div className="p-3 bg-slate-900 border-b border-cyan-500/30 text-xs space-y-2 font-mono">
+              <div className="flex items-center justify-between text-amber-300 font-bold text-[11px]">
+                <span className="flex items-center gap-1">
+                  <Key size={12} /> Gemini API Key (Online Dialogues)
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => {
+                    setGeminiKey(e.target.value);
+                    setTestSuccess(null);
+                  }}
+                  placeholder="AIzaSy..."
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400"
+                />
+                <button
+                  onClick={handleSaveApiKey}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded flex items-center gap-1 cursor-pointer"
+                >
+                  <Check size={11} /> Ok
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <button
+                  onClick={handleTestKey}
+                  disabled={testingKey || !geminiKey.trim()}
+                  className="text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                  {testingKey ? <Zap size={10} className="animate-spin" /> : <Play size={10} />}
+                  <span>Test Connection</span>
+                </button>
+                {testSuccess === true && <span className="text-emerald-400 font-bold">✓ Connected</span>}
+                {testSuccess === false && <span className="text-rose-400 font-bold">✗ Failed</span>}
+              </div>
+            </div>
+          )}
 
           {/* Task Type Selector Bar */}
           <div className="px-3 py-2 bg-slate-900/50 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[10px]">
@@ -237,6 +375,13 @@ export function UdoDraggableChatBubble() {
                         {msg.confidenceScore && (
                           <span className="text-emerald-400">Conf: {msg.confidenceScore}%</span>
                         )}
+                        <button
+                          onClick={() => speakWithJonasVoice(msg.text, { lang: 'de', pitch: 0.95, rate: 0.96 })}
+                          className="hover:text-cyan-300 text-slate-400 transition-colors ml-1 cursor-pointer"
+                          title="Play Voice"
+                        >
+                          <Volume2 size={11} />
+                        </button>
                       </div>
 
                       {msg.reasoningChain && msg.reasoningChain.length > 0 && (
@@ -289,7 +434,7 @@ export function UdoDraggableChatBubble() {
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Query Meta-Router (e.g. Befund analysieren)..."
+              placeholder="Query Meta-Router (e.g. Befund analysieren, Datum)..."
               className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
             />
             <button
@@ -305,3 +450,4 @@ export function UdoDraggableChatBubble() {
     </motion.div>
   );
 }
+

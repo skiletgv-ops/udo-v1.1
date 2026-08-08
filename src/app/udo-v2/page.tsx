@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, BookOpen, Layers, HelpCircle, Download, Presentation } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, BookOpen, Layers, HelpCircle, Presentation } from "lucide-react";
 import { UdoPresentationModal } from "../../components/udo2032/UdoPresentationModal";
+import RobotMascot from "../../components/RobotMascot";
 
 export interface UdoV2PageProps {
   onNavigateToPortal?: () => void;
@@ -87,21 +89,6 @@ export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
           </button>
 
           <button
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = '/api/download/udo-installer.exe';
-              link.download = 'UDO_2032_Medical_Command_Setup_v2.0.0.exe';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-            className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-slate-300 bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-2 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm cursor-pointer"
-          >
-            <Download size={14} className="text-emerald-400" />
-            <span>DOWNLOAD UDO APP (.EXE)</span>
-          </button>
-
-          <button
             onClick={handleNavigateHelp}
             className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-slate-300 transition-all backdrop-blur-sm cursor-pointer hover:text-white hover:border-cyan-400/50"
           >
@@ -111,32 +98,38 @@ export default function UdoV2Page({ onNavigateToPortal }: UdoV2PageProps) {
         </div>
       </header>
 
-      {/* Top Section: Top-Left & Top-Right Spots */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 z-10">
+      {/* Top Section: Top-Left AI Brain & Top-Right Draggable Robot Mascot with Chat Guide */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 z-10 items-center">
         {/* 1. Top-Left: Green glowing dot + AI Brain Online */}
         <div className="flex items-center gap-3 bg-slate-900/90 border border-emerald-500/30 rounded-xl px-5 py-4 shadow-lg shadow-emerald-950/20 backdrop-blur-md">
           <div className="relative flex items-center justify-center">
             <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981] animate-pulse" />
             <span className="absolute w-6 h-6 rounded-full bg-emerald-500/20 animate-ping pointer-events-none" />
           </div>
-          <span className="font-semibold text-emerald-400 tracking-wide text-base md:text-lg">
-            AI Brain Online
-          </span>
+          <div>
+            <span className="font-semibold text-emerald-400 tracking-wide text-base md:text-lg block">
+              AI Brain Online
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono uppercase">UDO Neural Engine v2.0 Active</span>
+          </div>
         </div>
 
-        {/* 2. Top-Right: Box that says 'Money Found: €0' */}
-        <div className="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-xl px-5 py-4 shadow-lg backdrop-blur-md">
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-0.5">
-              Financial Savings Counter
-            </span>
-            <span className="font-bold text-2xl text-slate-100 tracking-tight">
-              Money Found: €0
-            </span>
-          </div>
-          <span className="text-xs text-slate-500 bg-slate-950/60 border border-slate-800 px-2.5 py-1 rounded-md font-mono">
-            (we will update this later)
-          </span>
+        {/* 2. Top-Right: Draggable Robot Mascot & Guide Chat Bubble */}
+        <div className="flex items-center justify-end bg-slate-900/80 border border-cyan-500/30 rounded-xl px-5 py-3 shadow-lg shadow-cyan-950/20 backdrop-blur-md relative min-h-[100px]">
+          <motion.div
+            drag
+            dragMomentum={false}
+            dragElastic={0.15}
+            whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
+            whileHover={{ scale: 1.05 }}
+            className="cursor-grab active:cursor-grabbing flex items-center gap-3"
+          >
+            <RobotMascot
+              state="IDLE"
+              messageBubble="Welcome to the UDO Central System! Press the giant voice button below to start listening, or drag me anywhere!"
+              size="sm"
+            />
+          </motion.div>
         </div>
       </div>
 
